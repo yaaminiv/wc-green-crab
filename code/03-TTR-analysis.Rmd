@@ -1,7 +1,7 @@
 ---
 title: "03-TTR-analysis"
 author: "Yaamini Venkataraman"
-date: '2023-04-10'
+date: '2023-10-16'
 output: html_document
 ---
 
@@ -40,23 +40,32 @@ rawTTR <- read.csv("../../data/time-to-right.csv", header = TRUE) #Import raw da
 head(rawTTR) #Confirm import. Trial data is in seconds.
 ```
 
+```{r}
+crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
+  select(., c("ID", "treatment", "carapace.width", "carapace.length")) %>%
+  dplyr::rename(crab.ID = "ID") #Import metadata. Select ID, treatment, width and length columns. Rename "ID" as "crab.ID"
+head(crabMetadata) #Confirm changes
+```
+
 # Format data
 
 ```{r}
 modTTR <- rawTTR %>%
-  dplyr::select(., -c(sampling.ID, notes, probe.number)) %>%
-  mutate(., day = case_when(date == "7/8/2022" ~ 4,
-                            date == "7/12/2022" ~ 8,
-                            date == "7/15/2022" ~ 11,
-                            date == "7/19/2022" ~ 15,
-                            date == "7/22/2022" ~ 18,
-                            date == "7/26/2022" ~ 22)) %>%
-  mutate(., treatment = case_when(treatment.tank == "1" | treatment.tank == "4" ~ "13C",
-                                  treatment.tank == "2" | treatment.tank == "5" ~ "5C",
-                                  treatment.tank == "3" | treatment.tank == "6" ~ "30C")) %>%
+  dplyr::select(., -c(notes, probe.number)) %>%
+  left_join(., crabMetadata, by = "crab.ID") %>%
+  mutate(., day = case_when(date == "6/28/23" ~ 0,
+                            date == "6/29/23" ~ 1,
+                            date == "7/3/23" ~ 2,
+                            date == "7/5/23" ~ 7,
+                            date == "7/10/23" ~ 12, 
+                            date == "7/12/23" ~ 14,
+                            date == "7/17/23" ~ 19,
+                            date == "7/19/23" ~ 21,
+                            date == "7/24/23" ~ 26,
+                            date == "7/26/23" ~ 28,
+                            date == "8/9/23" ~ 42,
+                            date == "8/16/23" ~ 49)) %>%
   mutate(., size = carapace.width/carapace.length) %>%
-  mutate(., missing.legs = case_when(number.legs < 10 ~ "Y",
-                                     number.legs == 10 ~ "N")) %>%
   mutate(., trial.1 = na_if(trial.1, 91.00)) %>%
   mutate(., trial.2 = na_if(trial.2, 91.00)) %>%
   mutate(., trial.3 = na_if(trial.3, 91.00)) %>%
@@ -70,7 +79,7 @@ modTTR <- rawTTR %>%
   mutate(., TTRSEFull = std.error(TTRavg)) %>%
   mutate(., TTRavgFullLow = TTRavgFull - TTRSEFull) %>%
   mutate(., TTRavgFullHigh = TTRavgFull + TTRSEFull) %>%
-  ungroup(.) #Remove sampling ID and notes columns. Add new column with day information. Add new column with treatment information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA.  Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup.
+  ungroup(.) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup.
 head(modTTR) #Confirm formatting
 ```
 
@@ -100,8 +109,8 @@ modTTR %>%
                      limits = c(0, 50)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) #Plot average TTR and add lm fits without SE bars. Modify x-axis to only show experimental days where TTR was measured. Scale y axis to include 91 = indication that crabs did not right within 90 s. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-raw.pdf", height = 8.5, width = 11)
 ```
@@ -128,7 +137,7 @@ ggsave("figures/time-to-right-sex.pdf", height = 8.5, width = 11)
 
 ```{r}
 modTTR %>%
-  ggplot(., mapping = aes(x = day, y = TTRavg, color = as.factor(treatment.tank), shape = as.factor(treatment.tank))) +
+  ggplot(., mapping = aes(x = day, y = TTRavg, color = as.factor(tank), shape = as.factor(tank))) +
   geom_jitter(alpha = 0.75) +
   scale_x_continuous(name = "Day",
                      breaks = unique(modTTR$day),
@@ -136,12 +145,12 @@ modTTR %>%
   scale_y_continuous(name = "Average Time-to-Right (s)",
                      breaks = seq(0, 50, 10),
                      limits = c(0, 50)) +
-  scale_color_manual(values = rep(c(plotColors[2], plotColors[3], plotColors[1]), times = 2),
+  scale_color_manual(values = rep(c(plotColors[3], plotColors[2], plotColors[1]), times = 3),
                      name = "Tank",
-                     breaks = c("1", "2", "3", "4", "5", "6")) +
-  scale_shape_manual(values = c(19, 19, 19, 17, 17, 17),
+                     breaks = c("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9")) +
+  scale_shape_manual(values = c(19, 19, 19, 17, 17, 17, 15, 15, 15),
                      name = "Tank",
-                     breaks = c("1", "2", "3", "4", "5", "6")) +
+                     breaks = c("T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9")) +
   theme_classic(base_size = 15)
 ggsave("figures/time-to-right-tank.pdf", height = 8.5, width = 11)
 ```
@@ -226,39 +235,44 @@ hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
 ## ANOVA
 
 ```{r}
-TTRmodel <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + size + weight + as.factor(missing.legs), data = modTTR) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color, size, weight, and whether or not a crab is missing legs as explanatory variables.
+TTRmodel <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + size + weight + as.factor(missing.swimmer), data = modTTR) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color, size, weight, and whether or not a crab is missing legs as explanatory variables.
 summary(TTRmodel) #Only treatment is significant
 ```
 
 ```{r}
-write.csv(broom::tidy(TTRmodel), "TTR-ANOVA-output.csv", quote = FALSE, row.names = FALSE) #Save table version of ANOVA output
+TTRmodelStep <- step(TTRmodel, direction = "backward") #Use step-wise backwards selection to identify the best fit model
+summary(TTRmodelStep) #Show output from step to identify the best model
+```
+```{r}
+TTRmodelSig <- aov(log(TTRavg) ~ treatment + day + as.factor(integument.color) + size + weight + treatment:day, data = modTTR) #Run the most significant model identified by step
+summary(TTRmodelSig) #Significant impact of treatment, treatment x day, weight, and integument color. Marginally significant influence of size. No impact of day alone
+```
+
+```{r}
+write.csv(broom::tidy(TTRmodelSig), "TTR-ANOVA-output.csv", quote = FALSE, row.names = FALSE) #Save table version of ANOVA output
 ```
 
 ## Check assumptions
 
 ```{r}
-hist(residuals(TTRmodel)) #Residuals normally distributed
+hist(residuals(TTRmodelSig)) #Residuals normally distributed
 
-plot(fitted(TTRmodel), residuals(TTRmodel)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+plot(fitted(TTRmodelSig), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
 abline(h = 0, lty = 2, col = "grey")
 ```
 
 ## Post-hoc tests
 
 ```{r}
-TukeyHSD(TTRmodel, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all pairwise treatment comparisons.
+TukeyHSD(TTRmodelSig, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all pairwise treatment comparisons.
 ```
 
 ```{r}
-write.csv(broom::tidy(TukeyHSD(TTRmodel, "treatment", conf.level = 0.95)), "TTR-ANOVA-treatment-Tukey.csv", quote = FALSE, row.names = FALSE) #Save TukeyHSD output
+write.csv(broom::tidy(TukeyHSD(TTRmodelSig, "treatment", conf.level = 0.95)), "TTR-ANOVA-treatment-Tukey.csv", quote = FALSE, row.names = FALSE) #Save TukeyHSD output
 ```
 
 ```{r}
-pairwise.t.test(x = log(modTTR$TTRavg), modTTR$day, p.adjust.method = "bonferroni") #Use pairwise t-test for quantitative variables. Marginal significance between days 4 and 11.
-```
-
-```{r}
-write.csv(tidy(broom::pairwise.t.test(x = log(modTTR$TTRavg), modTTR$day, p.adjust.method = "bonferroni")), "TTR-ANOVA-day-pairwiset.csv", quote = FALSE, row.names = FALSE) #Save pairwise t-test output
+pairwise.t.test(x = log(modTTR$TTRavg), modTTR$day, p.adjust.method = "bonferroni") #Use pairwise t-test for quantitative variables. Significant difference between days 0-2, 2-7, and all days with day 49
 ```
 
 # Threshold analysis
@@ -281,20 +295,20 @@ head(modTTR) #Confirm changes
 ## Binomial model
 
 ```{r}
-TTRthreshModel <- glm(I(TTRthresh == 1) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + size + weight + as.factor(missing.legs), 
+TTRthreshModel <- glm(I(TTRthresh == 1) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + size + weight + as.factor(missing.swimmer), 
                       family = binomial(), 
                       data = modTTR) #Create a binomial model, where 1 = success of righting wihtin the defined threshold
-summary(TTRthreshModel) #Only the contrast bewteen 5C and 13C control is significant
+summary(TTRthreshModel) #Only weight is significant
 ```
+
 ```{r}
 step(TTRthreshModel, test = "LRT") #Use likelihood ratio tests and backwards deletion approaches to identify the best model
 ```
 
 ```{r}
-TTRthreshModel2 <- glm(I(TTRthresh == 1) ~ treatment + day,
-                       family = binomial(),
-                       data = modTTR) #Run model selected by step with only significant terms
-summary(TTRthreshModel2) #control vs. 5C significantly different, significant impact of day
+TTRthreshModel2 <- glm(formula = I(TTRthresh == 1) ~ treatment + day + as.factor(integument.color) + 
+    weight + treatment:day, family = binomial(), data = modTTR) #Run model selected by step with only significant terms
+summary(TTRthreshModel2) #Only weight significant
 ```
 
 ```{r}
@@ -314,18 +328,18 @@ modTTR %>%
   geom_line(y = boxplot.stats(modTTR$TTRavg)$stats[5], lty = 2, color = "black") +
   scale_x_continuous(name = "Day",
                      breaks = unique(modTTR$day),
-                     limits = c(4, 22)) +
+                     limits = c(0, 49)) +
   scale_y_continuous(name = "Average Time-to-Right (s)",
-                     breaks = c(0, seq(1, 5, 2), seq(5, 20, 5)),
-                     limits = c(0, 17)) +
+                     breaks = c(0, seq(1, 5, 2), seq(5, 10, 5)),
+                     limits = c(0, 10)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   scale_shape_manual(values = c(19, 17, 15),
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) #Plot average TTR and add lm fits without SE bars. Add vertical line for boxplot outlier threshold. Modify x-axis to only show experimental days where TTR was measured. Scale y axis to include 91 = indication that crabs did not right within 90 s. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg.pdf", height = 8.5, width = 11)
 ```
