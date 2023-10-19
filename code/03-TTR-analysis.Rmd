@@ -317,6 +317,8 @@ write.csv(broom::tidy(TTRthreshModel2), "TTR-binomialModel.csv", quote = FALSE, 
 
 # Final plots
 
+## Treatment-level plot
+
 ```{r}
 modTTR %>%
   dplyr::select(., c(day, treatment, TTRavgFull, TTRavgFullLow, TTRavgFullHigh)) %>%
@@ -366,6 +368,6 @@ modTTR %>%
                      name = "Temperature (ºC)",
                      breaks = c("15C", "25C", "5C"),
                      labels = c("15", "25", "5")) +
-  theme_classic(base_size = 15) #Plot average TTR and add lm fits without SE bars. Add vertical line for boxplot outlier threshold. Modify x-axis to only show experimental days where TTR was measured. Scale y axis to include 91 = indication that crabs did not right within 90 s. Assign colors to each treatment. Increase base font size.
+  theme_classic(base_size = 20) #Plot average TTR and add lm fits without SE bars. Add vertical line for boxplot outlier threshold. Modify x-axis to only show experimental days where TTR was measured. Scale y axis to include 91 = indication that crabs did not right within 90 s. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 ```
