@@ -42,7 +42,7 @@ head(rawTTR) #Confirm import. Trial data is in seconds.
 
 ```{r}
 crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
-  select(., c("ID", "treatment", "carapace.width", "carapace.length")) %>%
+  select(., c("ID", "treatment", "carapace.width", "carapace.length", "respirometry")) %>%
   dplyr::rename(crab.ID = "ID") #Import metadata. Select ID, treatment, width and length columns. Rename "ID" as "crab.ID"
 head(crabMetadata) #Confirm changes
 ```
@@ -371,3 +371,87 @@ modTTR %>%
   theme_classic(base_size = 20) #Plot average TTR and add lm fits without SE bars. Add vertical line for boxplot outlier threshold. Modify x-axis to only show experimental days where TTR was measured. Scale y axis to include 91 = indication that crabs did not right within 90 s. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 ```
+
+## Individual-level plot
+
+I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to plot the TTR data from that subset to visualize the individual variation within each treatment, and how that may or may not change over time.
+
+```{r}
+head(modTTR)
+```
+
+```{r}
+modTTR %>%
+  filter(., respirometry == "Y") %>%
+  select(., crab.ID) %>%
+  unique(.) %>%
+  nrow(.) #Sanity check: 27 crabs used for TTR and respirometry
+```
+
+```{r}
+modTTR %>%
+  filter(., respirometry == "Y") %>%
+  dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg)) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment == "15C" ~ "15C",
+                                  treatment == "25C" ~ "25C")) %>%
+  ggplot(., mapping = aes(x = day, y = TTRavg, group = crab.ID, color = treatment, shape = treatment)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(treatment, tank), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Individual Time-to-Right (s)",
+                     breaks = c(0, seq(1, 5, 2), seq(5, 15, 5))) +
+  # scale_y_continuous(name = "Average Time-to-Right (s)") +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot TTR for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment.
+ggsave("figures/time-to-right-avg-individuals.pdf", height = 8.5, width = 11)
+```
+
+I also want to look at difference in TTR over time by looking at the difference in TTR from the average.
+
+```{r}
+modTTR %>%
+  filter(., respirometry == "Y") %>%
+  dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull)) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment == "15C" ~ "15C",
+                                  treatment == "25C" ~ "25C")) %>%
+  ggplot(., mapping = aes(x = day, y = TTRavgFull - TTRavg, group = crab.ID, color = treatment, shape = treatment)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(treatment, tank), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference in Time-to-Right (s)",
+                     breaks = seq(-10, 5, 5)) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference in individual TTR from average TTR for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment.
+ggsave("figures/time-to-right-avg-individuals-diff.pdf", height = 8.5, width = 11)
+```
+
+
+# TO DO LIST
+
+- individual tracking through time
+- difference in TTR over time for tracked individuals
+  - calculate change from previous measurement
+  
+  
