@@ -627,83 +627,107 @@ dat20230705mod %>%
   ungroup(.) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
   scale_y_continuous(breaks = seq(80, 100, 10), 
                      limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
 ```
 
-Tank 1 has some weird anomalies...
+There are a couple of anomalies that need to be removed. Also, looks like probe 2 on tanks 8 and 6 have recorded values < 80 before actual measurements start, which is why that data has disappeared I have empty (or almost empty) plots. I'll need to deal with those values BEFORE I remove the measurements after the "first" 80% air saturation hit.
 
 ```{r}
-dat20230708mod %>%
-  filter(., tank == "tank1") %>%
+dat20230705mod %>%
   filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank9") %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 91)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 1)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 99)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 91, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 99, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (s)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  #scale_x_continuous(limits = c(95, 100)) +
+  # scale_y_continuous(breaks = seq(95, 100, 1), 
+  #                     limits = c(95, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line())
 ```
 
-...and so does Tank 6
-
 ```{r}
-dat20230708mod %>%
-  filter(., tank == "tank3") %>%
-  filter(., perc_air_sat <= 100) %>% 
+dat20230705clean <- dat20230705mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 82)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 168)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
-  geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (s)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
-  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
-  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line())
-```
-
-These are likely due to air bubbles or starting recording before the crabs were fully set up. I am going to remove these measurements.
-
-```{r}
-dat20230708clean <- dat20230708mod %>%
-  filter(., perc_air_sat <= 100) %>% 
-  group_by(tank, probe_num) %>%
-  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
-  ungroup(.) %>%
-  filter(., !(tank == "tank1" & probe_num == 1 & dt_s < 870)) %>%
-  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 1125)) %>%
-  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 1216)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 35)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 1, dt_s - 870, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 1125, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 1216, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 35, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 65)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 114)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 218)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 151)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 140)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 5)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 208)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 71)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 155)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 14)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 97)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 130)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 375)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 170)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 77)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 1)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 41)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 1)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 185)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 356)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 90)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 91)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 1)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 99)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 65, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 114, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 218, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 151, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 140, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 5, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 208, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 71, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 155, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 14, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 97, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 82, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 77, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 130, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 375, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 170, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 41, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 185, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 168, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 356, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 91, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 99, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -713,28 +737,72 @@ dat20230708clean <- dat20230708mod %>%
                      limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Check for values where tank == tank 1, probe_num == 1, and dt_s <= 870 Use the sub-conditions in parentheses and negate the condition with ! to retain all rows that don't meet this condition, but modify values for tank 1, probe 1. Do something similar such that tank 1, probe 2 starts at 1125 and tank 1, probe 3 starts at dt_s = 1216. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
-dat20230708clean
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
+dat20230705clean
 ggsave("figures/2023-07-05-perc-air-sat-clean.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
-dat20230708cleanDOumol <- dat20230708mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+dat20230705cleanDOumol <- dat20230705mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 82)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 168)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "tank1" & probe_num == 1 & dt_s < 870)) %>%
-  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 1125)) %>%
-  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 1216)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 35)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 1, dt_s - 870, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 1125, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 1216, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 35, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 65)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 114)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 218)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 151)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 140)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 5)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 208)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 71)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 155)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 14)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 97)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 130)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 375)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 170)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 77)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 1)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 41)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 1)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 185)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 356)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 90)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 91)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 1)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 99)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 65, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 114, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 218, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 151, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 140, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 5, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 208, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 71, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 155, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 14, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 97, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 82, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 77, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 130, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 375, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 170, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 41, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 185, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 168, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 356, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 91, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 1, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 99, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
@@ -744,102 +812,98 @@ dat20230708cleanDOumol <- dat20230708mod %>%
                      limits = c(150, 350)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Check for values where tank == tank 1, probe_num == 1, and dt_s <= 870 Use the sub-conditions in parentheses and negate the condition with ! to retain all rows that don't meet this condition, but modify values for tank 1, probe 1. Do something similar such that tank 1, probe 2 starts at 1125 and tank 1, probe 3 starts at dt_s = 1216. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
-dat20230708cleanDOumol
+                                        axis.line = element_line()) #Same figure but with DO values
+dat20230705cleanDOumol
 ggsave("figures/2023-07-05-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
 ```
 
 ## 2023-07-12
 
+Tanks 5, 1, and 4 need probe 2 to be filtered prior to removing values after hitting 80 the first time.
+
 ```{r}
 dat20230712mod %>%
   filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank9") %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 170)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 94)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 61)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 170, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 61, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
+  #scale_x_continuous(limits = c(170, 175)) +
+  # scale_y_continuous(breaks = seq(80, 100, 1),
+  #                     limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
-  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line())
-```
-
-Once again removing any anomalies (i.e. time recorded prior to the addition of crabs) from all tanks/probes.
-
-```{r}
-dat20230712mod %>%
-  filter(., perc_air_sat <= 100) %>%
-  group_by(tank, probe_num) %>%
-  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
-  ungroup(.) %>%
-  filter(., tank == "tank6") %>%
-  filter(., dt_s >= 271) %>%
-  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
-  geom_point(size = 0.5) +
-  #geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
-  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line())
 ```
 
 ```{r}
 dat20230712clean <- dat20230712mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 78)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 314)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 221)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "tank1" & probe_num == 1 & dt_s < 180)) %>%
-  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 180)) %>%
-  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 257)) %>%
-  filter(., !(tank == "tank2" & probe_num == 1 & dt_s < 267)) %>%
-  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 411)) %>%
-  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 842)) %>%
-  filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 305)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 246)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 240)) %>%
-  filter(., !(tank == "tank4" & probe_num == 1 & dt_s < 278)) %>%
-  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 132)) %>%
-  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 347)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 577)) %>%
-  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 219)) %>%
-  filter(., !(tank == "tank6" & probe_num == 1 & dt_s < 271)) %>%
-  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 268)) %>%
-  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 248)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 1, dt_s - 180, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 180, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 257, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 1, dt_s - 267, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 411, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 842, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 1, dt_s - 305, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 246, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 240, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 1, dt_s - 278, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 132, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 347, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 577, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 219, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 1, dt_s - 271, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 268, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 248, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 124)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 173)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 54)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 241)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 218)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 241)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 575)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 162)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 240)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 36)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 99)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 126)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 178)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 87)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 42)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 170)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 94)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 61)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 78, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 124, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 173, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 54, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 241, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 218, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 241, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 314, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 575, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 221, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 162, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 240, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 36, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 99, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 126, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 178, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 87, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 170, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 61, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -849,54 +913,66 @@ dat20230712clean <- dat20230712mod %>%
                      limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
 dat20230712clean
 ggsave("figures/2023-07-12-perc-air-sat-clean.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
 dat20230712cleanDOumol <- dat20230712mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 78)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 314)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 221)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "tank1" & probe_num == 1 & dt_s < 180)) %>%
-  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 180)) %>%
-  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 257)) %>%
-  filter(., !(tank == "tank2" & probe_num == 1 & dt_s < 267)) %>%
-  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 411)) %>%
-  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 842)) %>%
-  filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 305)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 246)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 240)) %>%
-  filter(., !(tank == "tank4" & probe_num == 1 & dt_s < 278)) %>%
-  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 132)) %>%
-  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 347)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 577)) %>%
-  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 219)) %>%
-  filter(., !(tank == "tank6" & probe_num == 1 & dt_s < 271)) %>%
-  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 268)) %>%
-  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 248)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 1, dt_s - 180, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 180, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 257, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 1, dt_s - 267, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 411, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 842, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 1, dt_s - 305, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 246, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 240, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 1, dt_s - 278, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 132, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 347, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 577, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 219, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 1, dt_s - 271, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 268, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 248, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 124)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 173)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 54)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 241)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 218)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 241)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 575)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 162)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 240)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 36)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 99)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 126)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 178)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 87)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 42)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 170)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 94)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 61)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 78, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 124, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 173, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 54, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 241, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 218, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 241, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 314, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 575, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 221, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 162, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 240, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 36, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 99, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 126, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 178, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 87, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 170, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 61, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
@@ -906,90 +982,106 @@ dat20230712cleanDOumol <- dat20230712mod %>%
                      limits = c(150, 350)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Same figure but with DO values
 dat20230712cleanDOumol
 ggsave("figures/2023-07-12-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
 ```
 
 ## 2023-07-19
 
-```{r}
-dat20230719mod %>%
-  filter(., perc_air_sat <= 100) %>% 
-  group_by(tank, probe_num) %>%
-  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
-  ungroup(.) %>%
-  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
-  geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
-  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
-  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line())
-```
+Probe 2 for tanks 9, 1, and 4 have values that need to be removed first. Why is it always probe 2?!
 
 ```{r}
 dat20230719mod %>%
-  filter(., perc_air_sat <= 100) %>%
+  filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank8") %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., tank == "Tank_4" & probe_num == 3) %>%
-  filter(., dt_s >= 130) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 63)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 142)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 214)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 63, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 142, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 214, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
-  #geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
+  #scale_x_continuous(limits = c(210, 215)) +
+  # scale_y_continuous(breaks = seq(80, 100, 1),
+  #                     limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line())
 ```
 
 ```{r}
 dat20230719clean <- dat20230719mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 26)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 40)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 1 & dt_s < 52)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 2 & dt_s < 181)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 3 & dt_s < 101)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 1 & dt_s < 203)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 2 & dt_s < 224)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 3 & dt_s < 394)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 1 & dt_s < 102)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 2 & dt_s < 18)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 3 & dt_s < 130)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 1 & dt_s < 149)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 2 & dt_s < 280)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 3 & dt_s < 281)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 1, dt_s - 52, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 2, dt_s - 181, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 3, dt_s - 101, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 1, dt_s - 203, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 2, dt_s - 224, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 3, dt_s - 394, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 1, dt_s - 102, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 2, dt_s - 18, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 3, dt_s - 130, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 1, dt_s - 149, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 2, dt_s - 280, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 3, dt_s - 281, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 90)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 126)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 120)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 174)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 188)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 112)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 280)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 320)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 91)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 56)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 55)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 70)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 70)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 130)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 41)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 92)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 146)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 63)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 142)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 214)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 90)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 151)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 26, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 126, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 120, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 174, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 188, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 112, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 280, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 320, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 91, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 56, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 55, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 130, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 41, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 92, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 146, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 63, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 142, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 214, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 40, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 151, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -999,149 +1091,181 @@ dat20230719clean <- dat20230719mod %>%
                      limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
 dat20230719clean
 ggsave("figures/2023-07-19-perc-air-sat-clean.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
 dat20230719cleanDOumol <- dat20230719mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 26)) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 40)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 1 & dt_s < 52)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 2 & dt_s < 181)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 3 & dt_s < 101)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 1 & dt_s < 203)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 2 & dt_s < 224)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 3 & dt_s < 394)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 1 & dt_s < 102)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 2 & dt_s < 18)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 3 & dt_s < 130)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 1 & dt_s < 149)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 2 & dt_s < 280)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 3 & dt_s < 281)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 1, dt_s - 52, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 2, dt_s - 181, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 3, dt_s - 101, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 1, dt_s - 203, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 2, dt_s - 224, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 3, dt_s - 394, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 1, dt_s - 102, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 2, dt_s - 18, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 3, dt_s - 130, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 1, dt_s - 149, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 2, dt_s - 280, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 3, dt_s - 281, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 90)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 126)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 120)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 174)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 42)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 188)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 112)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 280)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 320)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 91)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 56)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 55)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 70)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 70)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 130)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 41)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 92)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 146)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 63)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 142)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 214)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 90)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 151)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 26, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 126, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 120, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 174, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 188, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 112, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 42, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 280, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 320, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 91, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 56, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 55, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 130, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 41, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 92, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 146, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 63, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 142, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 214, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 40, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 151, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
   xlab("Time (min)") + ylab("Dissolved Oxygen (µmol)") +
   scale_y_continuous(breaks = seq(100, 350, 50), 
                      limits = c(150, 350)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Same figure but with DO values
 dat20230719cleanDOumol
 ggsave("figures/2023-07-19-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
 ```
 
 ## 2023-07-26
 
-```{r}
-dat20230726mod %>%
-  filter(., perc_air_sat <= 100) %>% 
-  group_by(tank, probe_num) %>%
-  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
-  ungroup(.) %>%
-  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
-  geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
-  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
-  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line())
-```
+Tank 5 probe 4 and tank 7 probe 2 need to be cleaned first.
 
 ```{r}
 dat20230726mod %>%
-  filter(., perc_air_sat <= 100) %>%
+  filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank9") %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., tank == "Tank_4" & probe_num == 3) %>%
-  filter(., dt_s >= 99) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 80)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 158)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 80, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 158, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
-  #geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
+ # scale_x_continuous(limits = c(155,160)) +
+  scale_y_continuous(breaks = seq(80, 100, 10),
+                       limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line())
 ```
 
 ```{r}
 dat20230726clean <- dat20230726mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 399)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 75)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 1 & dt_s < 39)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 2 & dt_s < 89)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 3 & dt_s < 110)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 1 & dt_s < 319)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 2 & dt_s < 720)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 3 & dt_s < 404)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 1 & dt_s < 328)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 2 & dt_s < 403)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 3 & dt_s < 237)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 1 & dt_s < 32)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 2 & dt_s < 83)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 3 & dt_s < 99)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 1 & dt_s < 212)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 2 & dt_s < 141)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 3 & dt_s < 208)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 1 & dt_s < 234)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 2 & dt_s < 268)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 3 & dt_s < 222)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 1, dt_s - 39, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 2, dt_s - 89, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 3, dt_s - 110, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 1, dt_s - 319, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 2, dt_s - 720, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 3, dt_s - 404, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 1, dt_s - 328, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 2, dt_s - 403, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 3, dt_s - 237, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 1, dt_s - 32, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 2, dt_s - 83, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 3, dt_s - 99, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 1, dt_s - 212, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 2, dt_s - 141, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 3, dt_s - 208, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 1, dt_s - 234, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 2, dt_s - 268, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 3, dt_s - 222, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 207)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 262)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 865)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 37)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 47)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 90)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 38)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 82)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 108)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 156)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 154)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 47)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 83)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 20)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 92)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 117)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 31)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 103)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 25)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 66)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 94)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 80)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 158)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 207, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 262, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 865, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 37, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 47, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 38, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 82, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 108, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 156, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 154, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 47, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 83, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 399, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 20, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 92, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 117, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 75, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 31, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 103, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 25, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 66, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 80, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 158, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -1151,77 +1275,380 @@ dat20230726clean <- dat20230726mod %>%
                      limits = c(80, 100)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
 dat20230726clean
 ggsave("figures/2023-07-26-perc-air-sat-clean.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
 dat20230726cleanDOumol <- dat20230726mod %>%
-  filter(., perc_air_sat <= 100) %>% 
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 399)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 75)) %>%
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
   ungroup(.) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 1 & dt_s < 39)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 2 & dt_s < 89)) %>%
-  filter(., !(tank == "Tank_1" & probe_num == 3 & dt_s < 110)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 1 & dt_s < 319)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 2 & dt_s < 720)) %>%
-  filter(., !(tank == "Tank_2" & probe_num == 3 & dt_s < 404)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 1 & dt_s < 328)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 2 & dt_s < 403)) %>%
-  filter(., !(tank == "Tank_3" & probe_num == 3 & dt_s < 237)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 1 & dt_s < 32)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 2 & dt_s < 83)) %>%
-  filter(., !(tank == "Tank_4" & probe_num == 3 & dt_s < 99)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 1 & dt_s < 212)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 2 & dt_s < 141)) %>%
-  filter(., !(tank == "Tank_5" & probe_num == 3 & dt_s < 208)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 1 & dt_s < 234)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 2 & dt_s < 268)) %>%
-  filter(., !(tank == "Tank_6" & probe_num == 3 & dt_s < 222)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 1, dt_s - 39, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 2, dt_s - 89, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1" & probe_num == 3, dt_s - 110, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 1, dt_s - 319, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 2, dt_s - 720, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2" & probe_num == 3, dt_s - 404, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 1, dt_s - 328, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 2, dt_s - 403, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3" & probe_num == 3, dt_s - 237, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 1, dt_s - 32, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 2, dt_s - 83, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4" & probe_num == 3, dt_s - 99, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 1, dt_s - 212, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 2, dt_s - 141, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5" & probe_num == 3, dt_s - 208, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 1, dt_s - 234, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 2, dt_s - 268, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6" & probe_num == 3, dt_s - 222, dt_s)) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 207)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 262)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 865)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 37)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 47)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 90)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 38)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 82)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 108)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 156)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 154)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 47)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 83)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 20)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 92)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 117)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 31)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 103)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 25)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 66)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 94)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 80)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 138)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 158)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 207, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 262, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 865, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 37, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 47, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 90, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 38, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 82, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 108, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 156, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 154, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 47, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 83, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 399, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 20, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 92, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 117, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 75, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 31, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 103, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 25, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 66, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 80, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 138, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 158, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
   geom_point(size = 0.5) +
-  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
   xlab("Time (min)") + ylab("Dissolved Oxygen (µmol)") +
   scale_y_continuous(breaks = seq(100, 350, 50), 
                      limits = c(150, 350)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line()) #Filter all air saturation values above 100. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. Remove recording anomalies. Use an ifelse statement within mutate to change dt_s for tank 1 based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides two columns per treatment.
+                                        axis.line = element_line()) #Same figure but with DO values
 dat20230726cleanDOumol
 ggsave("figures/2023-07-26-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
 ```
 
-
 ## 2023-08-09
 
+```{r}
+dat20230809mod %>%
+  filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank7") %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 250)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 270)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 160)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 250, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 270, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 160, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  #scale_x_continuous(limits = c(125,150)) +
+  scale_y_continuous(breaks = seq(80, 100, 10),
+                       limits = c(80, 100)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line())
+```
+
+```{r}
+dat20230809clean <- dat20230809mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 150)) %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 56)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 110)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 140)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 70)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 200)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 192)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 43)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 180)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 185)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 175)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 228)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 40)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 111)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 87)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 117)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 124)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 160)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 250)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 270)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 160)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 94)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 160)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 196)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 157)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 115)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 170)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 56, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 110, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 140, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 200, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 192, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 43, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 180, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 185, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 150, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 175, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 228, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 40, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 111, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 87, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 117, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 124, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 250, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 270, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 196, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 157, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 115, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 170, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_y_continuous(breaks = seq(80, 100, 10), 
+                     limits = c(80, 100)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
+dat20230809clean
+ggsave("figures/2023-08-09-perc-air-sat-clean.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+dat20230809cleanDOumol <- dat20230809mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 150)) %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 56)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 110)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 140)) %>%
+  filter(., !(tank == "tank2" & probe_num == 2 & dt_s < 70)) %>%
+  filter(., !(tank == "tank2" & probe_num == 3 & dt_s < 200)) %>%
+  filter(., !(tank == "tank2" & probe_num == 4 & dt_s < 192)) %>%
+  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 43)) %>%
+  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 180)) %>%
+  filter(., !(tank == "tank3" & probe_num == 4 & dt_s < 185)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 175)) %>%
+  filter(., !(tank == "tank4" & probe_num == 4 & dt_s < 228)) %>%
+  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 40)) %>%
+  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 111)) %>%
+  filter(., !(tank == "tank5" & probe_num == 4 & dt_s < 87)) %>%
+  filter(., !(tank == "tank6" & probe_num == 2 & dt_s < 117)) %>%
+  filter(., !(tank == "tank6" & probe_num == 3 & dt_s < 124)) %>%
+  filter(., !(tank == "tank6" & probe_num == 4 & dt_s < 160)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 250)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 270)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 160)) %>%
+  filter(., !(tank == "tank8" & probe_num == 2 & dt_s < 94)) %>%
+  filter(., !(tank == "tank8" & probe_num == 3 & dt_s < 160)) %>%
+  filter(., !(tank == "tank8" & probe_num == 4 & dt_s < 196)) %>%
+  filter(., !(tank == "tank9" & probe_num == 2 & dt_s < 157)) %>%
+  filter(., !(tank == "tank9" & probe_num == 3 & dt_s < 115)) %>%
+  filter(., !(tank == "tank9" & probe_num == 4 & dt_s < 170)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 56, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 110, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 140, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 2, dt_s - 70, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 3, dt_s - 200, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2" & probe_num == 4, dt_s - 192, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 43, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 180, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 4, dt_s - 185, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 150, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 175, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 4, dt_s - 228, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 40, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 111, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 4, dt_s - 87, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 2, dt_s - 117, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 3, dt_s - 124, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6" & probe_num == 4, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 250, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 270, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 2, dt_s - 94, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 3, dt_s - 160, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8" & probe_num == 4, dt_s - 196, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 2, dt_s - 157, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 3, dt_s - 115, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9" & probe_num == 4, dt_s - 170, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Dissolved Oxygen (µmol)") +
+  scale_y_continuous(breaks = seq(100, 350, 50), 
+                     limits = c(150, 350)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Same figure but with DO values
+dat20230809cleanDOumol
+ggsave("figures/2023-08-09-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
+```
+
 ## 2023-08-16
+
+```{r}
+dat20230816mod %>%
+  filter(., perc_air_sat <= 100) %>% 
+  filter(., tank == "tank7") %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 101)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 120)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 135)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 101, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 120, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 135, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+ # scale_x_continuous(limits = c(115,120)) +
+  scale_y_continuous(breaks = seq(80, 100, 10),
+                       limits = c(80, 100)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line())
+```
+
+```{r}
+dat20230816clean <- dat20230816mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 525)) %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 38)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 168)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 207)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 515)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 101)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 120)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 135)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 38, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 168, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 207, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 525, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 515, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 101, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 120, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 135, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_y_continuous(breaks = seq(80, 100, 10), 
+                     limits = c(80, 100)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Filter all air saturation values above 100. Remove values that reach 80 before actual recording starts. Group by tank and probe. Create a conditional to remove all rows after perc_air_sat reaches 80 for the first time. perc_air_sat <= 80 is a logical vector, where TRUE = 0 and FALSE = 80. cumsum calculates the cumulative sum of the logical vector. Once perc_air_sat <= 80 is FALSE, a 1 gets recorded for the cumsum. This effectively removes all rows after 80 is hit for the first time. Use filter statements to remove data from beginning of run where recording starts prior to setting up chambers. Use an ifelse statement within mutate to change dt_s for the tank/probe combination based on the actual dt_s start time. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. Use scales = free_x to have x-axes that vary across tanks. This provides three columns per treatment.
+dat20230816clean
+ggsave("figures/2023-08-16-perc-air-sat-clean.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+dat20230816cleanDOumol <- dat20230816mod %>%
+  filter(., perc_air_sat <= 100) %>%
+  filter(., !(tank == "tank4" & probe_num == 2 & dt_s < 525)) %>%
+  group_by(tank, probe_num) %>%
+  filter(., cumsum(perc_air_sat <= 80) == 0) %>%
+  ungroup(.) %>%
+  filter(., !(tank == "tank1" & probe_num == 2 & dt_s < 38)) %>%
+  filter(., !(tank == "tank1" & probe_num == 3 & dt_s < 168)) %>%
+  filter(., !(tank == "tank1" & probe_num == 4 & dt_s < 207)) %>%
+  filter(., !(tank == "tank4" & probe_num == 3 & dt_s < 515)) %>%
+  filter(., !(tank == "tank7" & probe_num == 2 & dt_s < 101)) %>%
+  filter(., !(tank == "tank7" & probe_num == 3 & dt_s < 120)) %>%
+  filter(., !(tank == "tank7" & probe_num == 4 & dt_s < 135)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 38, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 168, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 4, dt_s - 207, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 2, dt_s - 525, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4" & probe_num == 3, dt_s - 515, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 2, dt_s - 101, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 3, dt_s - 120, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7" & probe_num == 4, dt_s - 135, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = DO_umol_L, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Dissolved Oxygen (µmol)") +
+  scale_y_continuous(breaks = seq(100, 350, 50), 
+                     limits = c(150, 350)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Same figure but with DO values
+dat20230816cleanDOumol
+ggsave("figures/2023-08-16-perc-air-sat-clean-DOumol.pdf", height = 8.5, width = 11)
+```
 
 # Extract slopes
 
@@ -1230,7 +1657,7 @@ Now that I have my data cleaned, I need to get the regression slopes for each li
 ## 2023-07-05
 
 ```{r}
-dat20230708data <- dat20230708mod %>%
+dat20230705data <- dat20230705mod %>%
   filter(., perc_air_sat <= 100) %>% 
   group_by(tank, probe_num) %>%
   filter(., cumsum(perc_air_sat <= 80) == 0) %>%
@@ -1243,37 +1670,37 @@ dat20230708data <- dat20230708mod %>%
   mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 2, dt_s - 1125, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank1" & probe_num == 3, dt_s - 1216, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 35, dt_s)) #Save cleaned data as a new object
-head(dat20230708data) #Confirm object creation
+head(dat20230705data) #Confirm object creation
 ```
 
 ```{r}
-dat20230708_MO2_slopes <- dat20230708data %>%
+dat20230705_MO2_slopes <- dat20230705data %>%
   nest(data = -c(treatment, tank, probe_num)) %>%
   mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
   mutate(tidied = map(fit, tidy)) %>%
   unnest(tidied) #Create a list object that stores the regression results for each chamber. Nest data by treatment, tank, and probe number so the regression slopes are calculated appropriately. Use map to extract linear model fit information for DO_umol_L by time. Extract slopes using broom::tidy and unnest.
-dat20230708_MO2_slopes #Confirm dataframe creation
+dat20230705_MO2_slopes #Confirm dataframe creation
 ```
 ```{r}
-dat20230708_MO2_glance <- dat20230708data %>%
+dat20230705_MO2_glance <- dat20230705data %>%
   nest(data = -c(treatment, tank, probe_num)) %>%
   mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
   mutate(glanced = map(fit, glance)) %>%
   unnest(glanced) #Similar to above, but calculate the adjusted R-squared values by nesting treatment and probe information
-dat20230708_MO2_glance #Confirm dataframe creation
+dat20230705_MO2_glance #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_slope_results <- dat20230708_MO2_slopes %>%
+dat20230705_MO2_slope_results <- dat20230705_MO2_slopes %>%
   filter(term == "dt_s") %>%
   mutate(slope_nmol_hr = estimate*1000*60) %>%
   dplyr::select(treatment, tank, probe_num, slope_nmol_hr, p.value) %>%
-  mutate(r.squared = (dat20230708_MO2_glance$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
-dat20230708_MO2_slope_results #Confirm dataframe creation
+  mutate(r.squared = (dat20230705_MO2_glance$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
+dat20230705_MO2_slope_results #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_slope_results %>%
+dat20230705_MO2_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
@@ -1543,7 +1970,7 @@ Next step: I need to extract data from the last 10-20 minutes of each chamber. T
 ## 2023-07-05
 
 ```{r}
-dat20230708mod %>%
+dat20230705mod %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
@@ -1558,7 +1985,7 @@ dat20230708mod %>%
 ```
 
 ```{r}
-dat20230708mod %>%
+dat20230705mod %>%
   filter(., !(tank == "tank1" & dt_s < 3505)) %>%
   filter(., !(tank == "tank2" & dt_s < 4480)) %>%
   filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 840)) %>%
@@ -1595,7 +2022,7 @@ dat20230708mod %>%
 ```
 
 ```{r}
-dat20230708blanks <- dat20230708mod %>%
+dat20230705blanks <- dat20230705mod %>%
   filter(., !(tank == "tank1" & dt_s < 3505)) %>%
   filter(., !(tank == "tank2" & dt_s < 4480)) %>%
   filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 840)) %>%
@@ -1618,51 +2045,51 @@ dat20230708blanks <- dat20230708mod %>%
   mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 6585, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 7920, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank6", dt_s - 882, dt_s))
-head(dat20230708blanks) #Confirm dataframe creation
+head(dat20230705blanks) #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_slopes_blanks <- dat20230708blanks %>%
+dat20230705_MO2_slopes_blanks <- dat20230705blanks %>%
   nest(data = -c(treatment, tank, probe_num)) %>%
   mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
   mutate(tidied = map(fit, tidy)) %>%
   unnest(tidied) #Create a list object that stores the regression results for each chamber. Nest data by treatment, tank, and probe number so the regression slopes are calculated appropriately. Use map to extract linear model fit information for DO_umol_L by time. Extract slopes using broom::tidy and unnest.
-dat20230708_MO2_slopes_blanks #Confirm dataframe creation
+dat20230705_MO2_slopes_blanks #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_glance_blanks <- dat20230708blanks %>%
+dat20230705_MO2_glance_blanks <- dat20230705blanks %>%
   nest(data = -c(treatment, tank, probe_num)) %>%
   mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
   mutate(glanced = map(fit, glance)) %>%
   unnest(glanced) #Similar to above, but calculate the adjusted R-squared values by nesting treatment and probe information
-dat20230708_MO2_glance_blanks #Confirm dataframe creation
+dat20230705_MO2_glance_blanks #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_slopes_blanks_results <- dat20230708_MO2_slopes_blanks %>%
+dat20230705_MO2_slopes_blanks_results <- dat20230705_MO2_slopes_blanks %>%
   filter(term == "dt_s") %>%
   mutate(slope_nmol_hr = estimate*1000*60) %>%
   dplyr::select(treatment, tank, probe_num, slope_nmol_hr, p.value) %>%
-  mutate(r.squared = (dat20230708_MO2_glance_blanks$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
-dat20230708_MO2_slopes_blanks_results #Confirm dataframe creation
+  mutate(r.squared = (dat20230705_MO2_glance_blanks$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
+dat20230705_MO2_slopes_blanks_results #Confirm dataframe creation
 ```
 
 ```{r}
-dat20230708_MO2_all_slope_results <- dat20230708_MO2_slope_results %>%
-  left_join(., dat20230708_MO2_slopes_blanks_results, by = c("treatment", "tank", "probe_num"), suffix = c("", "_blank")) %>%
-  mutate(., slope_nmol_hr_corrected = slope_nmol_hr - dat20230708_MO2_slopes_blanks_results$slope_nmol_hr) %>%
+dat20230705_MO2_all_slope_results <- dat20230705_MO2_slope_results %>%
+  left_join(., dat20230705_MO2_slopes_blanks_results, by = c("treatment", "tank", "probe_num"), suffix = c("", "_blank")) %>%
+  mutate(., slope_nmol_hr_corrected = slope_nmol_hr - dat20230705_MO2_slopes_blanks_results$slope_nmol_hr) %>%
   mutate(., blank_ratio = abs(slope_nmol_hr_blank / slope_nmol_hr)) #Join dataframes by treatment, tank, and probe_num. Create a new column for the the corrected slope (uncorrected slope - blank slope) and the blank ratio (blank / uncorrected slope)
-dat20230708_MO2_all_slope_results
+dat20230705_MO2_all_slope_results
 ```
 
 ```{r}
-write.csv(dat20230708_MO2_all_slope_results, "20220708-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
+write.csv(dat20230705_MO2_all_slope_results, "20220708-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
 ```
 
 
 ```{r}
-dat20230708_MO2_slope_results %>%
+dat20230705_MO2_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
@@ -2044,13 +2471,13 @@ ggsave("figures/2023-07-26-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 ## Between treatments within a timepoint
 
 ```{r}
-hist(-(dat20230708_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
-hist(log(-(dat20230708_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
-hist(sqrt(-(dat20230708_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
+hist(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
+hist(log(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
+hist(sqrt(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
 ```
 
 ```{r}
-lm20220708 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230708_MO2_slope_results)
+lm20220708 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230705_MO2_slope_results)
 summary(lm20220708)
 ```
 
@@ -2133,7 +2560,7 @@ head(demTTRdata) #Confirm dataframe creation
 ```
 
 ```{r}
-all_MO2_slope_results <- bind_rows("04" = dat20230708_MO2_all_slope_results,
+all_MO2_slope_results <- bind_rows("04" = dat20230705_MO2_all_slope_results,
                                    "08" = dat20230712_MO2_all_slope_results,
                                    "15" = dat20230719_MO2_all_slope_results,
                                    "22" = dat20230726_MO2_all_slope_results, 
