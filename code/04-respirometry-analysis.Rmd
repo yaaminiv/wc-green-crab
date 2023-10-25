@@ -2242,43 +2242,41 @@ Next step: I need to extract data from the last 10-20 minutes of each chamber. T
 
 ```{r}
 dat20230705mod %>%
-  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  #filter(., tank == "tank9") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+ #scale_x_continuous(limits = c(725, 1925)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
 ```
 
 ```{r}
 dat20230705mod %>%
-  filter(., !(tank == "tank1" & dt_s < 3505)) %>%
-  filter(., !(tank == "tank2" & dt_s < 4480)) %>%
-  filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 840)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 710)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s > 1310)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 840)) %>%
-  filter(., !(tank == "tank4" & dt_s < 3105)) %>%
-  filter(., !(tank == "tank5" & probe_num == 1 & dt_s < 7920)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 6585)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s > 7185)) %>%
-  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 7920)) %>%
-  filter(., !(tank == "tank6" & dt_s < 882)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3505, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 4480, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 1, dt_s - 840, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 710, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 840, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3105, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 1, dt_s - 7920, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 6585, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 7920, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 882, dt_s)) %>%
+  filter(., !(tank == "tank1" & dt_s < 3900)) %>%
+  filter(., !(tank == "tank2" & dt_s < 3480)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2360)) %>%
+  filter(., !(tank == "tank4" & dt_s < 6310)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2649)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1236)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4895)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2347)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1325)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3900, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 3480, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2360, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 6310, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2649, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1236, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4895, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2347, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1325, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -2294,28 +2292,24 @@ dat20230705mod %>%
 
 ```{r}
 dat20230705blanks <- dat20230705mod %>%
-  filter(., !(tank == "tank1" & dt_s < 3505)) %>%
-  filter(., !(tank == "tank2" & dt_s < 4480)) %>%
-  filter(., !(tank == "tank3" & probe_num == 1 & dt_s < 840)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s < 710)) %>%
-  filter(., !(tank == "tank3" & probe_num == 2 & dt_s > 1310)) %>%
-  filter(., !(tank == "tank3" & probe_num == 3 & dt_s < 840)) %>%
-  filter(., !(tank == "tank4" & dt_s < 3105)) %>%
-  filter(., !(tank == "tank5" & probe_num == 1 & dt_s < 7920)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s < 6585)) %>%
-  filter(., !(tank == "tank5" & probe_num == 2 & dt_s > 7185)) %>%
-  filter(., !(tank == "tank5" & probe_num == 3 & dt_s < 7920)) %>%
-  filter(., !(tank == "tank6" & dt_s < 882)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3505, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 4480, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 1, dt_s - 840, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 2, dt_s - 710, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3" & probe_num == 3, dt_s - 840, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3105, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 1, dt_s - 7920, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 2, dt_s - 6585, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5" & probe_num == 3, dt_s - 7920, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 882, dt_s))
+  filter(., !(tank == "tank1" & dt_s < 3900)) %>%
+  filter(., !(tank == "tank2" & dt_s < 3480)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2360)) %>%
+  filter(., !(tank == "tank4" & dt_s < 6310)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2649)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1236)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4895)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2347)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1325)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3900, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 3480, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2360, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 6310, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2649, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1236, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4895, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2347, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1325, dt_s))
 head(dat20230705blanks) #Confirm dataframe creation
 ```
 
@@ -2355,12 +2349,12 @@ dat20230705_MO2_all_slope_results
 ```
 
 ```{r}
-write.csv(dat20230705_MO2_all_slope_results, "20220708-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
+write.csv(dat20230705_MO2_all_slope_results, "20230705-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
 ```
 
 
 ```{r}
-dat20230705_MO2_slope_results %>%
+dat20230705_MO2_all_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
@@ -2376,33 +2370,41 @@ ggsave("figures/2023-07-05-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 
 ```{r}
 dat20230712mod %>%
-  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  filter(., tank == "tank9") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_x_continuous(limits = c(1311,1911)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
 ```
 
 ```{r}
 dat20230712mod %>%
-  filter(., !(tank == "tank1" & dt_s < 1686)) %>%
-  filter(., !(tank == "tank2" & dt_s < 4710)) %>%
-  filter(., !(tank == "tank3" & dt_s < 602)) %>%
-  filter(., !(tank == "tank4" & dt_s < 3186)) %>%
-  filter(., !(tank == "tank5" & dt_s < 5088)) %>%
-  filter(., !(tank == "tank6" & dt_s < 1006)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 1686, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 4710, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 602, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3186, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 5088, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1006, dt_s)) %>%
+  filter(., !(tank == "tank1" & dt_s < 4728)) %>%
+  filter(., !(tank == "tank2" & dt_s < 2329)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2206)) %>%
+  filter(., !(tank == "tank4" & dt_s < 3775)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2544)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1372)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4846)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2857)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1311)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 4728, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 2329, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2206, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3775, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2544, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1372, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4846, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2857, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1311, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -2418,18 +2420,24 @@ dat20230712mod %>%
 
 ```{r}
 dat20230712blanks <- dat20230712mod %>%
-  filter(., !(tank == "tank1" & dt_s < 1686)) %>%
-  filter(., !(tank == "tank2" & dt_s < 4710)) %>%
-  filter(., !(tank == "tank3" & dt_s < 602)) %>%
-  filter(., !(tank == "tank4" & dt_s < 3186)) %>%
-  filter(., !(tank == "tank5" & dt_s < 5088)) %>%
-  filter(., !(tank == "tank6" & dt_s < 1006)) %>%
-  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 1686, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 4710, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 602, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3186, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 5088, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1006, dt_s))
+  filter(., !(tank == "tank1" & dt_s < 4728)) %>%
+  filter(., !(tank == "tank2" & dt_s < 2329)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2206)) %>%
+  filter(., !(tank == "tank4" & dt_s < 3775)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2544)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1372)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4846)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2857)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1311)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 4728, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 2329, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2206, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 3775, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2544, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1372, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4846, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2857, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1311, dt_s))
 head(dat20230712blanks) #Confirm dataframe creation
 ```
 
@@ -2473,7 +2481,7 @@ write.csv(dat20230712_MO2_all_slope_results, "20220712-MO2-slope-results.csv", q
 ```
 
 ```{r}
-dat20230712_MO2_slope_results %>%
+dat20230712_MO2_all_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
@@ -2489,33 +2497,41 @@ ggsave("figures/2023-07-12-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 
 ```{r}
 dat20230719mod %>%
-  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  filter(tank == "tank3") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  #scale_x_continuous(limits = c(1962,2562)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
 ```
 
 ```{r}
 dat20230719mod %>%
-  filter(., !(tank == "Tank_1" & dt_s < 1347)) %>%
-  filter(., !(tank == "Tank_2" & dt_s < 4453)) %>%
-  filter(., !(tank == "Tank_3" & dt_s < 1089)) %>%
-  filter(., !(tank == "Tank_4" & dt_s < 1624)) %>%
-  filter(., !(tank == "Tank_5" & dt_s < 4445)) %>%
-  filter(., !(tank == "Tank_6" & dt_s < 1367)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1", dt_s - 1347, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2", dt_s - 4453, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3", dt_s - 1089, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4", dt_s - 1624, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5", dt_s - 4445, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6", dt_s - 1367, dt_s)) %>%
+  filter(., !(tank == "tank1" & dt_s < 4578)) %>%
+  filter(., !(tank == "tank2" & dt_s < 2246)) %>%
+  filter(., !(tank == "tank3" & dt_s < 1962)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4014)) %>%
+  filter(., !(tank == "tank5" & dt_s < 1662)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1386)) %>%
+  filter(., !(tank == "tank7" & dt_s < 3980)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2259)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1183)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 4578, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 2246, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 1962, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4014, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 1662, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1386, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 3980, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2259, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1183, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -2523,26 +2539,32 @@ dat20230719mod %>%
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Identify and plot ~10 min of background respiration data that will be used to calculate the background respiration slope
 ```
 
 ```{r}
 dat20230719blanks <- dat20230719mod %>%
-  filter(., !(tank == "Tank_1" & dt_s < 1347)) %>%
-  filter(., !(tank == "Tank_2" & dt_s < 4453)) %>%
-  filter(., !(tank == "Tank_3" & dt_s < 1089)) %>%
-  filter(., !(tank == "Tank_4" & dt_s < 1624)) %>%
-  filter(., !(tank == "Tank_5" & dt_s < 4445)) %>%
-  filter(., !(tank == "Tank_6" & dt_s < 1367)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1", dt_s - 1347, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2", dt_s - 4453, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3", dt_s - 1089, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4", dt_s - 1624, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5", dt_s - 4445, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6", dt_s - 1367, dt_s))
+  filter(., !(tank == "tank1" & dt_s < 4578)) %>%
+  filter(., !(tank == "tank2" & dt_s < 2246)) %>%
+  filter(., !(tank == "tank3" & dt_s < 1962)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4014)) %>%
+  filter(., !(tank == "tank5" & dt_s < 1662)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1386)) %>%
+  filter(., !(tank == "tank7" & dt_s < 3980)) %>%
+  filter(., !(tank == "tank8" & dt_s < 2259)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1183)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 4578, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 2246, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 1962, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4014, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 1662, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1386, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 3980, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 2259, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1183, dt_s))
 head(dat20230719blanks) #Confirm dataframe creation
 ```
 
@@ -2586,7 +2608,7 @@ write.csv(dat20230719_MO2_all_slope_results, "20220719-MO2-slope-results.csv", q
 ```
 
 ```{r}
-dat20230719_MO2_slope_results %>%
+dat20230719_MO2_all_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
@@ -2602,54 +2624,42 @@ ggsave("figures/2023-07-19-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 
 ```{r}
 dat20230726mod %>%
-  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  filter(., tank == "tank9") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_x_continuous(limits = c(1309, 1909)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
 ```
 
 ```{r}
 dat20230726mod %>%
-  filter(., tank == "Tank_5") %>%
-  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
-  geom_point(size = 0.5) +
-  #geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
-  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
-  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
-  scale_x_continuous(limits = c(2900, 3500)) +
-  scale_y_continuous(breaks = seq(80, 100, 10), 
-                     limits = c(80, 100)) +
-  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
-  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
-                                        axis.line = element_line())
-```
-
-
-```{r}
-dat20230726mod %>%
-  filter(., !(tank == "Tank_1" & dt_s < 1083)) %>%
-  filter(., !(tank == "Tank_2" & dt_s < 3968)) %>%
-  filter(., !(tank == "Tank_3" & dt_s < 2169)) %>%
-  filter(., !(tank == "Tank_4" & dt_s < 1399)) %>%
-  filter(., !(tank == "Tank_5" & dt_s < 2900)) %>%
-  filter(., !(tank == "Tank_5" & dt_s > 3500)) %>%
-  filter(., !(tank == "Tank_6" & dt_s < 1420)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1", dt_s - 1083, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2", dt_s - 3968, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3", dt_s - 2169, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4", dt_s - 1399, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5", dt_s - 2900, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6", dt_s - 1420, dt_s)) %>%
+  filter(., !(tank == "tank1" & dt_s < 5400)) %>%
+  filter(., !(tank == "tank1" & dt_s > 6000)) %>%
+  filter(., !(tank == "tank2" & dt_s < 1699)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2361)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4156)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2593)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1325)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4027)) %>%
+  filter(., !(tank == "tank8" & dt_s < 1689)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1309)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 5400, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 1699, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2361, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4156, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2593, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1325, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4027, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 1689, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1309, dt_s)) %>%
   ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
@@ -2657,27 +2667,33 @@ dat20230726mod %>%
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Identify and plot ~10 min of background respiration data that will be used to calculate the background respiration slope
 ```
 
 ```{r}
 dat20230726blanks <- dat20230726mod %>%
-  filter(., !(tank == "Tank_1" & dt_s < 1083)) %>%
-  filter(., !(tank == "Tank_2" & dt_s < 3968)) %>%
-  filter(., !(tank == "Tank_3" & dt_s < 2169)) %>%
-  filter(., !(tank == "Tank_4" & dt_s < 1399)) %>%
-  filter(., !(tank == "Tank_5" & dt_s < 2900)) %>%
-  filter(., !(tank == "Tank_5" & dt_s > 3500)) %>%
-  filter(., !(tank == "Tank_6" & dt_s < 1420)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_1", dt_s - 1083, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_2", dt_s - 3968, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_3", dt_s - 2169, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_4", dt_s - 1399, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_5", dt_s - 2900, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "Tank_6", dt_s - 1420, dt_s))
+  filter(., !(tank == "tank1" & dt_s < 5400)) %>%
+  filter(., !(tank == "tank1" & dt_s > 6000)) %>%
+  filter(., !(tank == "tank2" & dt_s < 1699)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2361)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4156)) %>%
+  filter(., !(tank == "tank5" & dt_s < 2593)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1325)) %>%
+  filter(., !(tank == "tank7" & dt_s < 4027)) %>%
+  filter(., !(tank == "tank8" & dt_s < 1689)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1309)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 5400, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 1699, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2361, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4156, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2593, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1325, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4027, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 1689, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1309, dt_s))
 head(dat20230726blanks) #Confirm dataframe creation
 ```
 
@@ -2721,12 +2737,12 @@ write.csv(dat20230726_MO2_all_slope_results, "20220726-MO2-slope-results.csv", q
 ```
 
 ```{r}
-dat20230726_MO2_slope_results %>%
+dat20230726_MO2_all_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
-  scale_x_discrete(breaks = c("13C", "3OC", "5C"),
-                   labels = c("13", "3O", "5")) +
+  scale_x_discrete(breaks = c("15C", "25C", "5C"),
+                   labels = c("15", "25", "5")) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      guide = "none") +
   theme_classic(base_size = 15)
@@ -2735,73 +2751,236 @@ ggsave("figures/2023-07-26-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 
 ## 2023-08-09
 
+```{r}
+dat20230809mod %>%
+  filter(., tank == "tank9") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_line(y = 80, lty = 1, color = "grey50") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_x_continuous(limits = c(1300, 1900)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
+```
+
+```{r}
+dat20230809mod %>%
+  filter(., !(tank == "tank1" & dt_s < 3461)) %>%
+  filter(., !(tank == "tank2" & dt_s < 1604)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2024)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4712)) %>%
+  filter(., !(tank == "tank5" & dt_s < 1726)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1493)) %>%
+  filter(., !(tank == "tank7" & dt_s < 2809)) %>%
+  filter(., !(tank == "tank8" & dt_s < 1989)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1300)) %>%
+  filter(., !(tank == "tank9" & dt_s > 1900)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3461, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 1604, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2024, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4712, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 1726, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1493, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 2809, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 1989, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1300, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Identify and plot ~10 min of background respiration data that will be used to calculate the background respiration slope
+```
+
+```{r}
+dat20230809blanks <- dat20230809mod %>%
+  filter(., !(tank == "tank1" & dt_s < 3461)) %>%
+  filter(., !(tank == "tank2" & dt_s < 1604)) %>%
+  filter(., !(tank == "tank3" & dt_s < 2024)) %>%
+  filter(., !(tank == "tank4" & dt_s < 4712)) %>%
+  filter(., !(tank == "tank5" & dt_s < 1726)) %>%
+  filter(., !(tank == "tank6" & dt_s < 1493)) %>%
+  filter(., !(tank == "tank7" & dt_s < 2809)) %>%
+  filter(., !(tank == "tank8" & dt_s < 1989)) %>%
+  filter(., !(tank == "tank9" & dt_s < 1300)) %>%
+  filter(., !(tank == "tank9" & dt_s > 1900)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3461, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank2", dt_s - 1604, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2024, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 4712, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank5", dt_s - 1726, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1493, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 2809, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank8", dt_s - 1989, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank9", dt_s - 1300, dt_s))
+head(dat20230809blanks) #Confirm dataframe creation
+```
+
+```{r}
+dat20230809_MO2_slopes_blanks <- dat20230809blanks %>%
+  nest(data = -c(treatment, tank, probe_num)) %>%
+  mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
+  mutate(tidied = map(fit, tidy)) %>%
+  unnest(tidied) #Create a list object that stores the regression results for each chamber. Nest data by treatment, tank, and probe number so the regression slopes are calculated appropriately. Use map to extract linear model fit information for DO_umol_L by time. Extract slopes using broom::tidy and unnest.
+dat20230809_MO2_slopes_blanks #Confirm dataframe creation
+```
+
+```{r}
+dat20230809_MO2_glance_blanks <- dat20230809blanks %>%
+  nest(data = -c(treatment, tank, probe_num)) %>%
+  mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
+  mutate(glanced = map(fit, glance)) %>%
+  unnest(glanced) #Similar to above, but calculate the adjusted R-squared values by nesting treatment and probe information
+dat20230809_MO2_glance_blanks #Confirm dataframe creation
+```
+
+```{r}
+dat20230809_MO2_slopes_blanks_results <- dat20230809_MO2_slopes_blanks %>%
+  filter(term == "dt_s") %>%
+  mutate(slope_nmol_hr = estimate*1000*60) %>%
+  dplyr::select(treatment, tank, probe_num, slope_nmol_hr, p.value) %>%
+  mutate(r.squared = (dat20230809_MO2_glance_blanks$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
+dat20230809_MO2_slopes_blanks_results #Confirm dataframe creation
+```
+
+```{r}
+dat20230809_MO2_all_slope_results <- dat20230809_MO2_slope_results %>%
+  left_join(., dat20230809_MO2_slopes_blanks_results, by = c("treatment", "tank", "probe_num"), suffix = c("", "_blank")) %>%
+  mutate(., slope_nmol_hr_corrected = slope_nmol_hr - dat20230809_MO2_slopes_blanks_results$slope_nmol_hr) %>%
+  mutate(., blank_ratio = abs(slope_nmol_hr_blank / slope_nmol_hr)) #Join dataframes by treatment, tank, and probe_num. Create a new column for the the corrected slope (uncorrected slope - blank slope) and the blank ratio (blank / uncorrected slope)
+dat20230809_MO2_all_slope_results
+```
+
+```{r}
+write.csv(dat20230809_MO2_all_slope_results, "20230809-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
+```
+
+```{r}
+dat20230809_MO2_all_slope_results %>%
+  ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
+  geom_boxplot() + geom_point(size = 2) +
+  xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
+  scale_x_discrete(breaks = c("15C", "25C", "5C"),
+                   labels = c("15", "25", "5")) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     guide = "none") +
+  theme_classic(base_size = 15)
+ggsave("figures/2023-08-09-oxygen-consumption-nmolhr-corrected.pdf", width = 11, height = 8.5) #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. 
+```
+
 ## 2023-08-16
 
-# Compare blank-corrected oxygen consumption
-
-## Between treatments within a timepoint
-
 ```{r}
-hist(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
-hist(log(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
-hist(sqrt(-(dat20230705_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
+dat20230816mod %>%
+  filter(., tank == "tank7") %>%
+  ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_line(y = 80, lty = 1, color = "grey50") +
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_x_continuous(limits = c(6922, 7522)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Plot raw air saturation values and add a line for 80% saturation. Modify x and y axis labels, y axis breaks. Facet such that each column is a treatment/tank, and each row is a probe. This provides two columns per treatment.
 ```
 
 ```{r}
-lm20220708 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230705_MO2_slope_results)
-summary(lm20220708)
+dat20230816mod %>%
+  filter(., !(tank == "tank1" & dt_s < 6286)) %>%
+  filter(., !(tank == "tank4" & dt_s < 7095)) %>%
+  filter(., !(tank == "tank7" & dt_s < 6922)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3461, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 7095, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 6922, dt_s)) %>%
+  ggplot(., mapping = aes(x = (dt_s/60), y = perc_air_sat, color = treatment)) +
+  geom_point(size = 0.5) +
+  geom_smooth(method = lm, se = FALSE, lty = 1, color = "grey50")+
+  facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scale = "free_x") +
+  xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
+  theme_classic(base_size = 15) + theme(strip.text = element_blank(),
+                                        axis.line = element_line()) #Identify and plot ~10 min of background respiration data that will be used to calculate the background respiration slope
 ```
 
 ```{r}
-write.csv(broom::tidy(lm20220708), "20220708-model-output.csv", quote = FALSE, row.names = FALSE)
+dat20230816blanks <- dat20230816mod %>%
+  filter(., !(tank == "tank1" & dt_s < 6286)) %>%
+  filter(., !(tank == "tank4" & dt_s < 7095)) %>%
+  filter(., !(tank == "tank7" & dt_s < 6922)) %>%
+  mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3461, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 7095, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank7", dt_s - 6922, dt_s))
+head(dat20230816blanks) #Confirm dataframe creation
 ```
 
 ```{r}
-hist(-(dat20230712_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
-hist(log(-(dat20230712_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
-hist(sqrt(-(dat20230712_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
+dat20230816_MO2_slopes_blanks <- dat20230816blanks %>%
+  nest(data = -c(treatment, tank, probe_num)) %>%
+  mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
+  mutate(tidied = map(fit, tidy)) %>%
+  unnest(tidied) #Create a list object that stores the regression results for each chamber. Nest data by treatment, tank, and probe number so the regression slopes are calculated appropriately. Use map to extract linear model fit information for DO_umol_L by time. Extract slopes using broom::tidy and unnest.
+dat20230816_MO2_slopes_blanks #Confirm dataframe creation
 ```
 
 ```{r}
-lm20220712 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230712_MO2_slope_results)
-summary(lm20220712)
+dat20230816_MO2_glance_blanks <- dat20230816blanks %>%
+  nest(data = -c(treatment, tank, probe_num)) %>%
+  mutate(fit = map(data, ~lm(DO_umol_L ~ dt_s, data = .))) %>%
+  mutate(glanced = map(fit, glance)) %>%
+  unnest(glanced) #Similar to above, but calculate the adjusted R-squared values by nesting treatment and probe information
+dat20230816_MO2_glance_blanks #Confirm dataframe creation
 ```
 
 ```{r}
-write.csv(broom::tidy(lm20220712), "20220712-model-output.csv", quote = FALSE, row.names = FALSE)
+dat20230816_MO2_slopes_blanks_results <- dat20230816_MO2_slopes_blanks %>%
+  filter(term == "dt_s") %>%
+  mutate(slope_nmol_hr = estimate*1000*60) %>%
+  dplyr::select(treatment, tank, probe_num, slope_nmol_hr, p.value) %>%
+  mutate(r.squared = (dat20230816_MO2_glance_blanks$r.squared)) #Get the regression information for dt_s and not the intercept. Creates new a variable for respiration rate as nmol_per_hour (slope_nmol_hr). Select treatment, tank, probe number, slope over the hour, and p-value. Add the r-squared information from glance.
+dat20230816_MO2_slopes_blanks_results #Confirm dataframe creation
 ```
 
 ```{r}
-hist(-(dat20230719_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
-hist(log(-(dat20230719_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
-hist(sqrt(-(dat20230719_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
+dat20230816_MO2_all_slope_results <- dat20230816_MO2_slope_results %>%
+  left_join(., dat20230816_MO2_slopes_blanks_results, by = c("treatment", "tank", "probe_num"), suffix = c("", "_blank")) %>%
+  mutate(., slope_nmol_hr_corrected = slope_nmol_hr - dat20230816_MO2_slopes_blanks_results$slope_nmol_hr) %>%
+  mutate(., blank_ratio = abs(slope_nmol_hr_blank / slope_nmol_hr)) #Join dataframes by treatment, tank, and probe_num. Create a new column for the the corrected slope (uncorrected slope - blank slope) and the blank ratio (blank / uncorrected slope)
+dat20230816_MO2_all_slope_results
 ```
 
 ```{r}
-lm20220719 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230719_MO2_slope_results)
-summary(lm20220719)
+write.csv(dat20230816_MO2_all_slope_results, "20230816-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
 ```
 
 ```{r}
-write.csv(broom::tidy(lm20220719), "20220719-model-output.csv", quote = FALSE, row.names = FALSE)
+dat20230816_MO2_all_slope_results %>%
+  ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected)) + 
+  geom_boxplot(color = plotColors[3]) + geom_point(size = 2, color = plotColors[3]) +
+  xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
+  scale_x_discrete(breaks = c("15C", "25C", "5C"),
+                   labels = c("15", "25", "5")) +
+  scale_color_manual(guide = "none") +
+  theme_classic(base_size = 15)
+ggsave("figures/2023-08-16-oxygen-consumption-nmolhr-corrected.pdf", width = 11, height = 8.5) #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. 
 ```
 
-```{r}
-hist(-(dat20230726_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
-hist(log(-(dat20230726_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
-hist(sqrt(-(dat20230726_MO2_slope_results$slope_nmol_hr_corrected))) #Check sqrt transformation
-```
-
-```{r}
-lm20220726 <- lm(log(-slope_nmol_hr_corrected) ~ treatment, data = dat20230726_MO2_slope_results)
-summary(lm20220726)
-```
-
-```{r}
-write.csv(broom::tidy(lm20220726), "20220726-model-output.csv", quote = FALSE, row.names = FALSE)
-```
-
-## Across time and treatment
+# Compare blank-corrected oxygen consumption across time and treatment
 
 ### Add demographic information
 
@@ -2847,12 +3026,12 @@ all_MO2_slope_results_demTTRdata <- all_MO2_slope_results %>%
                           tank == "tank4" ~ 4,
                           tank == "tank5" ~ 5,
                           tank == "tank6" ~ 6,
-                          tank == "Tank_1" ~ 1,
-                          tank == "Tank_2" ~ 2,
-                          tank == "Tank_3" ~ 3,
-                          tank == "Tank_4" ~ 4,
-                          tank == "Tank_5" ~ 5,
-                          tank == "Tank_6" ~ 6)) %>%
+                          tank == "tank1" ~ 1,
+                          tank == "tank2" ~ 2,
+                          tank == "tank3" ~ 3,
+                          tank == "tank4" ~ 4,
+                          tank == "tank5" ~ 5,
+                          tank == "tank6" ~ 6)) %>%
   mutate(probe_num = as.numeric(probe_num)) %>%
   left_join(., demTTRdata, by = c("day", "treatment", "tank", "probe_num")) #Use case_when to include only the tank # in the tank column. Convert probe_num to a numeric column and left_join with demographic and TTR data using day, treatment, tank, and probe_num
 head(all_MO2_slope_results_demTTRdata) #Confirm dataframe creation
