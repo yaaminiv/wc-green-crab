@@ -47,6 +47,13 @@ crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
 head(crabMetadata) #Confirm changes
 ```
 
+```{r}
+genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
+head(genotypeData) #Confirm genotype dataframe creation
+```
+
 # Format data
 
 ```{r}
@@ -441,6 +448,35 @@ modTTR %>%
   theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
                                         strip.background = element_blank()) #Plot difference in individual TTR from average TTR for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment.
 ggsave("figures/time-to-right-avg-individuals-diff.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTR %>%
+  filter(., respirometry == "Y") %>%
+  left_join(., genotypeData, by = c("crab.ID", "treatment")) %>%
+  dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull, final.genotype)) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment == "15C" ~ "15C",
+                                  treatment == "25C" ~ "25C")) %>%
+  ggplot(., mapping = aes(x = day, y = TTRavg - TTRavgFull, group = crab.ID, color = treatment, shape = final.genotype)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(treatment, tank), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference in Time-to-Right (s)",
+                     breaks = seq(-5, 10, 5)) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference in individual TTR from average TTR for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment.
+ggsave("figures/time-to-right-avg-individuals-diff-genotype.pdf", height = 8.5, width = 11)
 ```
 
 ...and percent change from the average.
