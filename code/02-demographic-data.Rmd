@@ -564,9 +564,9 @@ vec.sp #All variables are significant against PCs
 ```{r}
 as.data.frame(vec.sp$vectors$arrows) %>%
   cbind(rbind(vec.sp$vectors$r,
-      vec.sp$vectors$pvals) %>%
-  t(.) %>%
-  as.data.frame(.)) %>%
+              vec.sp$vectors$pvals) %>%
+          t(.) %>%
+          as.data.frame(.)) %>%
   dplyr::rename(., "r2" = V1) %>%
   dplyr::rename(., "Pr(>r)" = V2) %>%
   write.csv(., "variable-loading-significance.csv", quote = FALSE) #Convert information from vec.sp into a dataframe format and save
@@ -870,3 +870,48 @@ mortalityDataLong %>%
 ggsave("figures/KM-curves.pdf", height = 8.5, width = 11)
 ```
 
+# Genotype characterization
+
+```{r}
+genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
+head(genotypeData) #Confirm genotype dataframe creation
+```
+
+```{r}
+genotypeData %>%
+  group_by(., final.genotype) %>%
+  summarise(., count = n()) %>%
+  ggplot(., aes(x= "", y = count, fill = final.genotype)) +
+  geom_bar(stat = "identity", width = 1) +
+  coord_polar("y", start = 0) +
+  geom_text(aes(label = paste0(round((count/sum(count)*100), digits = 0), "%")), position = position_stack(vjust = 0.5), size = 6) +
+  scale_fill_manual(name = "Genotype",
+                    values = c("#BAE4B3", "#74C476", "#006D2C")) +
+  theme_void(base_size = 15) #Group genotype data by genotype, then count the number of crabs in each genotype. Create a pie chart for genotype distribution, irrespective of treatment by using geom_bar then setting polar coordinates. Add text labels for % crabs in each genotype. Create a manual color scale.
+ggsave("figures/genotype.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+facet_labels <- c("15C" = "15ºC",
+                  "25C" = "25ºC",
+                  "5C" = "5ºC") #Assign labels for facets
+```
+
+
+```{r}
+genotypeData %>%
+  group_by(., treatment, final.genotype) %>%
+  summarise(., count = n()) %>%
+  ggplot(., aes(x= "", y = count, fill = final.genotype)) +
+  geom_bar(stat = "identity", width = 1, position = "fill") +
+  coord_polar("y", start = 0) +
+  facet_wrap(vars(treatment), ncol = 3, labeller = labeller(treatment = facet_labels)) +
+  scale_fill_manual(name = "Genotype",
+                    values = c("#BAE4B3", "#74C476", "#006D2C")) +
+  theme_void(base_size = 15)  + theme(strip.text.x = element_text(size = 15)) #Group genotype data by genotype, then count the number of crabs in each genotype. Create a pie chart for genotype distribution, irrespective of treatment by using geom_bar then setting polar coordinates. Create a manual color scale and adjust text of facet labels.
+ggsave("figures/genotype-by-treatment.pdf", height = 8.5, width = 11)
+```
+                                      
+                                      
