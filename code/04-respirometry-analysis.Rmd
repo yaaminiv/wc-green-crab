@@ -3001,7 +3001,7 @@ demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
                             date == "7/12/23" ~ "14",
                             date == "7/19/23" ~ "21",
                             date == "7/26/23" ~ "28",
-                            date == "8/09/23" ~ "42",
+                            date == "8/9/23" ~ "42",
                             date == "8/16/23" ~ "49")) %>%
   filter(., is.na(day) == FALSE) %>%
   mutate(., treatment = case_when(tank == "T1" | tank == "T4" | tank == "T7" ~ "5C",
@@ -3015,7 +3015,7 @@ demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
                                probe_num == 2 ~ 2,
                                probe_num == 3 ~ 3,
                                probe_num == 4 ~ 4)) %>%
-  select(., c(day, treatment, tank, probe_num, sex, integument.color, weight, size, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
+  select(., c(crab.ID, day, treatment, tank, probe_num, sex, integument.color, weight, size, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
 head(demTTRdata) #Confirm dataframe creation
 ```
 
@@ -3048,6 +3048,19 @@ head(all_MO2_slope_results_demTTRdata) #Confirm dataframe creation
 
 ### Add genotype information
 
+```{r}
+genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
+head(genotypeData) #Confirm genotype dataframe creation
+```
+
+```{r}
+all_MO2_slope_results_demTTRdata_genotype <- all_MO2_slope_results_demTTRdata %>%
+  left_join(., genotypeData, by = c("crab.ID", "treatment")) #Join dataframes by crab ID and treatment. 
+head(all_MO2_slope_results_demTTRdata_genotype) #Confirm left_join
+```
+
 ### ANOVA
 
 ```{r}
@@ -3058,7 +3071,7 @@ hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transfor
 
 
 ```{r}
-lmAllSlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + size + integument.color + missing.legs, data = (all_MO2_slope_results_demTTRdata %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmAllSlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + size + integument.color + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and day on respiration
 ```
 
@@ -3068,8 +3081,9 @@ summary(lmAllSlopeResultsStep) #The most significant model is one that includes 
 ```
 
 ```{r}
-lmAllSlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day), data = all_MO2_slope_results_demTTRdata) #Run the most significant model identified by step
-summary(lmAllSlopeResultsSig) #Significant impact of treatment and day (not not day x treatment)
+lmAllSlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
+    missing.legs + final.genotype + treatment:as.numeric(day), data = all_MO2_slope_results_demTTRdata_genotype) #Run the most significant model identified by step
+summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
 
 ```{r}
@@ -3081,14 +3095,14 @@ write.csv(broom::tidy(lmAllSlopeResultsSig), "all-slope-results-model-output.csv
 ```{r}
 hist(residuals(lmAllSlopeResultsSig)) #Residuals normally distributed
 
-plot(fitted(lmAllSlopeResultsSig), residuals(lmAllSlopeResultsSig)) #No heteroskedasticity 
+plot(fitted(lmAllSlopeResultsSig), residuals(lmAllSlopeResultsSig)) #Slight heteroskedasticity
 abline(h = 0, lty = 2, col = "grey")
 ```
 
 ### Post-hoc tests
 
 ```{r}
-TukeyHSD(lmAllSlopeResultsSig, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between 5C and other treatments, marginial significance between 30C and 13C.
+TukeyHSD(lmAllSlopeResultsSig, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all treatments
 ```
 
 ```{r}
@@ -3096,23 +3110,27 @@ write.csv(broom::tidy(TukeyHSD(lmAllSlopeResultsSig, "treatment", conf.level = 0
 ```
 
 ```{r}
-pairwise.t.test(x = log(-(all_MO2_slope_results_demTTRdata$slope_nmol_hr_corrected)), all_MO2_slope_results_demTTRdata$day, p.adjust.method = "bonferroni") #Use pairwise t-test for quantitative variables. Marginal significance between days 4 and 22.
+pairwise.t.test(x = log(-(all_MO2_slope_results_demTTRdata_genotype$slope_nmol_hr_corrected)), all_MO2_slope_results_demTTRdata$day, p.adjust.method = "bonferroni") #Use pairwise t-test for quantitative variables. Marginal significance between days 49 and all other days.
 ```
 
 ## Create multipanel figure for oxygen consumption
 
 ```{r}
-all_MO2_slope_results_reorder <- all_MO2_slope_results %>%
-  mutate(., treatment = gsub(x = treatment, pattern = "5C", replacement = "05C"))
+all_MO2_slope_results_reorder <- all_MO2_slope_results_demTTRdata_genotype %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment == "15C" ~ "15C",
+                                  treatment == "25C" ~ "25C"))
 #Reorder temperature treatments for plotting by renaming 5C as 05C so it is the first alphanumerically
-tail(all_MO2_slope_results_reorder)
+head(all_MO2_slope_results_reorder)
 ```
 
 ```{r}
-facet_labels <- c("04" = "Day 4",
-                  "08" = "Day 8",
-                  "15" = "Day 15",
-                  "22" = "Day 22") #Assign labels for facets
+facet_labels <- c("07" = "Day 7",
+                  "14" = "Day 14",
+                  "21" = "Day 21",
+                  "28" = "Day 28",
+                  "42" = "Day 42",
+                  "49" = "Day 49") #Assign labels for facets
 ```
 
 ```{r}
@@ -3125,22 +3143,53 @@ all_MO2_slope_results_reorder %>%
                geom = "line",
                aes(group = 1),
                col = "black", lty = 2) +
-  facet_wrap(. ~ day, ncol = 4, labeller = labeller (day = facet_labels)) +
-  scale_x_discrete(breaks = c("05C", "13C", "30C"),
+  facet_wrap(. ~ day, ncol = 3, labeller = labeller (day = facet_labels)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("", "", "")) +
+  scale_y_continuous(breaks = seq(0, 25000, 5000)) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   scale_shape_manual(values = c(15, 19, 17),
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   theme_classic(base_size = 15) + theme(axis.ticks.x = element_blank(),
                                         axis.title.x = element_blank(),
                                         strip.text.x = element_text(size = 15),
                                         strip.background = element_rect(colour = "white"))
 ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
+#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Add a line connecting each boxplot midpoint. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+  ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
+  geom_boxplot() + geom_point(aes(shape = final.genotype), size = 2) +
+  xlab("") + ylab("Oxygen Consumption (nmol/hr)") +
+  stat_summary(fun = median,
+               geom = "line",
+               aes(group = 1),
+               col = "black", lty = 2) +
+  facet_wrap(. ~ day, ncol = 3, labeller = labeller (day = facet_labels)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("", "", "")) +
+  scale_y_continuous(breaks = seq(0, 25000, 5000)) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1, 2),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(axis.ticks.x = element_blank(),
+                                        axis.title.x = element_blank(),
+                                        strip.text.x = element_text(size = 15),
+                                        strip.background = element_rect(colour = "white"))
+ggsave("figures/multipanel-oxygen-consumption-corrected-genotype.pdf", height = 8.5, width = 11)
 #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Add a line connecting each boxplot midpoint. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
