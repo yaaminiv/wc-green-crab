@@ -86,7 +86,8 @@ modTTR <- rawTTR %>%
   mutate(., TTRSEFull = std.error(TTRavg)) %>%
   mutate(., TTRavgFullLow = TTRavgFull - TTRSEFull) %>%
   mutate(., TTRavgFullHigh = TTRavgFull + TTRSEFull) %>%
-  ungroup(.) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup.
+  ungroup(.) %>% 
+  left_join(., genotypeData, by = c("crab.ID", "treatment")) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup. Join with genotype data.
 head(modTTR) #Confirm formatting
 ```
 
@@ -228,6 +229,21 @@ modTTR %>%
                      limits = c(0, 50)) +
   theme_classic(base_size = 15)
 ggsave("figures/time-to-right-size.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTR %>%
+  filter(., is.na(final.genotype) == FALSE) %>% 
+  ggplot(., mapping = aes(x = day, y = TTRavg, color = final.genotype)) +
+  geom_jitter(alpha = 0.8) +
+  scale_x_continuous(name = "Day",
+                     breaks = unique(modTTR$day),
+                     limits = c(4, 22)) +
+  scale_y_continuous(name = "Average Time-to-Right (s)",
+                     breaks = seq(0, 50, 10),
+                     limits = c(0, 50)) +
+  theme_classic(base_size = 15)
+ggsave("figures/time-to-right-genotype.pdf", height = 8.5, width = 11)
 ```
 
 # Assess differences by treatment
@@ -453,7 +469,6 @@ ggsave("figures/time-to-right-avg-individuals-diff.pdf", height = 8.5, width = 1
 ```{r}
 modTTR %>%
   filter(., respirometry == "Y") %>%
-  left_join(., genotypeData, by = c("crab.ID", "treatment")) %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull, final.genotype)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
