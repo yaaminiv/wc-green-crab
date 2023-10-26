@@ -3193,6 +3193,62 @@ ggsave("figures/multipanel-oxygen-consumption-corrected-genotype.pdf", height = 
 #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Add a line connecting each boxplot midpoint. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
+# Individual-level variation
+
+```{r}
+all_MO2_slope_results_reorder <- all_MO2_slope_results_reorder %>%
+  group_by(., day, treatment, tank) %>%
+  mutate(., slope_nmol_hr_corrected_avg = mean(slope_nmol_hr_corrected)) #Calculate tank average by day
+head(all_MO2_slope_results_reorder) #Confirm calculations
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = treatment)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(tank, treatment), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
+ggsave("figures/multipanel-oxygen-consumption-individual.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = final.genotype)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(tank, treatment), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
+ggsave("figures/multipanel-oxygen-consumption-individual-genotype.pdf", height = 8.5, width = 11)
+```
+
+
 # Within-group variability
 
 The 13ºC and 30ºC treatments have more variability than the 5ºC treatments. To quantify this, I will calculate the standard deviation and coefficient of variation for each treatment x day combination.
