@@ -2242,13 +2242,13 @@ Next step: I need to extract data from the last 10-20 minutes of each chamber. T
 
 ```{r}
 dat20230705mod %>%
-  #filter(., tank == "tank9") %>%
+  filter(., tank == "tank4") %>%
   ggplot(., mapping = aes(x = (dt_s), y = perc_air_sat, color = treatment)) +
   geom_point(size = 0.5) +
   geom_line(y = 80, lty = 1, color = "grey50") +
   facet_grid(cols = vars(treatment, tank), rows = vars(probe_num), scales = "free_x") +
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
- #scale_x_continuous(limits = c(725, 1925)) +
+  scale_x_continuous(limits = c(5591, 6191)) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
                      breaks = c("15C", "25C", "5C"),
@@ -2262,7 +2262,7 @@ dat20230705mod %>%
   filter(., !(tank == "tank1" & dt_s < 3900)) %>%
   filter(., !(tank == "tank2" & dt_s < 3480)) %>%
   filter(., !(tank == "tank3" & dt_s < 2360)) %>%
-  filter(., !(tank == "tank4" & dt_s < 6310)) %>%
+  filter(., !(tank == "tank4" & dt_s < 5591)) %>%
   filter(., !(tank == "tank5" & dt_s < 2649)) %>%
   filter(., !(tank == "tank6" & dt_s < 1236)) %>%
   filter(., !(tank == "tank7" & dt_s < 4895)) %>%
@@ -2271,7 +2271,7 @@ dat20230705mod %>%
   mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3900, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank2", dt_s - 3480, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2360, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 6310, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 5591, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2649, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1236, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4895, dt_s)) %>%
@@ -2284,8 +2284,8 @@ dat20230705mod %>%
   xlab("Time (min)") + ylab("Oxygen Air Saturation (%)") +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      name = "Temperature (ºC)",
-                     breaks = c("13C", "30C", "5C"),
-                     labels = c("13", "30", "5")) +
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5")) +
   theme_classic(base_size = 15) + theme(strip.text = element_blank(),
                                         axis.line = element_line()) #Identify and plot ~10 min of background respiration data that will be used to calculate the background respiration slope
 ```
@@ -2295,7 +2295,7 @@ dat20230705blanks <- dat20230705mod %>%
   filter(., !(tank == "tank1" & dt_s < 3900)) %>%
   filter(., !(tank == "tank2" & dt_s < 3480)) %>%
   filter(., !(tank == "tank3" & dt_s < 2360)) %>%
-  filter(., !(tank == "tank4" & dt_s < 6310)) %>%
+  filter(., !(tank == "tank4" & dt_s < 5591)) %>%
   filter(., !(tank == "tank5" & dt_s < 2649)) %>%
   filter(., !(tank == "tank6" & dt_s < 1236)) %>%
   filter(., !(tank == "tank7" & dt_s < 4895)) %>%
@@ -2304,7 +2304,7 @@ dat20230705blanks <- dat20230705mod %>%
   mutate(., dt_s = ifelse(tank == "tank1", dt_s - 3900, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank2", dt_s - 3480, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank3", dt_s - 2360, dt_s)) %>%
-  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 6310, dt_s)) %>%
+  mutate(., dt_s = ifelse(tank == "tank4", dt_s - 5591, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank5", dt_s - 2649, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank6", dt_s - 1236, dt_s)) %>%
   mutate(., dt_s = ifelse(tank == "tank7", dt_s - 4895, dt_s)) %>%
@@ -2352,14 +2352,13 @@ dat20230705_MO2_all_slope_results
 write.csv(dat20230705_MO2_all_slope_results, "20230705-MO2-slope-results.csv", quote = FALSE, row.names = FALSE) #Save results with uncorrected, blank, and corrected slopes
 ```
 
-
 ```{r}
 dat20230705_MO2_all_slope_results %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(size = 2) +
   xlab("Temperature (ºC)") + ylab("Oxygen Consumption (nmol/hr)") +
-  scale_x_discrete(breaks = c("13C", "3OC", "5C"),
-                   labels = c("13", "3O", "5")) +
+  scale_x_discrete(breaks = c("15C", "25C", "5C"),
+                   labels = c("15", "25", "5")) +
   scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
                      guide = "none") +
   theme_classic(base_size = 15)
@@ -2987,55 +2986,67 @@ ggsave("figures/2023-08-16-oxygen-consumption-nmolhr-corrected.pdf", width = 11,
 Sex and integument color can influence respiration rates. Even though all crabs were roughly the same size and weight for the chambers, there is still some variation that may explain differences in respiration rate. I will map this information to the slope results so I can incorporate it my statistical testing.
 
 ```{r}
+crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
+  select(., c("ID", "treatment", "carapace.width", "carapace.length", "respirometry")) %>%
+  dplyr::rename(crab.ID = "ID") #Import metadata. Select ID, treatment, width and length columns. Rename "ID" as "crab.ID"
+head(crabMetadata) #Confirm changes
+```
+
+```{r}
 demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
-  dplyr::select(., -c(sampling.ID, notes)) %>%
-  filter(., is.na(probe.number) == FALSE) %>%
+  dplyr::select(., -c(notes)) %>%
   dplyr::rename(., probe_num = probe.number) %>%
-  mutate(., day = case_when(date == "7/8/2022" ~ "04",
-                            date == "7/12/2022" ~ "08",
-                            date == "7/15/2022" ~ "11",
-                            date == "7/19/2022" ~ "15",
-                            date == "7/22/2022" ~ "18",
-                            date == "7/26/2022" ~ "22")) %>%
-  filter(., day != "11" & day!= "18") %>%
-  mutate(., treatment = case_when(treatment.tank == "1" | treatment.tank == "4" ~ "13C",
-                                  treatment.tank == "2" | treatment.tank == "5" ~ "5C",
-                                  treatment.tank == "3" | treatment.tank == "6" ~ "30C")) %>%
-  dplyr::rename(., tank = treatment.tank) %>%
+  filter(., is.na(probe_num) == FALSE) %>%
+  mutate(., day = case_when(date == "7/5/23" ~ "07",
+                            date == "7/12/23" ~ "14",
+                            date == "7/19/23" ~ "21",
+                            date == "7/26/23" ~ "28",
+                            date == "8/09/23" ~ "42",
+                            date == "8/16/23" ~ "49")) %>%
+  filter(., is.na(day) == FALSE) %>%
+  mutate(., treatment = case_when(tank == "T1" | tank == "T4" | tank == "T7" ~ "5C",
+                                  tank == "T2" | tank == "T5" | tank == "T8" ~ "15C",
+                                  tank == "T3" | tank == "T6" | tank == "T9" ~ "25C")) %>%
+  left_join(., crabMetadata, by = c("crab.ID", "treatment")) %>%
   mutate(., size = carapace.width/carapace.length) %>%
   mutate(., missing.legs = case_when(number.legs < 10 ~ "Y",
                                      number.legs == 10 ~ "N")) %>%
+  mutate(probe_num = case_when(probe_num == 1 ~ 4,
+                               probe_num == 2 ~ 2,
+                               probe_num == 3 ~ 3,
+                               probe_num == 4 ~ 4)) %>%
   select(., c(day, treatment, tank, probe_num, sex, integument.color, weight, size, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
 head(demTTRdata) #Confirm dataframe creation
 ```
 
 ```{r}
-all_MO2_slope_results <- bind_rows("04" = dat20230705_MO2_all_slope_results,
-                                   "08" = dat20230712_MO2_all_slope_results,
-                                   "15" = dat20230719_MO2_all_slope_results,
-                                   "22" = dat20230726_MO2_all_slope_results, 
-                                   .id = "day") #Create a new dataframe with all uncorrected slope results, including a day
-tail(all_MO2_slope_results) #Confirm dataframe creation
+all_MO2_slope_results <- bind_rows("07" = dat20230705_MO2_all_slope_results,
+                                   "14" = dat20230712_MO2_all_slope_results,
+                                   "21" = dat20230719_MO2_all_slope_results,
+                                   "28" = dat20230726_MO2_all_slope_results, 
+                                   "42" = dat20230809_MO2_all_slope_results,
+                                   "49" = dat20230816_MO2_all_slope_results,
+                                   .id = "day") #Create a new dataframe with all corrected slope results, including a day
+head(all_MO2_slope_results) #Confirm dataframe creation
 ```
 
 ```{r}
 all_MO2_slope_results_demTTRdata <- all_MO2_slope_results %>%
-  mutate(tank = case_when(tank == "tank1" ~ 1,
-                          tank == "tank2" ~ 2,
-                          tank == "tank3" ~ 3,
-                          tank == "tank4" ~ 4,
-                          tank == "tank5" ~ 5,
-                          tank == "tank6" ~ 6,
-                          tank == "tank1" ~ 1,
-                          tank == "tank2" ~ 2,
-                          tank == "tank3" ~ 3,
-                          tank == "tank4" ~ 4,
-                          tank == "tank5" ~ 5,
-                          tank == "tank6" ~ 6)) %>%
+  mutate(tank = case_when(tank == "tank1" ~ "T1",
+                          tank == "tank2" ~ "T2",
+                          tank == "tank3" ~ "T3",
+                          tank == "tank4" ~ "T4",
+                          tank == "tank5" ~ "T5",
+                          tank == "tank6" ~ "T6",
+                          tank == "tank7" ~ "T7",
+                          tank == "tank8" ~ "T8",
+                          tank == "tank9" ~ "T9")) %>%
   mutate(probe_num = as.numeric(probe_num)) %>%
   left_join(., demTTRdata, by = c("day", "treatment", "tank", "probe_num")) #Use case_when to include only the tank # in the tank column. Convert probe_num to a numeric column and left_join with demographic and TTR data using day, treatment, tank, and probe_num
 head(all_MO2_slope_results_demTTRdata) #Confirm dataframe creation
 ```
+
+### Add genotype information
 
 ### ANOVA
 
