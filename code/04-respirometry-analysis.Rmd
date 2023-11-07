@@ -3118,7 +3118,7 @@ summary(lmBinarySlopeResults) #Significant impact of treatment, treatment:day, a
 
 ```{r}
 lmBinarySlopeResultsStep <- step(lmBinarySlopeResults, direction = "backward") #Use backwards-deletion approach to identify the most significant model (lowest AIC)
-summary(lmBinarySlopeResultsStep) #The most significant model is one that includes treatment and day, but not the interaction between the two. None of the other demographic terms are significant
+summary(lmBinarySlopeResultsStep) #The most significant model is one that includes treatment, day, the interaction, and hasT
 ```
 
 ```{r}
@@ -3383,7 +3383,7 @@ ggsave("figures/multipanel-oxygen-consumption-corrected-CV.pdf", height = 8.5, w
 #Create a line graph for the CV of oxygen consumption over experimental day. Define color, shape, and line type by treatment.
 ```
 
-The CV is a ratio between SD and the mean. It's interesting that CV for all three treatments is closest on days 14 and 28, and that the 15ºC has a much higher CV than the 25ºC treatment at day 21. Also, CV for the 5ºC is highest on day 49, which is the first day there's an outlier in the 5ºC treatment. These patterns seem to  be more influenced by potential outliers.
+The CV is a ratio between SD and the mean. It's interesting that CV for all three treatments is closest on days 14 and 28, and that the 15ºC has a much higher CV than the 25ºC treatment at day 21. Also, CV for the 5ºC is highest on day 49, which is the first day there's an outlier in the 5ºC treatment. These patterns seem to be more influenced by potential outliers.
 
 # Pairwise Q10 calculations
 
