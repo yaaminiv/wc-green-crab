@@ -3337,20 +3337,20 @@ all_MO2_slope_results_meanSDCV %>%
   ggplot(., aes(x = day, y = slope_nmol_hr_corrected_SD, group = treatment, color = treatment)) + 
   geom_line(aes(lty = treatment)) + geom_point(aes(shape = treatment), size = 2) +
   xlab("Day") + ylab("SD of Oxygen Consumption (nmol/hr)") +
-  scale_x_discrete(breaks = c("04", "08", "15", "22"),
-                   labels = c("4", "8", "15", "22")) +
+  scale_x_discrete(breaks = c(seq(0, 42, 7), 49),
+                   labels = c(seq(0, 42, 7), 49)) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   scale_linetype_manual(values = c(2, 1, 6),
                         name = "Temperature (ºC)",
-                        breaks = c("05C", "13C", "30C"),
-                        labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   scale_shape_manual(values = c(15, 19, 17),
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   theme_classic(base_size = 15)
 ggsave("figures/multipanel-oxygen-consumption-corrected-SD.pdf", height = 8.5, width = 11)
 #Create a line graph for the SD of oxygen consumption (nmol/hr) over experimental day. Define color, shape, and line type by treatment.
