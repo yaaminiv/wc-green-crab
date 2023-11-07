@@ -3123,15 +3123,15 @@ summary(lmBinarySlopeResultsStep) #The most significant model is one that includ
 
 ```{r}
 lmBinarySlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    hasT + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+                                 hasT + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
 summary(lmBinarySlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
 
 ```{r}
 lmBinarySlopeResultsSigMinusInt <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction
+                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction
 lmBinarySlopeResultsSigMinusDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-    hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day
+                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day
 AIC(lmBinarySlopeResults, lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusInt, lmBinarySlopeResultsSigMinusDay) #Calculate AIC. Most parsimonious model is the one identified by step
 ```
 
@@ -3337,16 +3337,16 @@ all_MO2_slope_results_meanSDCV %>%
   ggplot(., aes(x = day, y = slope_nmol_hr_corrected_SD, group = treatment, color = treatment)) + 
   geom_line(aes(lty = treatment)) + geom_point(aes(shape = treatment), size = 2) +
   xlab("Day") + ylab("SD of Oxygen Consumption (nmol/hr)") +
-  scale_x_discrete(breaks = c(seq(0, 42, 7), 49),
-                   labels = c(seq(0, 42, 7), 49)) +
+  scale_x_discrete(breaks = c("07", "14", "21", "28", "42", "49"),
+                   labels = c(7, 14, 21, 28, 42, 49)) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
                      name = "Temperature (ºC)",
                      breaks = c("05C", "15C", "25C"),
                      labels = c("5", "15", "25")) +
   scale_linetype_manual(values = c(2, 1, 6),
                         name = "Temperature (ºC)",
-                     breaks = c("05C", "15C", "25C"),
-                     labels = c("5", "15", "25")) +
+                        breaks = c("05C", "15C", "25C"),
+                        labels = c("5", "15", "25")) +
   scale_shape_manual(values = c(15, 19, 17),
                      name = "Temperature (ºC)",
                      breaks = c("05C", "15C", "25C"),
@@ -3356,7 +3356,7 @@ ggsave("figures/multipanel-oxygen-consumption-corrected-SD.pdf", height = 8.5, w
 #Create a line graph for the SD of oxygen consumption (nmol/hr) over experimental day. Define color, shape, and line type by treatment.
 ```
 
-The line graph shows what was in the boxplot: variability for the 13ºC and 30ºC treatments are much higher, especially at day 22.
+The line graph shows what was in the boxplot: variability for the 15ºC and 25ºC treatments are much higher, with the 25ºC having the highest variability at day 14.
 
 ```{r}
 all_MO2_slope_results_meanSDCV %>%
@@ -3364,26 +3364,26 @@ all_MO2_slope_results_meanSDCV %>%
   ggplot(., aes(x = day, y = slope_nmol_hr_corrected_CV, group = treatment, color = treatment)) + 
   geom_line(aes(lty = treatment)) + geom_point(aes(shape = treatment), size = 2) +
   xlab("Day") + ylab("CV of Oxygen Consumption") +
-  scale_x_discrete(breaks = c("04", "08", "15", "22"),
-                   labels = c("4", "8", "15", "22")) +
+  scale_x_discrete(breaks = c("07", "14", "21", "28", "42", "49"),
+                   labels = c(7, 14, 21, 28, 42, 49)) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   scale_linetype_manual(values = c(2, 1, 6),
                         name = "Temperature (ºC)",
-                        breaks = c("05C", "13C", "30C"),
-                        labels = c("5", "13", "30")) +
+                        breaks = c("05C", "15C", "25C"),
+                        labels = c("5", "15", "25")) +
   scale_shape_manual(values = c(15, 19, 17),
                      name = "Temperature (ºC)",
-                     breaks = c("05C", "13C", "30C"),
-                     labels = c("5", "13", "30")) +
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
   theme_classic(base_size = 15)
 ggsave("figures/multipanel-oxygen-consumption-corrected-CV.pdf", height = 8.5, width = 11)
 #Create a line graph for the CV of oxygen consumption over experimental day. Define color, shape, and line type by treatment.
 ```
 
-The CV is a ratio between SD and the mean. It's interesting that CV for all three treatments is roughly equal at day 8, and that the 13ºC has a much higher CV than the 30ºC treatment at day 22. These patterns seem to  be more influenced by potential outliers.
+The CV is a ratio between SD and the mean. It's interesting that CV for all three treatments is closest on days 14 and 28, and that the 15ºC has a much higher CV than the 25ºC treatment at day 21. Also, CV for the 5ºC is highest on day 49, which is the first day there's an outlier in the 5ºC treatment. These patterns seem to  be more influenced by potential outliers.
 
 # Pairwise Q10 calculations
 
@@ -3399,11 +3399,11 @@ I am going to calculate pairwise Q10 metrics for each day with oxygen consumptio
 all_MO2_slope_results_Q10output <- all_MO2_slope_results_meanSDCV %>%
   select(day, treatment, slope_nmol_hr_corrected_mean) %>%
   unique(.) %>%
-  mutate(temperature = case_when(treatment == "13C" ~ 13,
-                                 treatment == "30C" ~ 30,
+  mutate(temperature = case_when(treatment == "15C" ~ 15,
+                                 treatment == "25C" ~ 25,
                                  treatment == "05C" ~ 5)) %>% 
   pivot_wider(., names_from = treatment, values_from = c(slope_nmol_hr_corrected_mean, temperature)) %>%
-  mutate(., Q10_13_30 = Q10(R1 = slope_nmol_hr_corrected_mean_13C, R2 = slope_nmol_hr_corrected_mean_30C, T1 = temperature_13C, T2 = temperature_30C)) %>%
+  mutate(., Q10_15_30 = Q10(R1 = slope_nmol_hr_corrected_mean_13C, R2 = slope_nmol_hr_corrected_mean_30C, T1 = temperature_13C, T2 = temperature_30C)) %>%
   mutate(., Q10_13_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_13C, T1 = temperature_05C, T2 = temperature_13C)) %>%
   mutate(., Q10_30_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_30C, T1 = temperature_05C, T2 = temperature_30C)) %>%
   select(., -c(temperature_13C, temperature_30C, temperature_05C)) #Take input dataframe and pivot wider. Use treatment as IDs for new colums, and paste values from mean slope and tmeperature. Use the formula to calculate Q10 for each pairwise temperature comparison. Remove temperature columns.
