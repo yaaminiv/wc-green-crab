@@ -899,7 +899,6 @@ facet_labels <- c("15C" = "15ºC",
                   "5C" = "5ºC") #Assign labels for facets
 ```
 
-
 ```{r}
 genotypeData %>%
   group_by(., treatment, final.genotype) %>%
