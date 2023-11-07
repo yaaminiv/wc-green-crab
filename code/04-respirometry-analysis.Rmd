@@ -3393,20 +3393,21 @@ Q10 = (R2/R1)^(10/(T2-T1))
 
 where T1 = temperature 1, T2 = temperature 2, R1 = respiration at T1, and R2 = respiration at T2.
 
-I am going to calculate pairwise Q10 metrics for each day with oxygen consumption data. This will provide another metric to compare across treatment x day combinations.
+I am going to calculate pairwise Q10 metrics for each day with oxygen consumption data for all three treatments. This will provide another metric to compare across treatment x day combinations.
 
 ```{r}
 all_MO2_slope_results_Q10output <- all_MO2_slope_results_meanSDCV %>%
+  filter(., day != "49") %>%
   select(day, treatment, slope_nmol_hr_corrected_mean) %>%
   unique(.) %>%
   mutate(temperature = case_when(treatment == "15C" ~ 15,
                                  treatment == "25C" ~ 25,
                                  treatment == "05C" ~ 5)) %>% 
   pivot_wider(., names_from = treatment, values_from = c(slope_nmol_hr_corrected_mean, temperature)) %>%
-  mutate(., Q10_15_30 = Q10(R1 = slope_nmol_hr_corrected_mean_13C, R2 = slope_nmol_hr_corrected_mean_30C, T1 = temperature_13C, T2 = temperature_30C)) %>%
-  mutate(., Q10_13_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_13C, T1 = temperature_05C, T2 = temperature_13C)) %>%
-  mutate(., Q10_30_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_30C, T1 = temperature_05C, T2 = temperature_30C)) %>%
-  select(., -c(temperature_13C, temperature_30C, temperature_05C)) #Take input dataframe and pivot wider. Use treatment as IDs for new colums, and paste values from mean slope and tmeperature. Use the formula to calculate Q10 for each pairwise temperature comparison. Remove temperature columns.
+  mutate(., Q10_15_25 = Q10(R1 = slope_nmol_hr_corrected_mean_15C, R2 = slope_nmol_hr_corrected_mean_25C, T1 = temperature_15C, T2 = temperature_25C)) %>%
+  mutate(., Q10_15_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_15C, T1 = temperature_05C, T2 = temperature_15C)) %>%
+  mutate(., Q10_25_5 = Q10(R1 = slope_nmol_hr_corrected_mean_05C, R2 = slope_nmol_hr_corrected_mean_25C, T1 = temperature_05C, T2 = temperature_25C)) %>%
+  select(., -c(temperature_15C, temperature_25C, temperature_05C)) #Take input dataframe and pivot wider. Use treatment as IDs for new colums, and paste values from mean slope and tmeperature. Use the formula to calculate Q10 for each pairwise temperature comparison. Remove temperature columns.
 all_MO2_slope_results_Q10output #Confirm Q10 calculations
 ```
 
@@ -3422,29 +3423,28 @@ I'm going to plot Q10 values for the 13ºC vs. 5ºC or 30ºC comparisons.
 all_MO2_slope_results_Q10output %>%
   pivot_longer(., cols = starts_with("Q10_"), names_to = "comparison", values_to = "Q10") %>%
   select(., day, comparison, Q10) %>%
-  filter(., comparison != "Q10_30_5") %>%
+  filter(., comparison != "Q10_25_5") %>%
   ggplot(., aes(x = day, y = Q10, group = comparison)) +
   geom_line(aes(color = comparison, lty = comparison)) + geom_point(aes(color = comparison, shape = comparison), size = 2) +
   geom_line(y = 2, color = "black", lty = 5) +
   xlab("Day") + ylab("Pairwise Q10") +
-  scale_y_continuous(lim = c(0,10), 
-                     breaks = seq(0,10,2)) +
-  scale_x_discrete(breaks = c("04", "08", "15", "22"),
-                   labels = c("4", "8", "15", "22")) +
+  scale_y_continuous(lim = c(0,6.5), 
+                     breaks = seq(0,6.5,2)) +
+  scale_x_discrete(breaks = c("07", "14", "21", "28", "42"),
+                   labels = c(7, 14, 21, 28, 42)) +
   scale_color_manual(values = c(plotColors[3], plotColors[1]), 
                      name = "Comparison",
-                     breaks = c("Q10_13_5", "Q10_13_30"),
-                     labels = c("13ºC vs. 5ºC", "13ºC vs. 30ºC")) +
+                     breaks = c("Q10_15_5", "Q10_15_25"),
+                     labels = c("15ºC vs. 5ºC", "15ºC vs. 25ºC")) +
   scale_linetype_manual(values = c(2, 6),
                         name = "Comparison",
-                        breaks = c("Q10_13_5", "Q10_13_30"),
-                        labels = c("13ºC vs. 5ºC", "13ºC vs. 30ºC")) +
+                        breaks = c("Q10_15_5", "Q10_15_25"),
+                        labels = c("15ºC vs. 5ºC", "15ºC vs. 25ºC")) +
   scale_shape_manual(values = c(15, 17),
                      name = "Comparison",
-                     breaks = c("Q10_13_5", "Q10_13_30"),
-                     labels = c("13ºC vs. 5ºC", "13ºC vs. 30ºC")) +
+                     breaks = c("Q10_15_5", "Q10_15_25"),
+                     labels = c("15ºC vs. 5ºC", "15ºC vs. 25ºC")) +
   theme_classic(base_size = 15)
 ggsave("figures/pairwise-Q10.pdf", height = 8.5, width = 11)
-#Create a line graph with pairwise Q10 metrics for control 13ºC vs. either the 5ºC or 30ºC treatments. First, pivot_longer the Q10 calculation table and select columns such that only day, Q10, and comparison information remains. Remove the 30ºC vs. 5ºC Q10 calculations. Plot the data, grouping by Q10 comparison. Assign colors, line type, and shape by comparison. 
+#Create a line graph with pairwise Q10 metrics for control 15ºC vs. either the 5ºC or 25ºC treatments. First, pivot_longer the Q10 calculation table and select columns such that only day, Q10, and comparison information remains. Remove the 25ºC vs. 5ºC Q10 calculations. Plot the data, grouping by Q10 comparison. Assign colors, line type, and shape by comparison. 
 ```
-
