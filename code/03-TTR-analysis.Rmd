@@ -376,8 +376,6 @@ write.csv(broom::tidy(TTRthreshModel2), "TTR-binomialModel.csv", quote = FALSE, 
 
 # Final plots
 
-## Treatment-level plot
-
 ```{r}
 modTTR %>%
   dplyr::select(., c(day, treatment, TTRavgFull, TTRavgFullLow, TTRavgFullHigh)) %>%
@@ -431,9 +429,37 @@ modTTR %>%
 ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 ```
 
-## Individual-level plot
+```{r}
+modTTR %>%
+  dplyr::select(., c(day, treatment, TTRavg)) %>%
+  distinct(.) %>%
+mutate(., day = case_when(day == 1 ~ "01",
+                            day == 2 ~ "02",
+                            day == 7 ~ "07",
+                            day != 1 | 2 | 7 ~ as.character(day))) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = day, y = TTRavg, color = treatment, shape = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_dodge(width = 0.75)) +
+  geom_hline(aes(yintercept = boxplot.stats(modTTR$TTRavg)$stats[5]), lty = 2, color = "black") +
+  ylab("Average Time-to-Right (s)") +
+  scale_x_discrete(name = "Day",
+                   breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42", "49"),
+                   labels = c("0", "1", "2", "7", "12", "14", "19", "21", "26", "28", "42", "49")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
+ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
+```
 
-I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to plot the TTR data from that subset to visualize the individual variation within each treatment, and how that may or may not change over time.
+
+# Individual-level analysis
 
 ```{r}
 modTTR %>%
@@ -442,6 +468,13 @@ modTTR %>%
   unique(.) %>%
   nrow(.) #Sanity check: 27 crabs used for TTR and respirometry
 ```
+
+## Plots
+
+## Individual-level plot
+
+I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to plot the TTR data from that subset to visualize the individual variation within each treatment, and how that may or may not change over time.
+
 
 ```{r}
 modTTR %>%
