@@ -24,9 +24,11 @@ getwd()
 #install.packages("tidyverse")
 #install.packages("plotrix")
 #install.packages("RColorBrewer")
+#install.packages("respirometry")
 require(tidyverse)
 require(plotrix)
 require(RColorBrewer)
+require(respirometry)
 ```
 
 ```{r}
@@ -57,6 +59,12 @@ head(genotypeData) #Confirm genotype dataframe creation
 # Format data
 
 ```{r}
+levels(as.factor(modTTR$missing.swimmer))
+```
+
+FIX NAS BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
+
+```{r}
 modTTR <- rawTTR %>%
   dplyr::select(., -c(notes, probe.number)) %>%
   left_join(., crabMetadata, by = "crab.ID") %>%
@@ -73,6 +81,13 @@ modTTR <- rawTTR %>%
                             date == "8/9/23" ~ 42,
                             date == "8/16/23" ~ 49)) %>%
   mutate(., size = carapace.width/carapace.length) %>%
+  filter(., is.na(size) == FALSE) %>% #Remove this line when TTR data is fixed
+  mutate(., integument.cont = case_when(integument.color == "BG" ~ 0.5,
+                                        integument.color == "G" ~ 1.0,
+                                        integument.color == "YG" ~ 1.5,
+                                        integument.color == "Y" ~ 2.0,
+                                        integument.color == "YO" ~ 2.5,
+                                        integument.color == "O" ~ 3)) %>%
   mutate(., trial.1 = na_if(trial.1, 91.00)) %>%
   mutate(., trial.2 = na_if(trial.2, 91.00)) %>%
   mutate(., trial.3 = na_if(trial.3, 91.00)) %>%
@@ -87,7 +102,7 @@ modTTR <- rawTTR %>%
   mutate(., TTRavgFullLow = TTRavgFull - TTRSEFull) %>%
   mutate(., TTRavgFullHigh = TTRavgFull + TTRSEFull) %>%
   ungroup(.) %>% 
-  left_join(., genotypeData, by = c("crab.ID", "treatment")) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup. Join with genotype data.
+  left_join(., genotypeData, by = c("crab.ID", "treatment")) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Use case_when to create a column of continuous integument color metrics. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup. Join with genotype data.
 head(modTTR) #Confirm formatting
 ```
 
@@ -231,6 +246,24 @@ modTTR %>%
 ggsave("figures/time-to-right-size.pdf", height = 8.5, width = 11)
 ```
 
+## Carapace width
+
+```{r}
+modTTR %>%
+  ggplot(., mapping = aes(x = day, y = TTRavg, color = carapace.width)) +
+  geom_jitter(alpha = 0.8) +
+  scale_x_continuous(name = "Day",
+                     breaks = unique(modTTR$day),
+                     limits = c(4, 22)) +
+  scale_y_continuous(name = "Average Time-to-Right (s)",
+                     breaks = seq(0, 50, 10),
+                     limits = c(0, 50)) +
+  theme_classic(base_size = 15)
+ggsave("figures/time-to-right-carapaceWidth.pdf", height = 8.5, width = 11)
+```
+
+## Genotype
+
 ```{r}
 modTTR %>%
   filter(., is.na(final.genotype) == FALSE) %>% 
@@ -248,18 +281,18 @@ ggsave("figures/time-to-right-genotype.pdf", height = 8.5, width = 11)
 
 # Assess differences by treatment
 
-I will use an ANOVA to assess treatment differences, as a linear model or ANOVA seems to be common practice in the literature (ex. [Blakeslee et al. 2021](https://doi.org/10.1098/rspb.2021.0703)). I chose an ANOVA because I have a lot of categorical variables.
+I will use an ANOVA to assess treatment differences, as a linear model or ANOVA seems to be common practice in the literature (ex. [Blakeslee et al. 2021](https://doi.org/10.1098/rspb.2021.0703)).
 
 ```{r}
 hist(modTTR$TTRavg)
 hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
 ```
 
-## ANOVA
+## GLM
 
 ```{r}
-TTRmodel <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + size + weight + as.factor(missing.swimmer), data = modTTR) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color, size, weight, and whether or not a crab is missing legs as explanatory variables.
-summary(TTRmodel) #Only treatment is significant
+TTRmodel <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer), data = modTTR) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, and whether or not a crab is missing legs as explanatory variables.
+summary(TTRmodel) #Various factors significant
 ```
 
 ```{r}
@@ -268,44 +301,37 @@ summary(TTRmodelStep) #Show output from step to identify the best model
 ```
 
 ```{r}
-TTRmodelSig <- aov(log(TTRavg) ~ treatment + day + as.factor(integument.color) + size + weight + treatment:day, data = modTTR) #Run the most significant model identified by step
-summary(TTRmodelSig) #Significant impact of treatment, treatment x day, weight, and integument color. Marginally significant influence of size. No impact of day alone
+TTRmodelSig <- glm(log(TTRavg) ~ treatment + day + integument.cont + weight + treatment:day, data = modTTR) #Run the most significant model identified by step, which includes treatment, day, integument color, weight, and the interaction between treatment and day
+summary(TTRmodelSig) #Significant impact of treatment, day, their interaction, integument color, and weight
 ```
 
-It's interesting that day is not significant, but treatment:day is retained as a significant effect. I will compare the AIC from the model identified by `step`, the model - treatment:day, and the model - day - treatment:day to find the best option.
+I'm going to run a few more models without various factors to see what happens.
 
 ```{r}
-TTRmodelSigMinusDayInt <- aov(log(TTRavg) ~ treatment + day + as.factor(integument.color) + size + weight, data = modTTR) #Run the most significant model identified by step - treatment:day
-TTRmodelSigMinusDay <- aov(log(TTRavg) ~ treatment + day + as.factor(integument.color) + size + weight, data = modTTR) #Run the most significant model identified by step - treatment:day - day
-TTRmodelSigMinusDayIntSize <- aov(log(TTRavg) ~ treatment + day + as.factor(integument.color) + weight, data = modTTR) #Run the most significant model identified by step - treatment:day - day - size
-AIC(TTRmodel, TTRmodelSig, TTRmodelSigMinusDayInt, TTRmodelSigMinusDay, TTRmodelSigMinusDayIntSize) #Calculate AIC for various models
+TTRmodelSigMinusIntegument <- glm(log(TTRavg) ~ treatment + day + weight + treatment:day, data = modTTR)
+TTRmodelSigMinusWeight <- glm(log(TTRavg) ~ treatment + day + as.factor(integument.color) + treatment:day, data = modTTR)
+TTRmodelSignMinusIntegumentWeight <- glm(log(TTRavg) ~ treatment + day + treatment:day, data = modTTR)
+TTRmodelSigMinusInt <- glm(log(TTRavg) ~ treatment + day + as.factor(integument.color) + weight, data = modTTR)
+AIC(TTRmodel, TTRmodelSig, TTRmodelSigMinusIntegument, TTRmodelSigMinusWeight, TTRmodelSignMinusIntegumentWeight, TTRmodelSigMinusInt) #Calculate AIC for various models
+```
+
+The model from step is still the most parsimonious model.
+
+```{r}
+summary(TTRmodelSig) #Most parsimonious model. Significant influence of treatment, integment color, and weight, but no effect of day or size.
 ```
 
 ```{r}
-summary(TTRmodelSigMinusDayInt) #Most parsimonious model. Significant influence of treatment, integment color, and weight, but no effect of day or size.
-```
-
-```{r}
-write.csv(broom::tidy(TTRmodelSigMinusDayInt), "TTR-ANOVA-output.csv", quote = FALSE, row.names = FALSE) #Save table version of ANOVA output
+write.csv(broom::tidy(TTRmodelSig), "TTR-glm-output.csv", quote = FALSE, row.names = FALSE) #Save table version of GLM output
 ```
 
 ## Check assumptions
 
 ```{r}
-hist(residuals(TTRmodelSigMinusDayInt)) #Residuals normally distributed
+hist(residuals(TTRmodelSig)) #Residuals normally distributed
 
-plot(fitted(TTRmodelSigMinusDayInt), residuals(TTRmodelSigMinusDayInt)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+plot(fitted(TTRmodelSig), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
 abline(h = 0, lty = 2, col = "grey")
-```
-
-## Post-hoc tests
-
-```{r}
-TukeyHSD(TTRmodelSigMinusDayInt, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all pairwise treatment comparisons.
-```
-
-```{r}
-write.csv(broom::tidy(TukeyHSD(TTRmodelSigMinusDayInt, "treatment", conf.level = 0.95)), "TTR-ANOVA-treatment-Tukey.csv", quote = FALSE, row.names = FALSE) #Save TukeyHSD output
 ```
 
 # Threshold analysis
@@ -333,6 +359,7 @@ TTRthreshModel <- glm(I(TTRthresh == 1) ~ treatment + day + treatment*day + as.f
                       data = modTTR) #Create a binomial model, where 1 = success of righting wihtin the defined threshold
 summary(TTRthreshModel) #Only weight is significant
 ```
+
 ```{r}
 step(TTRthreshModel, test = "LRT") #Use likelihood ratio tests and backwards deletion approaches to identify the best model
 ```
@@ -534,6 +561,7 @@ ggsave("figures/time-to-right-avg-individuals-percChange.pdf", height = 8.5, wid
 
 # TO DO LIST
 
+- FIX NAS IN MODTTR BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
 - TTR x genotype analysis
   
   
