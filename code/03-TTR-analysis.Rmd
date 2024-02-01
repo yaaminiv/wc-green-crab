@@ -24,10 +24,14 @@ getwd()
 #install.packages("tidyverse")
 #install.packages("plotrix")
 #install.packages("RColorBrewer")
+#install.packages("ggpubr")
+#install.packages("patchwork")
 #install.packages("respirometry")
 require(tidyverse)
 require(plotrix)
 require(RColorBrewer)
+require(ggpubr)
+require(patchwork)
 require(respirometry)
 ```
 
@@ -57,10 +61,6 @@ head(genotypeData) #Confirm genotype dataframe creation
 ```
 
 # Format data
-
-```{r}
-levels(as.factor(modTTR$missing.swimmer))
-```
 
 FIX NAS BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
 
@@ -366,7 +366,7 @@ step(TTRthreshModel, test = "LRT") #Use likelihood ratio tests and backwards del
 
 ```{r}
 TTRthreshModel2 <- glm(formula = I(TTRthresh == 1) ~ treatment + day + as.factor(integument.color) + 
-    weight + treatment:day, family = binomial(), data = modTTR) #Run model selected by step with only significant terms
+                         weight + treatment:day, family = binomial(), data = modTTR) #Run model selected by step with only significant terms
 summary(TTRthreshModel2) #Only weight significant
 ```
 
@@ -433,7 +433,7 @@ ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 modTTR %>%
   dplyr::select(., c(day, treatment, TTRavg)) %>%
   distinct(.) %>%
-mutate(., day = case_when(day == 1 ~ "01",
+  mutate(., day = case_when(day == 1 ~ "01",
                             day == 2 ~ "02",
                             day == 7 ~ "07",
                             day != 1 | 2 | 7 ~ as.character(day))) %>%
@@ -458,27 +458,27 @@ mutate(., day = case_when(day == 1 ~ "01",
 ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
 ```
 
-
 # Individual-level analysis
 
+I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to examine that subset to understand individual variation within each treatment, and how that may or may not change over time.
+
+remove rows without genotype data
+
 ```{r}
-modTTR %>%
+modTTRSubset <- modTTR %>%
   filter(., respirometry == "Y") %>%
-  select(., crab.ID) %>%
-  unique(.) %>%
-  nrow(.) #Sanity check: 27 crabs used for TTR and respirometry
+  filter(., is.na(final.genotype) == FALSE) %>%
+  unique(.) #Subset data for crabs used in respirometry and TTR
+head(modTTRSubset)
+nrow(modTTRSubset)
 ```
 
-## Plots
+## Data exploration
 
-## Individual-level plot
-
-I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to plot the TTR data from that subset to visualize the individual variation within each treatment, and how that may or may not change over time.
-
+First things first: I want to understand if there are certain individuals that vary more over time! The simplest way to do this is to just plot the data.
 
 ```{r}
-modTTR %>%
-  filter(., respirometry == "Y") %>%
+modTTRSubset %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -505,11 +505,12 @@ modTTR %>%
 ggsave("figures/time-to-right-avg-individuals.pdf", height = 8.5, width = 11)
 ```
 
+Alright, this plot tells us what we already know: that there's more variation in the 5ºC than the other two.
+
 I also want to look at difference in TTR over time by looking at the difference in TTR from the average...
 
 ```{r}
-modTTR %>%
-  filter(., respirometry == "Y") %>%
+modTTRSubset %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -536,8 +537,7 @@ ggsave("figures/time-to-right-avg-individuals-diff.pdf", height = 8.5, width = 1
 ```
 
 ```{r}
-modTTR %>%
-  filter(., respirometry == "Y") %>%
+modTTRSubset %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull, final.genotype)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -566,8 +566,7 @@ ggsave("figures/time-to-right-avg-individuals-diff-genotype.pdf", height = 8.5, 
 ...and percent change from the average.
 
 ```{r}
-modTTR %>%
-  filter(., respirometry == "Y") %>%
+modTTRSubset %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -592,9 +591,323 @@ modTTR %>%
 ggsave("figures/time-to-right-avg-individuals-percChange.pdf", height = 8.5, width = 11)
 ```
 
+## Genotype analysis
+
+I'm going to examine the effect of genotype on TTR in a few ways. 
+
+### Average TTR
+
+I'm going to start by looking the influnce of genotype variables on overall TTR:
+
+1. Genotype
+2. Presence of "C" (warm-adapted allele) (the inverse )
+
+```{r}
+modTTRSubset <- modTTRSubset %>%
+  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "N")) %>%
+  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "Y")) #Add two columns for presence of C or T allele
+head(modTTRSubset)
+```
+
+```{r}
+TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = modTTRSubset) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
+summary(TTRmodelSubset) #Various factors significant
+```
+
+```{r}
+step(TTRmodelSubset, direction = "backward")
+```
+
+```{r}
+TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = modTTRSubset) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
+summary(TTRmodelSubset2) #Various factors significant
+```
+
+```{r}
+step(TTRmodelSubset2, direction = "backward")
+```
+
+No genotype variable has a significant influence on average TTR. Can we see if any of our outliers in our average TTR boxplots are associated with a particular genotype?
+
+```{r}
+facet_labels <- c("05C" = "5ºC",
+                  "15C" = "15ºC",
+                  "25C" = "25ºC") #Assign labels for facets
+```
+
+```{r}
+modTTRSubset %>%
+  dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
+  distinct(.) %>%
+  mutate(., day = case_when(day == 1 ~ "01",
+                            day == 2 ~ "02",
+                            day == 7 ~ "07",
+                            day != 1 | 2 | 7 ~ as.character(day))) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = day, y = TTRavg, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, nrow = 3, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  ylab("Average Time-to-Right (s)") +
+  scale_x_discrete(name = "Day",
+                   breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42", "49"),
+                   labels = c("0", "1", "2", "7", "12", "14", "19", "21", "26", "28", "42", "49")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
+ggsave("figures/time-to-right-avg-boxplot-genotype.pdf", height = 8.5, width = 11)
+```
+
+### Difference in TTR
+
+I'm going to do a similar analysis, but this time look at the effects of genotype on the difference in TTR between days 2 and 7, days 2 and 21, and days 2 and 42. Although the 5ºC treatment was run for 49 days, since we know time has a significant influence on TTR I'm going to use the same time point for all variables. Looking at differences with day 7 can represent short-term differences, while days 21 and 42 would be longer-term differences. Day 21 is also a nice parallel to the three-week experiment run in 2022. I also have day 0 data for some of the crabs.
+
+```{r}
+modTTRSubsetDiff <- modTTRSubset %>%
+  select(., day, crab.ID, TTRavg, treatment, final.genotype, presenceC, presenceT) %>%
+  filter(., day == 0 | day == 2 | day == 7 | day == 21 | day == 42) %>%
+  pivot_wider(., names_from = day, values_from = TTRavg, names_prefix = "day") %>%
+  mutate(., day2v0 = day2 - day0) %>%
+  mutate(., day7v0 = day7 - day0) %>%
+  mutate(., day21v0 = day21 - day0) %>%
+  mutate(., day42v0 = day42 - day0) %>%
+  mutate(., day7v2 = day7 - day2) %>%
+  mutate(., day21v2 = day21 - day2) %>%
+  mutate(., day42v2 = day42 - day2) #For subset of the crabs, select day, crab ID, average TTR, treatmet, and genotype information. Filter days of interest and pivot wider, using days as columns and values from TTRavg. Add "day" as a prefix to all columns. Get the difference in TTR for comparisons of interest.
+head(modTTRSubsetDiff)
+```
+
+
+#### Plot
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day7v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual TTR (s)", title = "Day 7 vs. Day 2") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-day7v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual TTR (s)", title = "Day 21 vs. Day 2") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-day21v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual TTR (s)", title = "Day 42 vs. Day 2") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-day42v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+day7vs2Plot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day7v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "", y = "", title = "A. Day 7 vs. Day 2") +
+  scale_y_continuous(breaks = seq(-5, 15, 5),
+                     limits = c(-5,15)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none",
+                                        axis.ticks.x = element_blank(),
+                                        axis.text.x = element_blank())
+day7vs2Plot
+```
+
+```{r}
+day21vs2Plot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual TTR (s)", title = "B. Day 21 vs. Day 2") +
+  scale_y_continuous(breaks = seq(-1,5,1),
+                     limits = c(-1,5)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none",
+                                        axis.ticks.x = element_blank(),
+                                        axis.text.x = element_blank())
+day21vs2Plot
+```
+
+```{r}
+day42v2Plot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "", title = "C. Day 42 vs. Day 2") +
+  scale_y_continuous(breaks = seq(-1,6,1),
+                     limits = c(-1,6)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+day42v2Plot
+```
+
+```{r}
+day7vs2Plot / day21vs2Plot / day42v2Plot
+ggsave("figures/time-to-right-average-individuals-genotype-multipanel.pdf", height = 11, width = 8.5)
+```
+
+## Q10 analysis
+
+Q10 is a metric used to quantify temperature sensitivity, generally defined as the change in a physiological response over a 10 degree temperature interval. For most organisms, Q10 is around 2 (a two-fold change in a physiological or chemical response due to a 10 degree temperature change). I will use the full dataset to calculate Q10 values between day 0 and 2, day 0 and 7, day 0 and 21, and day 0 and 42. I can then investigate how genotype influences Q10.
+
+```{r}
+modTTRQ10 <- modTTR %>%
+  select(., day, crab.ID, TTRavg, treatment, final.genotype) %>%
+  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "N")) %>%
+  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "Y")) %>%
+  filter(., day == 0 | day == 2 | day == 7 | day == 21 | day == 42) %>%
+  filter(., treatment != "15C") %>%
+  pivot_wider(., names_from = day, values_from = TTRavg, names_prefix = "day") %>%
+  filter(., is.na(day0) == FALSE) %>% 
+  mutate(temperature = case_when(treatment == "15C" ~ 15,
+                                 treatment == "25C" ~ 25,
+                                 treatment == "5C" ~ 5)) %>%
+  arrange(., temperature) %>%
+  mutate(., day2_Q10 = Q10(R1 = day0, 
+                           R2 = day2, 
+                           T1 = 15, 
+                           T2 = temperature)) %>%
+  mutate(., day7_Q10 = Q10(R1 = day0, 
+                           R2 = day7, 
+                           T1 = 15, 
+                           T2 = temperature)) %>%
+  mutate(., day21_Q10 = Q10(R1 = day0, 
+                           R2 = day7, 
+                           T1 = 15, 
+                           T2 = temperature)) %>%
+  mutate(., day42_Q10 = Q10(R1 = day0, 
+                           R2 = day7, 
+                           T1 = 15, 
+                           T2 = temperature)) %>% 
+  filter(., is.na(day2_Q10) == FALSE) %>%
+  select(., crab.ID, treatment, final.genotype, presenceC, presenceT, day2_Q10, day7_Q10, day21_Q10, day42_Q10) %>%
+  pivot_longer(., cols = !c(crab.ID, treatment, final.genotype, presenceC, presenceT), names_to = "day", values_to = "Q10") %>%
+  filter(., is.na(Q10) == FALSE) %>%
+  mutate(., day = gsub(x = day, pattern = "_Q10", replacement = "")) %>%
+  mutate(., day = gsub(x = day, pattern = "day", replacement = "")) %>%
+  mutate(., day = case_when(day == "2" ~ "02",
+                            day == "7" ~ "07",
+                            day != "2" | day != "7" ~ day)) %>% 
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment))
+#Select columns of interest. Add columns for presence of C or T alleles. Filter days of interest, remove 15C crabs, and pivot wider. Remove crabs without a day 0 measurement. Add a column for temperature based on the treatment column, and arrange data by temperature. Use the Q10 function within the respirometry package to calculate Q10 values for day 0 vs. day 2, 7, 21, and 42. Remove any rows without a day 2 Q10 value. Select columns of interest and pivot longer. Remove any rows without a Q10 value. Use a series of gsub to modify day column and convert to a character format that would be organized numerically. Use a similar approach for treatment.
+head(modTTRQ10)
+length(modTTRQ10$crab.ID %>% unique(.)) #18 crabs
+```
+
+```{r}
+modTTRQ10 %>%
+  ggplot(., mapping = aes(x = day, y = Q10, color = treatment, shape = treatment, group = crab.ID)) +
+  geom_point(size = 2) + geom_line(lty = 3) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  scale_x_discrete(name = "Day",
+                   breaks = c("02", "07", "21", "42"),
+                   labels = c("2", "7", "21", "42")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15) #Plot Q10 data with day on the x-axis, Q10 on the y-axis, and color and shape defined by treatment. Group by crab.ID. Add points and lines connecting values for each crab. Facet by treatment, allow y-axis to vary by each facet, and include facet labels. Add x-axis label and specify x-axis tick labels. Add shape and color values for each treatment but do not include a legend.
+ggsave("figures/time-to-right-average-individuals-Q10.pdf", height = 8.5, width = 11)
+```
+
 # TO DO LIST
 
 - FIX NAS IN MODTTR BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
-- TTR x genotype analysis
-  
-  
+- full TTR x genotype analysis
+
