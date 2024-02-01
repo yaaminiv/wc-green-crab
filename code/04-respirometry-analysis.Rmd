@@ -3008,14 +3008,13 @@ demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
                                   tank == "T2" | tank == "T5" | tank == "T8" ~ "15C",
                                   tank == "T3" | tank == "T6" | tank == "T9" ~ "25C")) %>%
   left_join(., crabMetadata, by = c("crab.ID", "treatment")) %>%
-  mutate(., size = carapace.width/carapace.length) %>%
   mutate(., missing.legs = case_when(number.legs < 10 ~ "Y",
                                      number.legs == 10 ~ "N")) %>%
   mutate(probe_num = case_when(probe_num == 1 ~ 4,
                                probe_num == 2 ~ 2,
                                probe_num == 3 ~ 3,
                                probe_num == 4 ~ 4)) %>%
-  select(., c(crab.ID, day, treatment, tank, probe_num, sex, integument.color, weight, size, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
+  select(., c(crab.ID, day, treatment, tank, probe_num, sex, integument.color, weight, carapace.width, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
 head(demTTRdata) #Confirm dataframe creation
 ```
 
@@ -3078,7 +3077,7 @@ hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transfor
 #### Full genotype 
 
 ```{r}
-lmAllSlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + size + integument.color + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmAllSlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + carapace.width + integument.color + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
 ```
 
@@ -3089,17 +3088,17 @@ summary(lmAllSlopeResultsStep) #The most significant model is one that includes 
 
 ```{r}
 lmAllSlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                              missing.legs + final.genotype + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+                              carapace.width + missing.legs + final.genotype + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
 summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
 
 ```{r}
 lmAllSlopeResultsSigMinusInt <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                      missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction
+                                      carapace.width + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction
 lmAllSlopeResultsSigMinusDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                      missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction or day
-lmAllSlopeResultsSigMinusLegs <- aov(log(-slope_nmol_hr_corrected) ~ treatment + day + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction or legs
-lmAllSlopeResultsSigMinusLegsDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction, legs, day
+                                      carapace.width + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction or day
+lmAllSlopeResultsSigMinusLegs <- aov(log(-slope_nmol_hr_corrected) ~ treatment + day + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction, width, or legs
+lmAllSlopeResultsSigMinusLegsDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction, width, legs, day
 AIC(lmAllSlopeResults, lmAllSlopeResultsSig, lmAllSlopeResultsSigMinusInt, lmAllSlopeResultsSigMinusLegs, lmAllSlopeResultsSigMinusDay, lmAllSlopeResultsSigMinusLegsDay) #Calculate AIC. Most parsimonious model (lowest AIC) is the model selected by step
 ```
 
@@ -3112,7 +3111,7 @@ summary(lmAllSlopeResultsSig) #Most parsimonious model
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
-lmBinarySlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + size + integument.color + missing.legs + hasC + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmBinarySlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + carapace.width + integument.color + missing.legs + hasC + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmBinarySlopeResults) #Significant impact of treatment, treatment:day, and hasT on respiration
 ```
 
@@ -3123,16 +3122,18 @@ summary(lmBinarySlopeResultsStep) #The most significant model is one that includ
 
 ```{r}
 lmBinarySlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                 hasT + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+                                 carapace.width + missing.legs + hasT + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
 summary(lmBinarySlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
 
 ```{r}
 lmBinarySlopeResultsSigMinusInt <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction
+                                         carapace.width + missing.legs + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction
 lmBinarySlopeResultsSigMinusDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day
-AIC(lmBinarySlopeResults, lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusInt, lmBinarySlopeResultsSigMinusDay) #Calculate AIC. Most parsimonious model is the one identified by step
+                                         carapace.width + missing.legs + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day
+lmBinarySlopeResultsSigMinusDem <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
+                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day - width - missing legs
+AIC(lmBinarySlopeResults, lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusInt, lmBinarySlopeResultsSigMinusDay, lmBinarySlopeResultsSigMinusDem) #Calculate AIC. Most parsimonious model is the one identified by step
 ```
 
 ```{r}
