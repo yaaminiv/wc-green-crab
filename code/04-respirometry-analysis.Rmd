@@ -3205,10 +3205,6 @@ all_MO2_slope_results_reorder %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(aes(shape = treatment), size = 2) +
   xlab("") + ylab("Oxygen Consumption (nmol/hr)") +
-  stat_summary(fun = median,
-               geom = "line",
-               aes(group = 1),
-               col = "black", lty = 2) +
   facet_wrap(. ~ day, ncol = 3, labeller = labeller (day = facet_labels)) +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("", "", "")) +
@@ -3226,7 +3222,7 @@ all_MO2_slope_results_reorder %>%
                                         strip.text.x = element_text(size = 15),
                                         strip.background = element_rect(colour = "white"))
 ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
-#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Add a line connecting each boxplot midpoint. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
+#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
 ```{r}
@@ -3235,10 +3231,6 @@ all_MO2_slope_results_reorder %>%
   ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
   geom_boxplot() + geom_point(aes(shape = final.genotype), size = 2) +
   xlab("") + ylab("Oxygen Consumption (nmol/hr)") +
-  stat_summary(fun = median,
-               geom = "line",
-               aes(group = 1),
-               col = "black", lty = 2) +
   facet_wrap(. ~ day, ncol = 3, labeller = labeller (day = facet_labels)) +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("", "", "")) +
@@ -3256,7 +3248,7 @@ all_MO2_slope_results_reorder %>%
                                         strip.text.x = element_text(size = 15),
                                         strip.background = element_rect(colour = "white"))
 ggsave("figures/multipanel-oxygen-consumption-corrected-genotype.pdf", height = 8.5, width = 11)
-#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Add a line connecting each boxplot midpoint. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
+#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
 # Individual-level variation
