@@ -3004,6 +3004,12 @@ demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
                             date == "8/9/23" ~ "42",
                             date == "8/16/23" ~ "49")) %>%
   filter(., is.na(day) == FALSE) %>%
+  mutate(., integument.cont = case_when(integument.color == "BG" ~ 0.5,
+                                        integument.color == "G" ~ 1.0,
+                                        integument.color == "YG" ~ 1.5,
+                                        integument.color == "Y" ~ 2.0,
+                                        integument.color == "YO" ~ 2.5,
+                                        integument.color == "O" ~ 3)) %>%
   mutate(., treatment = case_when(tank == "T1" | tank == "T4" | tank == "T7" ~ "5C",
                                   tank == "T2" | tank == "T5" | tank == "T8" ~ "15C",
                                   tank == "T3" | tank == "T6" | tank == "T9" ~ "25C")) %>%
@@ -3014,7 +3020,7 @@ demTTRdata <- read.csv("../../data/time-to-right.csv", header = TRUE) %>%
                                probe_num == 2 ~ 2,
                                probe_num == 3 ~ 3,
                                probe_num == 4 ~ 4)) %>%
-  select(., c(crab.ID, day, treatment, tank, probe_num, sex, integument.color, weight, carapace.width, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
+  select(., c(crab.ID, day, treatment, tank, probe_num, sex, integument.cont, weight, carapace.width, missing.legs)) #Import TTR data and modify to include only the desired demographic data and average TTR data for crabs used during respiration trials
 head(demTTRdata) #Confirm dataframe creation
 ```
 
@@ -3066,7 +3072,7 @@ all_MO2_slope_results_demTTRdata_genotype <- all_MO2_slope_results_demTTRdata %>
 head(all_MO2_slope_results_demTTRdata_genotype) #Confirm left_join and dataframe manipulation
 ```
 
-### ANOVA
+### GLM
 
 ```{r}
 hist(-(all_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
@@ -3077,7 +3083,9 @@ hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transfor
 #### Full genotype 
 
 ```{r}
-lmAllSlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + carapace.width + integument.color + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmAllSlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day)*final.genotype + 
+                           sex + weight + carapace.width + integument.cont + missing.legs, 
+                         data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
 ```
 
@@ -3087,19 +3095,19 @@ summary(lmAllSlopeResultsStep) #The most significant model is one that includes 
 ```
 
 ```{r}
-lmAllSlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                              carapace.width + missing.legs + final.genotype + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+lmAllSlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + final.genotype +
+                              treatment:as.numeric(day) + treatment:final.genotype + as.numeric(day):final.genotype +
+                              treatment:as.numeric(day):final.genotype,
+                            data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
 summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
+In this model, day is not significant but it's included in the model. I'm going to see what happens when I remove it.
 
 ```{r}
-lmAllSlopeResultsSigMinusInt <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                      carapace.width + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction
-lmAllSlopeResultsSigMinusDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                      carapace.width + missing.legs + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction or day
-lmAllSlopeResultsSigMinusLegs <- aov(log(-slope_nmol_hr_corrected) ~ treatment + day + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction, width, or legs
-lmAllSlopeResultsSigMinusLegsDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + final.genotype, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, without interaction, width, legs, day
-AIC(lmAllSlopeResults, lmAllSlopeResultsSig, lmAllSlopeResultsSigMinusInt, lmAllSlopeResultsSigMinusLegs, lmAllSlopeResultsSigMinusDay, lmAllSlopeResultsSigMinusLegsDay) #Calculate AIC. Most parsimonious model (lowest AIC) is the model selected by step
+lmAllSlopeResultsSigMinusDay <- glm(log(-slope_nmol_hr_corrected) ~ treatment + final.genotype + 
+                                      treatment:final.genotype,
+                                    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus day
+AIC(lmAllSlopeResultsSig, lmAllSlopeResultsSigMinusDay) #AIC is lower for the model with day
 ```
 
 ```{r}
@@ -3111,33 +3119,35 @@ summary(lmAllSlopeResultsSig) #Most parsimonious model
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
-lmBinarySlopeResults <- aov(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + sex + weight + carapace.width + integument.color + missing.legs + hasC + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmBinarySlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day)*hasC + treatment*as.numeric(day)*hasT + 
+                              sex + weight + carapace.width + integument.cont + missing.legs, 
+                            data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmBinarySlopeResults) #Significant impact of treatment, treatment:day, and hasT on respiration
 ```
-
 ```{r}
 lmBinarySlopeResultsStep <- step(lmBinarySlopeResults, direction = "backward") #Use backwards-deletion approach to identify the most significant model (lowest AIC)
 summary(lmBinarySlopeResultsStep) #The most significant model is one that includes treatment, day, the interaction, and hasT
 ```
 
 ```{r}
-lmBinarySlopeResultsSig <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                 carapace.width + missing.legs + hasT + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+lmBinarySlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC + hasT +
+                                 treatment:as.numeric(day) + treatment:hasC + 
+                                 as.numeric(day):hasC + treatment:hasT + 
+                                 treatment:as.numeric(day):hasC, 
+                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
 summary(lmBinarySlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
 ```
+In this model, treatment is not significant, but there are several significant interactions. Also, presence of the C allele is significant, but presence of T is not. Time to try out a few more iterations.
 
 ```{r}
-lmBinarySlopeResultsSigMinusInt <- aov(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-                                         carapace.width + missing.legs + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction
-lmBinarySlopeResultsSigMinusDay <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                         carapace.width + missing.legs + hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day
-lmBinarySlopeResultsSigMinusDem <- aov(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                         hasT, data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Significant model - interaction - day - width - missing legs
-AIC(lmBinarySlopeResults, lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusInt, lmBinarySlopeResultsSigMinusDay, lmBinarySlopeResultsSigMinusDem) #Calculate AIC. Most parsimonious model is the one identified by step
-```
-
-```{r}
-summary(lmBinarySlopeResultsSig) #Most parsimonious model
+lmBinarySlopeResultsSigMinusTreat <- glm(log(-slope_nmol_hr_corrected) ~ as.numeric(day) + hasC + hasT +
+                                 as.numeric(day):hasC, 
+                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus treatment
+lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC +
+                                 treatment:as.numeric(day) + treatment:hasC + as.numeric(day):hasC +
+                                 treatment:as.numeric(day):hasC, 
+                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus hasT
+AIC(lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusTreat, lmBinarySlopeResultsSigMinushasT) #Step model is still the most significant
 ```
 
 #### Final model
@@ -3159,24 +3169,6 @@ hist(residuals(lmBinarySlopeResultsSig)) #Residuals normally distributed
 
 plot(fitted(lmBinarySlopeResultsSig), residuals(lmBinarySlopeResultsSig)) #Slight heteroskedasticity
 abline(h = 0, lty = 2, col = "grey")
-```
-
-### Post-hoc tests
-
-```{r}
-TukeyHSD(lmBinarySlopeResultsSig, "treatment", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all treatments
-```
-
-```{r}
-write.csv(broom::tidy(TukeyHSD(lmBinarySlopeResultsSig, "treatment", conf.level = 0.95)), "all-slope-reuslts-ANOVA-treatment-Tukey.csv", quote = FALSE, row.names = FALSE) #Save TukeyHSD output
-```
-
-```{r}
-pairwise.t.test(x = log(-(all_MO2_slope_results_demTTRdata_genotype$slope_nmol_hr_corrected)), all_MO2_slope_results_demTTRdata$day, p.adjust.method = "bonferroni") #Use pairwise t-test for quantitative variables. Marginal significance between days 49 and all other days.
-```
-
-```{r}
-TukeyHSD(lmBinarySlopeResultsSig, "hasT", conf.level = 0.95) #Use TukeyHSD for categorical variables. Significant difference between all treatments
 ```
 
 ## Create multipanel figure for oxygen consumption
@@ -3474,7 +3466,7 @@ all_MO2_slope_results_diff <- all_MO2_slope_results_reorder %>%
 head(all_MO2_slope_results_diff)
 ```
 
-#### Plot
+#### Plot by genotype
 
 ```{r}
 all_MO2_slope_results_diff %>%
@@ -3572,7 +3564,153 @@ day14v7Plot <- all_MO2_slope_results_diff %>%
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
                      guide = "none") +
   scale_shape_manual(values = c(15, 19, 17),
-                    guide = "none") +
+                     guide = "none") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(),
+                                        axis.ticks.x = element_blank())
+day14v7Plot
+```
+
+```{r}
+day21v7Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "", y = "Difference in Individual Oxygen Consumption (s)", title = "B. Day 21 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(),
+                                        axis.ticks.x = element_blank())
+day21v7Plot
+```
+
+```{r}
+day42v2Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "", title = "C. Day 42 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15)
+day42v2Plot
+```
+
+```{r}
+day7vs2Plot / day21vs2Plot / day42v2Plot
+ggsave("figures/oxygen-consumption-individuals-genotype-multiday-multipanel.pdf", height = 11, width = 8.5)
+```
+
+#### Plot by binary genotype
+
+Since presence of the T allele was marginally significant in the ANOVA, I want to plot by T presence instead of full genotype to see if that makes any patterns clearer. My post-hoc tests show that presence of the T allele increased oxygen consumption.
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day14v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 14 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day14v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 21 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day21v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day28v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 28 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day28v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 42 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day42v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+day14v7Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day14v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "", y = "", title = "A. Day 14 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                     guide = "none") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(),
                                         axis.ticks.x = element_blank())
 day14v7Plot
