@@ -3251,61 +3251,6 @@ ggsave("figures/multipanel-oxygen-consumption-corrected-genotype.pdf", height = 
 #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
-# Individual-level variation
-
-```{r}
-all_MO2_slope_results_reorder <- all_MO2_slope_results_reorder %>%
-  group_by(., day, treatment, tank) %>%
-  mutate(., slope_nmol_hr_corrected_avg = mean(slope_nmol_hr_corrected)) #Calculate tank average by day
-head(all_MO2_slope_results_reorder) #Confirm calculations
-```
-
-```{r}
-all_MO2_slope_results_reorder %>%
-  filter(., blank_ratio < 0.10) %>%
-  ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = treatment)) +
-  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
-  facet_wrap(vars(tank, treatment), ncol = 3) +
-  scale_x_continuous(name = "Day",
-                     breaks = c(seq(0, 42, 14), 49),
-                     limits = c(0, 49)) +
-  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
-  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("05C", "15C", "25C"),
-                     labels = c("5", "15", "25")) +
-  scale_shape_manual(values = c(15, 19, 17),
-                     name = "Temperature (ºC)",
-                     breaks = c("05C", "15C", "25C"),
-                     labels = c("5", "15", "25")) +
-  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
-                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
-ggsave("figures/multipanel-oxygen-consumption-individual.pdf", height = 8.5, width = 11)
-```
-
-```{r}
-all_MO2_slope_results_reorder %>%
-  filter(., blank_ratio < 0.10) %>%
-  ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = final.genotype)) +
-  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
-  facet_wrap(vars(tank, treatment), ncol = 3) +
-  scale_x_continuous(name = "Day",
-                     breaks = c(seq(0, 42, 14), 49),
-                     limits = c(0, 49)) +
-  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
-  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
-                     name = "Temperature (ºC)",
-                     breaks = c("05C", "15C", "25C"),
-                     labels = c("5", "15", "25")) +
-  scale_shape_manual(values = c(3, 4, 1),
-                     name = "Genotype",
-                     breaks = c("CC", "CT", "TT"),
-                     labels = c("CC", "CT", "TT")) +
-  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
-                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
-ggsave("figures/multipanel-oxygen-consumption-individual-genotype.pdf", height = 8.5, width = 11)
-```
-
 # Within-group variability
 
 The 15ºC and 25ºC treatments have more variability than the 5ºC treatments. To quantify this, I will calculate the standard deviation and coefficient of variation for each treatment x day combination.
@@ -3441,3 +3386,305 @@ all_MO2_slope_results_Q10output %>%
 ggsave("figures/pairwise-Q10.pdf", height = 8.5, width = 11)
 #Create a line graph with pairwise Q10 metrics for control 15ºC vs. either the 5ºC or 25ºC treatments. First, pivot_longer the Q10 calculation table and select columns such that only day, Q10, and comparison information remains. Remove the 25ºC vs. 5ºC Q10 calculations. Plot the data, grouping by Q10 comparison. Assign colors, line type, and shape by comparison. 
 ```
+
+# Individual-level variation
+
+## Exploratory plots
+
+```{r}
+all_MO2_slope_results_reorder <- all_MO2_slope_results_reorder %>%
+  group_by(., day, treatment, tank) %>%
+  mutate(., slope_nmol_hr_corrected_avg = mean(slope_nmol_hr_corrected)) #Calculate tank average by day
+head(all_MO2_slope_results_reorder) #Confirm calculations
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+  ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = treatment)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(tank, treatment), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
+ggsave("figures/multipanel-oxygen-consumption-individual.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+  ggplot(., mapping = aes(x = as.numeric(day), y = (-slope_nmol_hr_corrected_avg + slope_nmol_hr_corrected), group = crab.ID, color = treatment, shape = final.genotype)) +
+  geom_point(size = 1, alpha = 0.75) + geom_line(linetype = 3) +
+  facet_wrap(vars(tank, treatment), ncol = 3) +
+  scale_x_continuous(name = "Day",
+                     breaks = c(seq(0, 42, 14), 49),
+                     limits = c(0, 49)) +
+  scale_y_continuous(name = "Difference from Average Oxygen Consumption (nmol/hr)") +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(strip.text.x = element_blank(),
+                                        strip.background = element_blank()) #Plot difference from average oxygen consumption for each individual crab that was tracked over the entire experiment. Facet by tank and treatment so it's easier to visualize. Assign colors to each treatment and shapes to genotype.
+ggsave("figures/multipanel-oxygen-consumption-individual-genotype.pdf", height = 8.5, width = 11)
+```
+
+From these plots, it's clear that there is less variation in the 5ºC treatment than the 25ºC treatment because some crabs vary more than others. Can genotype explain these differenes?
+
+## Difference in respiration by genotype
+
+look at the effects of genotype on the difference in TTR between days 2 and 7, days 2 and 21, and days 2 and 42. Although the 5ºC treatment was run for 49 days, since we know time has a significant influence on TTR I'm going to use the same time point for all variables. Looking at differences with day 7 can represent short-term differences, while days 21 and 42 would be longer-term differences. Day 21 is also a nice parallel to the three-week experiment run in 2022. I also have day 0 data for some of the crabs.
+
+```{r}
+all_MO2_slope_results_reorder
+```
+
+```{r}
+all_MO2_slope_results_diff <- all_MO2_slope_results_reorder %>%
+  ungroup(.) %>%
+  arrange(., treatment) %>%
+  select(., day, crab.ID, slope_nmol_hr_corrected, treatment, final.genotype) %>%
+  filter(., day != "49") %>%
+  mutate(hasC = case_when(final.genotype == "CC" ~ "Y",
+                          final.genotype == "CT" ~ "Y",
+                          final.genotype == "TT" ~ "N"),
+         hasT = case_when(final.genotype == "CC" ~ "N",
+                          final.genotype == "CT" ~ "Y",
+                          final.genotype == "TT" ~ "Y")) %>%
+  pivot_wider(., names_from = day, values_from = slope_nmol_hr_corrected, names_prefix = "day") %>%
+  mutate(., day14v7 = -day14 + day07) %>%
+  mutate(., day21v7 = -day21 + day07) %>%
+  mutate(., day28v7 = -day28 + day07) %>%
+  mutate(., day42v7 = -day42 + day07) #Select day, crab ID, slope, treatmet, and genotype information. Filter days of interest. Add binary genotype information. Pivot wider, using days as columns and values from slope and add "day" as a prefix to all columns. Get the difference in negative slope for comparisons of interest.
+head(all_MO2_slope_results_diff)
+```
+
+#### Plot
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day14v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 14 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day14v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 21 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day21v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day28v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 28 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day28v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 42 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/oxygen-consumption-individuals-genotype-day42v7.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+day14v7Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day14v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "", y = "", title = "A. Day 14 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                    guide = "none") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(),
+                                        axis.ticks.x = element_blank())
+day14v7Plot
+```
+
+```{r}
+day21v7Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "", y = "Difference in Individual Oxygen Consumption (s)", title = "B. Day 21 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(),
+                                        axis.ticks.x = element_blank())
+day21v7Plot
+```
+
+```{r}
+day42v2Plot <- all_MO2_slope_results_diff %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
+  facet_wrap(. ~ final.genotype) + 
+  labs(x = "Temperature (ºC)", y = "", title = "C. Day 42 vs. Day 7") +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("5", "15", "25")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 19, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15)
+day42v2Plot
+```
+
+```{r}
+day7vs2Plot / day21vs2Plot / day42v2Plot
+ggsave("figures/oxygen-consumption-individuals-genotype-multiday-multipanel.pdf", height = 11, width = 8.5)
+```
+
+## Individual Q10 analysis
+
+Although I already calculated pairwise Q10 values, I have individual-level information I can use to calculate individual Q10 values. 
+
+```{r}
+modTTRQ10 <- modTTR %>%
+  select(., day, crab.ID, TTRavg, treatment, final.genotype) %>%
+  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "N")) %>%
+  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "Y")) %>%
+  filter(., day == 0 | day == 2 | day == 7 | day == 21 | day == 42) %>%
+  filter(., treatment != "15C") %>%
+  pivot_wider(., names_from = day, values_from = TTRavg, names_prefix = "day") %>%
+  filter(., is.na(day0) == FALSE) %>% 
+  mutate(temperature = case_when(treatment == "15C" ~ 15,
+                                 treatment == "25C" ~ 25,
+                                 treatment == "5C" ~ 5)) %>%
+  arrange(., temperature) %>%
+  mutate(., day2_Q10 = Q10(R1 = day0, 
+                           R2 = day2, 
+                           T1 = 15, 
+                           T2 = temperature)) %>%
+  mutate(., day7_Q10 = Q10(R1 = day0, 
+                           R2 = day7, 
+                           T1 = 15, 
+                           T2 = temperature)) %>%
+  mutate(., day21_Q10 = Q10(R1 = day0, 
+                            R2 = day7, 
+                            T1 = 15, 
+                            T2 = temperature)) %>%
+  mutate(., day42_Q10 = Q10(R1 = day0, 
+                            R2 = day7, 
+                            T1 = 15, 
+                            T2 = temperature)) %>% 
+  filter(., is.na(day2_Q10) == FALSE) %>%
+  select(., crab.ID, treatment, final.genotype, presenceC, presenceT, day2_Q10, day7_Q10, day21_Q10, day42_Q10) %>%
+  pivot_longer(., cols = !c(crab.ID, treatment, final.genotype, presenceC, presenceT), names_to = "day", values_to = "Q10") %>%
+  filter(., is.na(Q10) == FALSE) %>%
+  mutate(., day = gsub(x = day, pattern = "_Q10", replacement = "")) %>%
+  mutate(., day = gsub(x = day, pattern = "day", replacement = "")) %>%
+  mutate(., day = case_when(day == "2" ~ "02",
+                            day == "7" ~ "07",
+                            day != "2" | day != "7" ~ day)) %>% 
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment))
+#Select columns of interest. Add columns for presence of C or T alleles. Filter days of interest, remove 15C crabs, and pivot wider. Remove crabs without a day 0 measurement. Add a column for temperature based on the treatment column, and arrange data by temperature. Use the Q10 function within the respirometry package to calculate Q10 values for day 0 vs. day 2, 7, 21, and 42. Remove any rows without a day 2 Q10 value. Select columns of interest and pivot longer. Remove any rows without a Q10 value. Use a series of gsub to modify day column and convert to a character format that would be organized numerically. Use a similar approach for treatment.
+head(modTTRQ10)
+length(modTTRQ10$crab.ID %>% unique(.)) #18 crabs
+```
+
+```{r}
+modTTRQ10 %>%
+  ggplot(., mapping = aes(x = day, y = Q10, color = treatment, shape = treatment, group = crab.ID)) +
+  geom_point(size = 2) + geom_line(lty = 3) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  scale_x_discrete(name = "Day",
+                   breaks = c("02", "07", "21", "42"),
+                   labels = c("2", "7", "21", "42")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[1]),
+                     guide = "none") +
+  scale_shape_manual(values = c(15, 17),
+                     guide = "none") +
+  theme_classic(base_size = 15) #Plot Q10 data with day on the x-axis, Q10 on the y-axis, and color and shape defined by treatment. Group by crab.ID. Add points and lines connecting values for each crab. Facet by treatment, allow y-axis to vary by each facet, and include facet labels. Add x-axis label and specify x-axis tick labels. Add shape and color values for each treatment but do not include a legend.
+ggsave("figures/time-to-right-average-individuals-Q10.pdf", height = 8.5, width = 11)
+```
+
+
