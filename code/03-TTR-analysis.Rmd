@@ -867,14 +867,14 @@ modTTRQ10 <- modTTR %>%
                            T1 = 15, 
                            T2 = temperature)) %>%
   mutate(., day21_Q10 = Q10(R1 = day0, 
-                           R2 = day7, 
+                           R2 = day21, 
                            T1 = 15, 
                            T2 = temperature)) %>%
   mutate(., day42_Q10 = Q10(R1 = day0, 
-                           R2 = day7, 
+                           R2 = day42, 
                            T1 = 15, 
                            T2 = temperature)) %>% 
-  filter(., is.na(day2_Q10) == FALSE) %>%
+  # filter(., is.na(day2_Q10) == FALSE) %>%
   select(., crab.ID, treatment, final.genotype, presenceC, presenceT, day2_Q10, day7_Q10, day21_Q10, day42_Q10) %>%
   pivot_longer(., cols = !c(crab.ID, treatment, final.genotype, presenceC, presenceT), names_to = "day", values_to = "Q10") %>%
   filter(., is.na(Q10) == FALSE) %>%
