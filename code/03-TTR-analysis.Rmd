@@ -874,7 +874,7 @@ modTTRQ10 <- modTTR %>%
                            R2 = day42, 
                            T1 = 15, 
                            T2 = temperature)) %>% 
-  # filter(., is.na(day2_Q10) == FALSE) %>%
+  # filter(., is.na(day2_Q10) == FALSE & is.na(day7_Q10) == FALSE & is.na(day21_Q10) == FALSE & is.na(day42_Q10) == FALSE) %>%
   select(., crab.ID, treatment, final.genotype, presenceC, presenceT, day2_Q10, day7_Q10, day21_Q10, day42_Q10) %>%
   pivot_longer(., cols = !c(crab.ID, treatment, final.genotype, presenceC, presenceT), names_to = "day", values_to = "Q10") %>%
   filter(., is.na(Q10) == FALSE) %>%
