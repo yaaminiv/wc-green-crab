@@ -3474,7 +3474,7 @@ all_MO2_slope_results_diff %>%
   ggplot(mapping = aes(x = treatment, y = day14v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 14 vs. Day 7") +
+  labs(x = "Temperature (ºC)", y = "Difference in Oxygen Consumption (nmol/hr)", title = "Day 14 vs. Day 7") +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("5", "15", "25")) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -3495,7 +3495,7 @@ all_MO2_slope_results_diff %>%
   ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 21 vs. Day 7") +
+  labs(x = "Temperature (ºC)", y = "Difference in Oxygen Consumption (nmol/hr)", title = "Day 21 vs. Day 7") +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("5", "15", "25")) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -3516,7 +3516,7 @@ all_MO2_slope_results_diff %>%
   ggplot(mapping = aes(x = treatment, y = day28v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 28 vs. Day 7") +
+  labs(x = "Temperature (ºC)", y = "Difference in Oxygen Consumption (nmol/hr)", title = "Day 28 vs. Day 7") +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("5", "15", "25")) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -3537,7 +3537,7 @@ all_MO2_slope_results_diff %>%
   ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "Temperature (ºC)", y = "Difference in Individual Oxygen Consumption (s)", title = "Day 42 vs. Day 7") +
+  labs(x = "Temperature (ºC)", y = "Difference in Oxygen Consumption (nmol/hr)", title = "Day 42 vs. Day 7") +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("5", "15", "25")) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -3576,7 +3576,7 @@ day21v7Plot <- all_MO2_slope_results_diff %>%
   ggplot(mapping = aes(x = treatment, y = day21v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "", y = "Difference in Individual Oxygen Consumption (s)", title = "B. Day 21 vs. Day 7") +
+  labs(x = "", y = "", title = "B. Day 21 vs. Day 7") +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
                    labels = c("5", "15", "25")) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -3589,7 +3589,7 @@ day21v7Plot
 ```
 
 ```{r}
-day42v2Plot <- all_MO2_slope_results_diff %>%
+day42v7Plot <- all_MO2_slope_results_diff %>%
   filter(., is.na(final.genotype) == FALSE) %>%
   ggplot(mapping = aes(x = treatment, y = day42v7, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
@@ -3602,10 +3602,14 @@ day42v2Plot <- all_MO2_slope_results_diff %>%
   scale_shape_manual(values = c(15, 19, 17),
                      guide = "none") +
   theme_classic(base_size = 15)
-day42v2Plot
+day42v7Plot
 ```
 
 ```{r}
-day7vs2Plot / day21vs2Plot / day42v2Plot
-ggsave("figures/oxygen-consumption-individuals-genotype-multiday-multipanel.pdf", height = 11, width = 8.5)
+#pdf("figures/oxygen-consumption-individuals-genotype-multiday-multipanel.pdf", height = 11, width = 8.5)
+
+day14v7Plot / day21v7Plot / day42v7Plot
+grid::grid.draw(grid::textGrob("Difference in Oxygen Consumption (nmol/hr)", x = 0.02, rot = 90, gp = gpar(fontsize = 15)))
+
+#dev.off()
 ```
