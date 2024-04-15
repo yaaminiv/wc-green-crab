@@ -462,8 +462,6 @@ ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
 
 I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to examine that subset to understand individual variation within each treatment, and how that may or may not change over time.
 
-remove rows without genotype data
-
 ```{r}
 modTTRSubset <- modTTR %>%
   filter(., respirometry == "Y") %>%
@@ -686,7 +684,6 @@ modTTRSubsetDiff <- modTTRSubset %>%
   mutate(., day42v2 = day42 - day2) #For subset of the crabs, select day, crab ID, average TTR, treatmet, and genotype information. Filter days of interest and pivot wider, using days as columns and values from TTRavg. Add "day" as a prefix to all columns. Get the difference in TTR for comparisons of interest.
 head(modTTRSubsetDiff)
 ```
-
 
 #### Plot
 
