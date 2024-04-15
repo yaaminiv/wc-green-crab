@@ -457,26 +457,24 @@ modTTR %>%
   theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
 ```
-
 # Individual-level analysis
+
+## Respirometry crabs
 
 I have 27 individuals (three per tank) with TTR and respirometry data! I'm going to examine that subset to understand individual variation within each treatment, and how that may or may not change over time.
 
 ```{r}
-modTTRSubset <- modTTR %>%
+modTTRSubsetR <- modTTR %>%
   filter(., respirometry == "Y") %>%
-  filter(., is.na(final.genotype) == FALSE) %>%
   unique(.) #Subset data for crabs used in respirometry and TTR
-head(modTTRSubset)
-nrow(modTTRSubset)
+head(modTTRSubsetR)
+nrow(modTTRSubsetR)
 ```
-
-## Data exploration
 
 First things first: I want to understand if there are certain individuals that vary more over time! The simplest way to do this is to just plot the data.
 
 ```{r}
-modTTRSubset %>%
+modTTRSubsetR %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -508,7 +506,7 @@ Alright, this plot tells us what we already know: that there's more variation in
 I also want to look at difference in TTR over time by looking at the difference in TTR from the average...
 
 ```{r}
-modTTRSubset %>%
+modTTRSubsetR %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -535,7 +533,7 @@ ggsave("figures/time-to-right-avg-individuals-diff.pdf", height = 8.5, width = 1
 ```
 
 ```{r}
-modTTRSubset %>%
+modTTRSubsetR %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull, final.genotype)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -564,7 +562,7 @@ ggsave("figures/time-to-right-avg-individuals-diff-genotype.pdf", height = 8.5, 
 ...and percent change from the average.
 
 ```{r}
-modTTRSubset %>%
+modTTRSubsetR %>%
   dplyr::select(., c(crab.ID, day, tank, treatment, TTRavg, TTRavgFull)) %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
                                   treatment == "15C" ~ "15C",
@@ -601,18 +599,19 @@ I'm going to start by looking the influnce of genotype variables on overall TTR:
 2. Presence of "C" (warm-adapted allele) (the inverse )
 
 ```{r}
-modTTRSubset <- modTTRSubset %>%
+modTTRGenotype <- modTTR %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
   mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
                                   final.genotype == "CT" ~ "Y",
                                   final.genotype == "TT" ~ "N")) %>%
   mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
                                   final.genotype == "CT" ~ "Y",
-                                  final.genotype == "TT" ~ "Y")) #Add two columns for presence of C or T allele
-head(modTTRSubset)
+                                  final.genotype == "TT" ~ "Y")) #Subset data with genotype information. Add two columns for presence of C or T allele
+head(modTTRGenotype)
 ```
 
 ```{r}
-TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = modTTRSubset) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
+TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = (modTTRGenotype %>% filter(., respirometry == "Y"))) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
 summary(TTRmodelSubset) #Various factors significant
 ```
 
@@ -621,7 +620,7 @@ step(TTRmodelSubset, direction = "backward")
 ```
 
 ```{r}
-TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = modTTRSubset) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
+TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = (modTTRGenotype %>% filter(., respirometry == "Y"))) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
 summary(TTRmodelSubset2) #Various factors significant
 ```
 
@@ -638,7 +637,7 @@ facet_labels <- c("05C" = "5ºC",
 ```
 
 ```{r}
-modTTRSubset %>%
+modTTRSubsetR %>%
   dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
   distinct(.) %>%
   mutate(., day = case_when(day == 1 ~ "01",
@@ -671,7 +670,7 @@ ggsave("figures/time-to-right-avg-boxplot-genotype.pdf", height = 8.5, width = 1
 I'm going to do a similar analysis, but this time look at the effects of genotype on the difference in TTR between days 2 and 7, days 2 and 21, and days 2 and 42. Although the 5ºC treatment was run for 49 days, since we know time has a significant influence on TTR I'm going to use the same time point for all variables. Looking at differences with day 7 can represent short-term differences, while days 21 and 42 would be longer-term differences. Day 21 is also a nice parallel to the three-week experiment run in 2022. I also have day 0 data for some of the crabs.
 
 ```{r}
-modTTRSubsetDiff <- modTTRSubset %>%
+modTTRSubsetDiff <- modTTRGenotype %>%
   select(., day, crab.ID, TTRavg, treatment, final.genotype, presenceC, presenceT) %>%
   filter(., day == 0 | day == 2 | day == 7 | day == 21 | day == 42) %>%
   pivot_wider(., names_from = day, values_from = TTRavg, names_prefix = "day") %>%
