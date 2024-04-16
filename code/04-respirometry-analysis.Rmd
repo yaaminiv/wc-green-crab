@@ -3220,7 +3220,7 @@ all_MO2_slope_results_reorder %>%
                      name = "Temperature (ºC)",
                      breaks = c("05C", "15C", "25C"),
                      labels = c("5", "15", "25")) +
-  scale_shape_manual(values = c(3, 4, 1, 2),
+  scale_shape_manual(values = c(3, 4, 1),
                      name = "Genotype",
                      breaks = c("CC", "CT", "TT"),
                      labels = c("CC", "CT", "TT")) +
