@@ -3095,23 +3095,12 @@ summary(lmAllSlopeResultsStep) #The most significant model is one that includes 
 ```
 
 ```{r}
-lmAllSlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + final.genotype +
-                              treatment:as.numeric(day) + treatment:final.genotype + as.numeric(day):final.genotype +
-                              treatment:as.numeric(day):final.genotype,
-                            data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
+lmAllSlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
+    final.genotype + sex + 
+      treatment:as.numeric(day) + treatment:final.genotype + as.numeric(day):final.genotype + treatment:as.numeric(day):final.genotype, 
+    data = (all_MO2_slope_results_demTTRdata_genotype %>% 
+              filter(., blank_ratio < 0.1))) #Run the most significant model identified by step
 summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
-```
-In this model, day is not significant but it's included in the model. I'm going to see what happens when I remove it.
-
-```{r}
-lmAllSlopeResultsSigMinusDay <- glm(log(-slope_nmol_hr_corrected) ~ treatment + final.genotype + 
-                                      treatment:final.genotype,
-                                    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus day
-AIC(lmAllSlopeResultsSig, lmAllSlopeResultsSigMinusDay) #AIC is lower for the model with day
-```
-
-```{r}
-summary(lmAllSlopeResultsSig) #Most parsimonious model
 ```
 
 #### Binary genotype
@@ -3130,20 +3119,20 @@ summary(lmBinarySlopeResultsStep) #The most significant model is one that includ
 ```
 
 ```{r}
-lmBinarySlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC + hasT +
-                                 treatment:as.numeric(day) + treatment:hasC + 
-                                 as.numeric(day):hasC + treatment:hasT + 
-                                 treatment:as.numeric(day):hasC, 
-                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Run the most significant model identified by step
-summary(lmBinarySlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
+lmBinarySlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
+    hasC + hasT + sex + treatment:as.numeric(day) + treatment:hasC + 
+    as.numeric(day):hasC + treatment:hasT + treatment:as.numeric(day):hasC, 
+    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., 
+        blank_ratio < 0.1))) #Run the most significant model identified by step
+summary(lmBinarySlopeResultsSig) #Significant impact of treatment, day, and treatment*day, and marginally significant impact of genotype
 ```
 In this model, treatment is not significant, but there are several significant interactions. Also, presence of the C allele is significant, but presence of T is not. Time to try out a few more iterations.
 
 ```{r}
-lmBinarySlopeResultsSigMinusTreat <- glm(log(-slope_nmol_hr_corrected) ~ as.numeric(day) + hasC + hasT +
+lmBinarySlopeResultsSigMinusTreat <- glm(log(-slope_nmol_hr_corrected) ~ as.numeric(day) + hasC + hasT + sex +
                                  as.numeric(day):hasC, 
                                data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus treatment
-lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC +
+lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC + sex +
                                  treatment:as.numeric(day) + treatment:hasC + as.numeric(day):hasC +
                                  treatment:as.numeric(day):hasC, 
                                data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus hasT
