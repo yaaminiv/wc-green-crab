@@ -686,6 +686,8 @@ head(modTTRSubsetDiff)
 
 #### Plot
 
+##### Facet by genotype
+
 ```{r}
 modTTRSubsetDiff %>%
   mutate(., treatment = case_when(treatment == "5C" ~ "05C",
@@ -785,7 +787,7 @@ day21vs2Plot <- modTTRSubsetDiff %>%
   ggplot(mapping = aes(x = treatment, y = day21v2, color = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = treatment), size = 2) +
   facet_wrap(. ~ final.genotype) + 
-  labs(x = "Temperature (ºC)", y = "Difference in Individual TTR (s)", title = "B. Day 21 vs. Day 2") +
+  labs(x = "", y = "Difference in Individual TTR (s)", title = "B. Day 21 vs. Day 2") +
   scale_y_continuous(breaks = seq(-1,5,1),
                      limits = c(-1,5)) +
   scale_x_discrete(breaks = c("05C", "15C", "25C"),
@@ -831,6 +833,143 @@ day42v2Plot
 ```{r}
 day7vs2Plot / day21vs2Plot / day42v2Plot
 ggsave("figures/time-to-right-average-individuals-genotype-multipanel.pdf", height = 11, width = 8.5)
+```
+
+##### Facet by temperature
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day7v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  labs(x = "Genotype", y = "Difference in Individual TTR (s)", title = "Day 7 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-bytemp-day7v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day21v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  labs(x = "Genotype", y = "Difference in Individual TTR (s)", title = "Day 21 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-bytemp-day21v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day42v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  labs(x = "Genotype", y = "Difference in Individual TTR (s)", title = "Day 42 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+ggsave("figures/time-to-right-average-individuals-genotype-bytemp-day42v2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+day7vs2byTempPlot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day7v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) + 
+  labs(x = "", y = "", title = "A. Day 7 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none",
+                                        axis.ticks.x = element_blank(),
+                                        axis.text.x = element_blank())
+day7vs2byTempPlot
+```
+
+```{r}
+day21vs2byTempPlot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day21v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) + 
+  labs(x = "", y = "Difference in Individual TTR (s)", title = "B. Day 21 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none",
+                                        axis.ticks.x = element_blank(),
+                                        axis.text.x = element_blank())
+day21vs2byTempPlot
+```
+
+```{r}
+day42v2byTempPlot <- modTTRSubsetDiff %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = final.genotype, y = day42v2, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, scales = "free_y", labeller = labeller(treatment = facet_labels)) + 
+  labs(x = "Genotype", y = "", title = "C. Day 42 vs. Day 2") +
+  scale_x_discrete(breaks = c("CC", "CT", "TT")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) + theme(legend.position = "none")
+day42v2byTempPlot
+```
+
+```{r}
+day7vs2byTempPlot / day21vs2byTempPlot / day42v2byTempPlot
+ggsave("figures/time-to-right-average-individuals-genotype-byTemp-multipanel.pdf", height = 11, width = 8.5)
 ```
 
 ## Q10 analysis
