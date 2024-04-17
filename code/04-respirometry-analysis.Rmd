@@ -3083,7 +3083,7 @@ hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transfor
 #### Full genotype 
 
 ```{r}
-lmAllSlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day)*final.genotype + 
+lmAllSlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + final.genotype + 
                            sex + weight + carapace.width + integument.cont + missing.legs, 
                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
@@ -3096,11 +3096,9 @@ summary(lmAllSlopeResultsStep) #The most significant model is one that includes 
 
 ```{r}
 lmAllSlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    final.genotype + sex + 
-      treatment:as.numeric(day) + treatment:final.genotype + as.numeric(day):final.genotype + treatment:as.numeric(day):final.genotype, 
-    data = (all_MO2_slope_results_demTTRdata_genotype %>% 
-              filter(., blank_ratio < 0.1))) #Run the most significant model identified by step
-summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day, and marginally significant impact of genotype
+    sex + integument.cont + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% 
+    filter(., blank_ratio < 0.1))) #Run the most significant model identified by step
+summary(lmAllSlopeResultsSig) #Significant impact of treatment*day. Genotype not included
 ```
 
 #### Binary genotype
@@ -3108,7 +3106,7 @@ summary(lmAllSlopeResultsSig) #Significant impact of treatment and treatment*day
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
-lmBinarySlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day)*hasC + treatment*as.numeric(day)*hasT + 
+lmBinarySlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + hasC + hasT + 
                               sex + weight + carapace.width + integument.cont + missing.legs, 
                             data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmBinarySlopeResults) #Significant impact of treatment, treatment:day, and hasT on respiration
@@ -3120,23 +3118,19 @@ summary(lmBinarySlopeResultsStep) #The most significant model is one that includ
 
 ```{r}
 lmBinarySlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    hasC + hasT + sex + treatment:as.numeric(day) + treatment:hasC + 
-    as.numeric(day):hasC + treatment:hasT + treatment:as.numeric(day):hasC, 
+    hasT + sex + integument.cont + treatment:as.numeric(day), 
     data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., 
         blank_ratio < 0.1))) #Run the most significant model identified by step
-summary(lmBinarySlopeResultsSig) #Significant impact of treatment, day, and treatment*day, and marginally significant impact of genotype
+summary(lmBinarySlopeResultsSig) #Significant impact of treatment*day. Genotype (T presence) included but not significant
 ```
-In this model, treatment is not significant, but there are several significant interactions. Also, presence of the C allele is significant, but presence of T is not. Time to try out a few more iterations.
+
+In this model, treatment and day are significant, and only the interaction between treatment and day for 5ºC is significant. Also, presence of the T allele is significant, but presence of C is not included in the model.
 
 ```{r}
-lmBinarySlopeResultsSigMinusTreat <- glm(log(-slope_nmol_hr_corrected) ~ as.numeric(day) + hasC + hasT + sex +
-                                 as.numeric(day):hasC, 
-                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus treatment
-lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + hasC + sex +
-                                 treatment:as.numeric(day) + treatment:hasC + as.numeric(day):hasC +
-                                 treatment:as.numeric(day):hasC, 
-                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Same model, minus hasT
-AIC(lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinusTreat, lmBinarySlopeResultsSigMinushasT) #Step model is still the most significant
+lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~treatment + as.numeric(day) + sex + integument.cont + treatment:as.numeric(day), 
+    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., 
+        blank_ratio < 0.1))) #Same model, minus hasT
+AIC(lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinushasT) #Step model is still the most significant
 ```
 
 #### Final model
