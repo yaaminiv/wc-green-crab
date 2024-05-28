@@ -638,6 +638,7 @@ facet_labels <- c("05C" = "5ºC",
 modTTRGenotype %>%
   dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
   distinct(.) %>%
+  filter(., treatment != "15C") %>%
   mutate(., day = case_when(day == 1 ~ "01",
                             day == 2 ~ "02",
                             day == 7 ~ "07",
