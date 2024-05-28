@@ -683,6 +683,38 @@ modTTRSubsetDiff <- modTTRGenotype %>%
 head(modTTRSubsetDiff)
 ```
 
+#### Statistical comparison
+
+```{r}
+modTTRSubsetDiffStats <- modTTRSubsetDiff %>%
+  filter(., is.na(day0) == FALSE & is.na(day2) == FALSE & is.na(day7) == FALSE) %>%
+  select(., -c(day0, day2, day7, day21, day42, day7v2, day21v2, day42v2)) %>%
+  pivot_longer(., cols = c(day2v0, day7v0, day21v0, day42v0), names_to = "day", values_to = "TTRdiff") %>%
+  mutate(., day = gsub(pattern = "day", replacement = "", x = day)) %>%
+  mutate(., day = gsub(pattern = "v0", replacement = "", x = day)) %>%
+  mutate(., day = as.numeric(day))
+  #Take difference in TTR information and subset crabs with data for days 0, 2, and 7. Remove extraneous columns. Pivot data longer with values in TTRdiff and day in a new column. Remove extra characters from day values and convert into a numeric column
+head(modTTRSubsetDiffStats) #Confirm dataframe creation
+```
+
+```{r}
+TTRdiffGLM <- glm(log(TTRdiff + 1) ~ final.genotype + treatment*day, data = modTTRSubsetDiffStats) #Run GLM to examine if difference in TTR from day 0 is impacted by genotype, treatment, or day
+summary(TTRdiffGLM) #No effect of genotype
+```
+
+```{r}
+step(TTRdiffGLM, direction = "backward") #Genotype not included in most parsimonious model
+```
+
+```{r}
+TTRdiffGLM2 <- glm(log(TTRdiff + 1) ~ presenceC + presenceT + treatment*day, data = modTTRSubsetDiffStats) #Run GLM to examine if difference in TTR from day 0 is impacted by binary genotype, treatment, or day
+summary(TTRdiffGLM) #No effect of genotype
+```
+
+```{r}
+step(TTRdiffGLM2, direction = "backward") #Genotype not included in most parsimonious model
+```
+
 #### Plot
 
 ##### Facet by genotype
