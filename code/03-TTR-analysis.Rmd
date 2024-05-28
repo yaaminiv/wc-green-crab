@@ -55,7 +55,6 @@ head(crabMetadata) #Confirm changes
 
 ```{r}
 genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
-  filter(., is.na(final.genotype) == FALSE) %>%
   select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
 head(genotypeData) #Confirm genotype dataframe creation
 ```
@@ -600,7 +599,6 @@ I'm going to start by looking the influnce of genotype variables on overall TTR:
 
 ```{r}
 modTTRGenotype <- modTTR %>%
-  filter(., is.na(final.genotype) == FALSE) %>%
   mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
                                   final.genotype == "CT" ~ "Y",
                                   final.genotype == "TT" ~ "N")) %>%
@@ -611,7 +609,7 @@ head(modTTRGenotype)
 ```
 
 ```{r}
-TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = (modTTRGenotype %>% filter(., respirometry == "Y"))) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
+TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = modTTRGenotype) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
 summary(TTRmodelSubset) #Various factors significant
 ```
 
@@ -620,7 +618,7 @@ step(TTRmodelSubset, direction = "backward")
 ```
 
 ```{r}
-TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = (modTTRGenotype %>% filter(., respirometry == "Y"))) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
+TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = modTTRGenotype) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
 summary(TTRmodelSubset2) #Various factors significant
 ```
 
@@ -637,7 +635,7 @@ facet_labels <- c("05C" = "5ºC",
 ```
 
 ```{r}
-modTTRSubsetR %>%
+modTTRGenotype %>%
   dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
   distinct(.) %>%
   mutate(., day = case_when(day == 1 ~ "01",
