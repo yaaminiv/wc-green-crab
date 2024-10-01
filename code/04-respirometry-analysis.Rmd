@@ -26,6 +26,7 @@ getwd()
 #if ("lubridate" %in% rownames(installed.packages()) == 'FALSE') install.packages("lubridate")
 #if ("respirometry" %in% rownames(installed.packages()) == 'FALSE') install.packages("respirometry")
 #if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages("gridExtra")
+#if ("lme4" %in% rownames(installed.packages()) == 'FALSE') install.packages("lme4")
 #if ("broom" %in% rownames(installed.packages()) == 'FALSE') install.packages("broom")
 # if ("patchwork" %in% rownames(installed.packages()) == 'FALSE') install.packages("patchwork")
 # if ("grid" %in% rownames(installed.packages()) == 'FALSE') install.packages('grid')
@@ -35,6 +36,7 @@ require(RColorBrewer)
 require(lubridate)
 require(respirometry)
 require(gridExtra)
+require(lme4)
 require(broom)
 require(patchwork)
 require(grid)
@@ -3080,69 +3082,92 @@ hist(log(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transform
 hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
 ```
 
-#### Full genotype 
+#### Base model
 
 ```{r}
-lmAllSlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + final.genotype + 
-                           sex + weight + carapace.width + integument.cont + missing.legs, 
-                         data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+lmAllSlopeResults <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+                            sex + weight + carapace.width + integument.cont + missing.legs +
+                            (1|crab.ID), 
+                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
 ```
 
 ```{r}
-lmAllSlopeResultsStep <- step(lmAllSlopeResults, direction = "backward") #Use backwards-deletion approach to identify the most significant model (lowest AIC)
-summary(lmAllSlopeResultsStep) #The most significant model is one that includes treatment and day, but not the interaction between the two. None of the other demographic terms are significant
+lmAllSlopeResultsNullTemperature <- lmer(log(-slope_nmol_hr_corrected) ~ as.numeric(day) +
+                                           sex + weight + carapace.width + integument.cont + missing.legs +
+                                           (1|crab.ID), 
+                                         data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults) #Compare models. Temperature is significant
 ```
 
 ```{r}
-lmAllSlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    sex + integument.cont + treatment:as.numeric(day), data = (all_MO2_slope_results_demTTRdata_genotype %>% 
-    filter(., blank_ratio < 0.1))) #Run the most significant model identified by step
-summary(lmAllSlopeResultsSig) #Significant impact of treatment*day. Genotype not included
+lmAllSlopeResultsNullDay <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + 
+                                   sex + weight + carapace.width + integument.cont + missing.legs +
+                                   (1|crab.ID), 
+                                 data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+anova(lmAllSlopeResultsNullDay, lmAllSlopeResults) #Compare models. Day is significant
 ```
 
-#### Binary genotype
+```{r}
+lmAllSlopeResultsNullInteraction <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) +
+                                           sex + weight + carapace.width + integument.cont + missing.legs +
+                                           (1|crab.ID), 
+                                         data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults) #Compare models. Interaction is significant
+```
+
+```{r}
+baseModelComparisons <- rbind(broom::tidy(anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults)),
+                              broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResults)),
+                              broom::tidy(anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults))) #Create table for model comparison output
+baseModelComparisons
+```
+
+```{r}
+write.csv(baseModelComparisons, "respirometry-base-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
+```
+
+#### Model with genotype 
+
+Now that I know what parameters shouldbe in the base model, I will add genotype to see if that makes a difference.
+
+```{r}
+lmAllSlopeResults <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+                            sex + weight + carapace.width + integument.cont + missing.legs +
+                            (1|crab.ID), 
+                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
+```
 
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
-lmBinarySlopeResults <- glm(log(-slope_nmol_hr_corrected) ~ treatment*as.numeric(day) + hasC + hasT + 
-                              sex + weight + carapace.width + integument.cont + missing.legs, 
-                            data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Examine the influence of treatment, day, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
-summary(lmBinarySlopeResults) #Significant impact of treatment, treatment:day, and hasT on respiration
-```
-```{r}
-lmBinarySlopeResultsStep <- step(lmBinarySlopeResults, direction = "backward") #Use backwards-deletion approach to identify the most significant model (lowest AIC)
-summary(lmBinarySlopeResultsStep) #The most significant model is one that includes treatment, day, the interaction, and hasT
+lmAllSlopeResultsHasC <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+                                    hasC +
+                                    sex + weight + carapace.width + integument.cont + missing.legs +
+                                    (1|crab.ID), 
+                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+anova(lmAllSlopeResults, lmAllSlopeResultsHasC) #Compare models. C allele is not significant
 ```
 
 ```{r}
-lmBinarySlopeResultsSig <- glm(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + 
-    hasT + sex + integument.cont + treatment:as.numeric(day), 
-    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., 
-        blank_ratio < 0.1))) #Run the most significant model identified by step
-summary(lmBinarySlopeResultsSig) #Significant impact of treatment*day. Genotype (T presence) included but not significant
-```
-
-In this model, treatment and day are significant, and only the interaction between treatment and day for 5ºC is significant. Also, presence of the T allele is significant, but presence of C is not included in the model.
-
-```{r}
-lmBinarySlopeResultsSigMinushasT <- glm(log(-slope_nmol_hr_corrected) ~treatment + as.numeric(day) + sex + integument.cont + treatment:as.numeric(day), 
-    data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., 
-        blank_ratio < 0.1))) #Same model, minus hasT
-AIC(lmBinarySlopeResultsSig, lmBinarySlopeResultsSigMinushasT) #Step model is still the most significant
-```
-
-#### Final model
-
-I'll compare the two different models using AIC to determine which is a better fit.
-
-```{r}
-AIC(lmAllSlopeResultsSig, lmBinarySlopeResultsSig) #Compare AIC of both models. Model with binary genotype has lower AIC so that will be the final model
+lmAllSlopeResultsHasT <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+                                    hasT +
+                                    sex + weight + carapace.width + integument.cont + missing.legs +
+                                    (1|crab.ID), 
+                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+anova(lmAllSlopeResults, lmAllSlopeResultsHasT) #Compare models. T allele is marginally significant
 ```
 
 ```{r}
-write.csv(broom::tidy(lmBinarySlopeResultsSig), "all-slope-results-model-output.csv", quote = FALSE, row.names = FALSE)
+genotypeModelComparisons <- rbind(broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsGenotype)),
+                              broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasC)),
+                              broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasT))) #Create table for model comparison output
+genotypeModelComparisons
+```
+
+```{r}
+write.csv(genotypeModelComparisons, "respirometry-genotype-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
 ```
 
 ### Check assumptions
