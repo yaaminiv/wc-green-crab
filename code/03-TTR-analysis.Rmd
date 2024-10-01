@@ -720,7 +720,6 @@ modTTRSubsetDiff <- modTTRGenotype %>%
 head(modTTRSubsetDiff)
 ```
 
-
 ```{r}
 modTTRSubsetDiffStats <- modTTRSubsetDiff %>%
   filter(., is.na(day0) == FALSE & is.na(day2) == FALSE & is.na(day7) == FALSE) %>%
@@ -746,6 +745,47 @@ hist(log(modTTRSubsetDiffStats$TTRdiff))
 
 ```{r}
 head(modTTRSubsetDiffStats) #Confirm dataframe creation
+```
+
+#### Treatment, day, and treatment x day
+
+```{r}
+TTRDiffmodel <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   (1|crab.ID), 
+                 data = modTTRSubsetDiffStats, REML = FALSE) #Run model
+summary(TTRDiffmodel) #Look at model output.
+```
+```{r}
+TTRnullDiffTreatment <- lmer(TTRdiff ~ day + 
+                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   (1|crab.ID), 
+                 data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRnullDiffTreatment, TTRDiffmodel) #Treatment is a significant predictor
+```
+
+```{r}
+TTRnullDiffDay <- lmer(TTRdiff ~ treatment + 
+                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   (1|crab.ID), 
+                 data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRnullDiffDay, TTRDiffmodel) #Day is not a significant predictor
+```
+
+```{r}
+TTRnullDiffInteraction <- lmer(TTRdiff ~ treatment + day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRSubsetDiffStats, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullDiffInteraction, TTRDiffmodel) #Interaction is not a significant predictor
+```
+
+```{r}
+TTRDiffModelComparisons<- rbind(broom::tidy(anova(TTRnullDiffTreatment, TTRDiffmodel)),
+                            broom::tidy(anova(TTRnullDiffDay, TTRDiffmodel)),
+                            broom::tidy(anova(TTRnullDiffInteraction, TTRDiffmodel))) #Create table for model comparison output
+TTRDiffModelComparisons
+```
+
+```{r}
+write.csv(TTRDiffModelComparisons, "ttr-diff-base-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
 ```
 
 #### Full genotype
@@ -796,14 +836,14 @@ anova(TTRdiffNullAlleleT, TTRdiffModelAllele) #T presence is not a signficiant p
 ```
 
 ```{r}
-TTRdiffModelComparisons <- rbind(broom::tidy(anova(TTRdiffNullGenotype, TTRdiffModelGenotype)),
+TTRdiffGenotypeModelComparisons <- rbind(broom::tidy(anova(TTRdiffNullGenotype, TTRdiffModelGenotype)),
                                  broom::tidy(anova(TTRdiffNullAlleleC, TTRdiffModelAllele)),
                                  broom::tidy(anova(TTRdiffNullAlleleT, TTRdiffModelAllele))) #Create a table of model comparison output
-TTRdiffModelComparisons
+TTRdiffGenotypeModelComparisons
 ```
 
 ```{r}
-write.csv(TTRdiffModelComparisons, "ttr-diff-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
+write.csv(TTRdiffGenotypeModelComparisons, "ttr-diff-genotype-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
 ```
 
 #### Plot
