@@ -632,10 +632,10 @@ anova(TTRnullGenotype, TTRmodelGenotype) #Full genotype is not a significant pre
 
 ```{r}
 TTRmodelAllele <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
-                           presenceC + presenceT +
-                           as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                           (1|crab.ID), 
-                         data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+                         presenceC + presenceT +
+                         as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                         (1|crab.ID), 
+                       data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
 summary(TTRmodelAllele) #Look at model output
 #Individual crab still explains less than model residuals
 ```
@@ -652,14 +652,16 @@ anova(TTRnullAlleleT, TTRmodelAllele) #Presence of T is not a significant predic
 
 ```{r}
 TTRGenotypeModelComparisons <- rbind(broom::tidy(anova(TTRnullGenotype, TTRmodelGenotype)),
-                                   broom::tidy(anova(TTRnullAlleleC, TTRmodelAllele)),
-                                   broom::tidy(anova(TTRnullAlleleT, TTRmodelAllele))) #Create a table of model comparison output
+                                     broom::tidy(anova(TTRnullAlleleC, TTRmodelAllele)),
+                                     broom::tidy(anova(TTRnullAlleleT, TTRmodelAllele))) #Create a table of model comparison output
 TTRGenotypeModelComparisons
 ```
 
 ```{r}
 write.csv(TTRGenotypeModelComparisons, "ttr-genotype-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
 ```
+
+#### Plot
 
 No genotype variable has a significant influence on average TTR. Can we see if any of our outliers in our average TTR boxplots are associated with a particular genotype?
 
@@ -718,7 +720,6 @@ modTTRSubsetDiff <- modTTRGenotype %>%
 head(modTTRSubsetDiff)
 ```
 
-#### Statistical comparison
 
 ```{r}
 modTTRSubsetDiffStats <- modTTRSubsetDiff %>%
@@ -727,27 +728,82 @@ modTTRSubsetDiffStats <- modTTRSubsetDiff %>%
   pivot_longer(., cols = c(day2v0, day7v0, day21v0, day42v0), names_to = "day", values_to = "TTRdiff") %>%
   mutate(., day = gsub(pattern = "day", replacement = "", x = day)) %>%
   mutate(., day = gsub(pattern = "v0", replacement = "", x = day)) %>%
-  mutate(., day = as.numeric(day))
+  mutate(., day = as.numeric(day)) %>%
+  filter(., is.na(TTRdiff) == FALSE) %>%
+  left_join(., (modTTRGenotype %>%
+                  dplyr::select(crab.ID, treatment, day, sex, integument.cont, weight, treatment, carapace.width, missing.swimmer, final.genotype, presenceC, presenceT)),
+            by = c("crab.ID", "treatment", "final.genotype", "presenceC", "presenceT", "day"))
 #Take difference in TTR information and subset crabs with data for days 0, 2, and 7. Remove extraneous columns. Pivot data longer with values in TTRdiff and day in a new column. Remove extra characters from day values and convert into a numeric column
+head(modTTRSubsetDiffStats) #Confirm dataframe creation
+nrow(modTTRSubsetDiffStats) #72 data points
+```
+
+```{r}
+hist(modTTRSubsetDiffStats$TTRdiff)
+hist(log(modTTRSubsetDiffStats$TTRdiff))
+#Non-transformed data is more normalized than log-transformed data
+```
+
+```{r}
 head(modTTRSubsetDiffStats) #Confirm dataframe creation
 ```
 
+#### Full genotype
+
 ```{r}
-TTRdiffGLM <- glm(log(TTRdiff + 1) ~ final.genotype + treatment*day, data = modTTRSubsetDiffStats) #Run GLM to examine if difference in TTR from day 0 is impacted by genotype, treatment, or day
-summary(TTRdiffGLM) #No effect of genotype
+TTRdiffModelGenotype <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                               final.genotype +
+                               as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
+                               (1|crab.ID), 
+                             data = modTTRSubsetDiffStats, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+summary(TTRdiffModelGenotype) #Look at model output
+```
+```{r}
+TTRdiffNullGenotype <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                              as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
+                              (1|crab.ID), 
+                            data = modTTRSubsetDiffStats, REML = FALSE)
+anova(TTRdiffNullGenotype, TTRdiffModelGenotype) #Final genotype is not a signficiant predictor of difference in TTR
+```
+
+#### Presence of C or T
+
+```{r}
+TTRdiffModelAllele <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                             presenceC + presenceT +
+                             as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
+                             (1|crab.ID), 
+                           data = modTTRSubsetDiffStats, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+summary(TTRdiffModelAllele) #Look at model output
 ```
 
 ```{r}
-step(TTRdiffGLM, direction = "backward") #Genotype not included in most parsimonious model
+TTRdiffNullAlleleC <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                             as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
+                             presenceT +
+                             (1|crab.ID), 
+                           data = modTTRSubsetDiffStats, REML = FALSE)
+anova(TTRdiffNullAlleleC, TTRdiffModelAllele) #C presence is not a signficiant predictor of difference in TTR
 ```
 
 ```{r}
-TTRdiffGLM2 <- glm(log(TTRdiff + 1) ~ presenceC + presenceT + treatment*day, data = modTTRSubsetDiffStats) #Run GLM to examine if difference in TTR from day 0 is impacted by binary genotype, treatment, or day
-summary(TTRdiffGLM2) #No effect of genotype
+TTRdiffNullAlleleT <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+                             as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
+                             presenceC +
+                             (1|crab.ID), 
+                           data = modTTRSubsetDiffStats, REML = FALSE)
+anova(TTRdiffNullAlleleT, TTRdiffModelAllele) #T presence is not a signficiant predictor of difference in TTR
 ```
 
 ```{r}
-step(TTRdiffGLM2, direction = "backward") #Genotype not included in most parsimonious model
+TTRdiffModelComparisons <- rbind(broom::tidy(anova(TTRdiffNullGenotype, TTRdiffModelGenotype)),
+                                 broom::tidy(anova(TTRdiffNullAlleleC, TTRdiffModelAllele)),
+                                 broom::tidy(anova(TTRdiffNullAlleleT, TTRdiffModelAllele))) #Create a table of model comparison output
+TTRdiffModelComparisons
+```
+
+```{r}
+write.csv(TTRdiffModelComparisons, "ttr-diff-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
 ```
 
 #### Plot
