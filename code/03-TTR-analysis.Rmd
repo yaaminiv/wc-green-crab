@@ -24,12 +24,14 @@ getwd()
 #install.packages("tidyverse")
 #install.packages("plotrix")
 #install.packages("RColorBrewer")
+#install.packages(lme4)
 #install.packages("ggpubr")
 #install.packages("patchwork")
 #install.packages("respirometry")
 require(tidyverse)
 require(plotrix)
 require(RColorBrewer)
+require(lme4)
 require(ggpubr)
 require(patchwork)
 require(respirometry)
@@ -287,49 +289,50 @@ hist(modTTR$TTRavg)
 hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
 ```
 
-## GLM
+## Mixed effects model
 
 ```{r}
-TTRmodel <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer), data = modTTR) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, and whether or not a crab is missing legs as explanatory variables.
-summary(TTRmodel) #Various factors significant
+TTRmodel <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   (1|crab.ID), 
+                 data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later. Use data without rows with NAs
+summary(TTRmodel) #Look at model output.
+#Residuals explain more random effect variation than crab ID, crab ID explains very little variation
+```
+Now that I've run the full model, I want to test the importance of treatment, day, and their interaction as predictors. I'll include all other factors in the null model to account for any variation they may contribute.
+
+```{r}
+TTRnullTreatment <- lmer(log(TTRavg) ~ day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRnullTreatment, TTRmodel) #Treatment is a significant predictor
 ```
 
 ```{r}
-TTRmodelStep <- step(TTRmodel, direction = "backward") #Use step-wise backwards selection to identify the best fit model
-summary(TTRmodelStep) #Show output from step to identify the best model
+TTRnullDay <- lmer(log(TTRavg) ~ treatment + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without day to identify significance of predictor
+anova(TTRnullTreatment, TTRmodel) #Day is a significant predictor
 ```
 
 ```{r}
-TTRmodelSig <- glm(log(TTRavg) ~ treatment + day + integument.cont + weight + treatment:day, data = modTTR) #Run the most significant model identified by step, which includes treatment, day, integument color, weight, and the interaction between treatment and day
-summary(TTRmodelSig) #Significant impact of treatment, day, their interaction, integument color, and weight
-```
-
-I'm going to run a few more models without various factors to see what happens.
-
-```{r}
-TTRmodelSigMinusIntegument <- glm(log(TTRavg) ~ treatment + day + weight + treatment:day, data = modTTR)
-TTRmodelSigMinusWeight <- glm(log(TTRavg) ~ treatment + day + as.factor(integument.color) + treatment:day, data = modTTR)
-TTRmodelSignMinusIntegumentWeight <- glm(log(TTRavg) ~ treatment + day + treatment:day, data = modTTR)
-TTRmodelSigMinusInt <- glm(log(TTRavg) ~ treatment + day + as.factor(integument.color) + weight, data = modTTR)
-AIC(TTRmodel, TTRmodelSig, TTRmodelSigMinusIntegument, TTRmodelSigMinusWeight, TTRmodelSignMinusIntegumentWeight, TTRmodelSigMinusInt) #Calculate AIC for various models
-```
-
-The model from step is still the most parsimonious model.
-
-```{r}
-summary(TTRmodelSig) #Most parsimonious model. Significant influence of treatment, integment color, and weight, but no effect of day or size.
+TTRnullInteraction <- lmer(log(TTRavg) ~ treatment + day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullInteraction, TTRmodel) #Interaction is a significant predictor
 ```
 
 ```{r}
-write.csv(broom::tidy(TTRmodelSig), "TTR-glm-output.csv", quote = FALSE, row.names = FALSE) #Save table version of GLM output
+TTRModelComparisons<- rbind(broom::tidy(anova(TTRnullTreatment, TTRmodel)),
+                            broom::tidy(anova(TTRnullDay, TTRmodel)),
+                            broom::tidy(anova(TTRnullInteraction, TTRmodel))) #Create table for model comparison output
+TTRModelComparisons
+```
+
+```{r}
+write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
 ```
 
 ## Check assumptions
 
 ```{r}
-hist(residuals(TTRmodelSig)) #Residuals normally distributed
+hist(residuals(TTRmodel)) #Residuals normally distributed
 
-plot(fitted(TTRmodelSig), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+plot(fitted(TTRmodel), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
 abline(h = 0, lty = 2, col = "grey")
 ```
 
@@ -608,22 +611,54 @@ modTTRGenotype <- modTTR %>%
 head(modTTRGenotype)
 ```
 
+#### Full genotype 
+
 ```{r}
-TTRmodelSubset <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(final.genotype), data = modTTRGenotype) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and genotype as explanatory variables. Cannot add presence of C or T allele into the model since they are colinear with genotype
-summary(TTRmodelSubset) #Various factors significant
+TTRmodelGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                           final.genotype +
+                           as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                           (1|crab.ID), 
+                         data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+summary(TTRmodelGenotype) #Look at model output
+#Individual crab still explains less than model residuals
 ```
 
 ```{r}
-step(TTRmodelSubset, direction = "backward")
+TTRnullGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullGenotype, TTRmodelGenotype) #Full genotype is not a significant predictor
+```
+
+#### Presence of C or T
+
+```{r}
+TTRmodelAllele <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                           presenceC + presenceT +
+                           as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                           (1|crab.ID), 
+                         data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+summary(TTRmodelAllele) #Look at model output
+#Individual crab still explains less than model residuals
 ```
 
 ```{r}
-TTRmodelSubset2 <- glm(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + as.factor(presenceT), data = modTTRGenotype) #ANOVA, with log(TTRavg) as the response variable, and treatment, day, the interaction between treatment and day, sex, integument color (continuous), carapace width, weight, whether or not a crab is missing legs, and presence of C or T allele
-summary(TTRmodelSubset2) #Various factors significant
+TTRnullAlleleC <- lmer(log(TTRavg) ~ treatment + day + treatment:day + presenceT + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullAlleleC, TTRmodelAllele) #Presence of C is not a significant predictor
 ```
 
 ```{r}
-step(TTRmodelSubset2, direction = "backward")
+TTRnullAlleleT <- lmer(log(TTRavg) ~ treatment + day + treatment:day + presenceC + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullAlleleT, TTRmodelAllele) #Presence of T is not a significant predictor
+```
+
+```{r}
+TTRGenotypeModelComparisons <- rbind(broom::tidy(anova(TTRnullGenotype, TTRmodelGenotype)),
+                                   broom::tidy(anova(TTRnullAlleleC, TTRmodelAllele)),
+                                   broom::tidy(anova(TTRnullAlleleT, TTRmodelAllele))) #Create a table of model comparison output
+TTRGenotypeModelComparisons
+```
+
+```{r}
+write.csv(TTRGenotypeModelComparisons, "ttr-genotype-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
 ```
 
 No genotype variable has a significant influence on average TTR. Can we see if any of our outliers in our average TTR boxplots are associated with a particular genotype?
@@ -693,7 +728,7 @@ modTTRSubsetDiffStats <- modTTRSubsetDiff %>%
   mutate(., day = gsub(pattern = "day", replacement = "", x = day)) %>%
   mutate(., day = gsub(pattern = "v0", replacement = "", x = day)) %>%
   mutate(., day = as.numeric(day))
-  #Take difference in TTR information and subset crabs with data for days 0, 2, and 7. Remove extraneous columns. Pivot data longer with values in TTRdiff and day in a new column. Remove extra characters from day values and convert into a numeric column
+#Take difference in TTR information and subset crabs with data for days 0, 2, and 7. Remove extraneous columns. Pivot data longer with values in TTRdiff and day in a new column. Remove extra characters from day values and convert into a numeric column
 head(modTTRSubsetDiffStats) #Confirm dataframe creation
 ```
 
@@ -708,7 +743,7 @@ step(TTRdiffGLM, direction = "backward") #Genotype not included in most parsimon
 
 ```{r}
 TTRdiffGLM2 <- glm(log(TTRdiff + 1) ~ presenceC + presenceT + treatment*day, data = modTTRSubsetDiffStats) #Run GLM to examine if difference in TTR from day 0 is impacted by binary genotype, treatment, or day
-summary(TTRdiffGLM) #No effect of genotype
+summary(TTRdiffGLM2) #No effect of genotype
 ```
 
 ```{r}
@@ -1033,13 +1068,13 @@ modTTRQ10 <- modTTR %>%
                            T1 = 15, 
                            T2 = temperature)) %>%
   mutate(., day21_Q10 = Q10(R1 = day0, 
-                           R2 = day21, 
-                           T1 = 15, 
-                           T2 = temperature)) %>%
+                            R2 = day21, 
+                            T1 = 15, 
+                            T2 = temperature)) %>%
   mutate(., day42_Q10 = Q10(R1 = day0, 
-                           R2 = day42, 
-                           T1 = 15, 
-                           T2 = temperature)) %>% 
+                            R2 = day42, 
+                            T1 = 15, 
+                            T2 = temperature)) %>% 
   select(., crab.ID, treatment, final.genotype, presenceC, presenceT, day2_Q10, day7_Q10, day21_Q10, day42_Q10) %>%
   pivot_longer(., cols = !c(crab.ID, treatment, final.genotype, presenceC, presenceT), names_to = "day", values_to = "Q10") %>%
   filter(., is.na(Q10) == FALSE) %>%
