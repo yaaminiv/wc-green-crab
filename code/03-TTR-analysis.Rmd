@@ -791,7 +791,7 @@ write.csv(TTRDiffModelComparisons, "ttr-diff-base-comparison-stat-output.csv", q
 #### Full genotype
 
 ```{r}
-TTRdiffModelGenotype <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+TTRdiffModelGenotype <- lmer(TTRdiff ~ treatment + 
                                final.genotype +
                                as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
                                (1|crab.ID), 
@@ -799,7 +799,7 @@ TTRdiffModelGenotype <- lmer(TTRdiff ~ treatment + day + treatment:day +
 summary(TTRdiffModelGenotype) #Look at model output
 ```
 ```{r}
-TTRdiffNullGenotype <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+TTRdiffNullGenotype <- lmer(TTRdiff ~ treatment + 
                               as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
                               (1|crab.ID), 
                             data = modTTRSubsetDiffStats, REML = FALSE)
@@ -809,7 +809,7 @@ anova(TTRdiffNullGenotype, TTRdiffModelGenotype) #Final genotype is not a signfi
 #### Presence of C or T
 
 ```{r}
-TTRdiffModelAllele <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+TTRdiffModelAllele <- lmer(TTRdiff ~ treatment + 
                              presenceC + presenceT +
                              as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
                              (1|crab.ID), 
@@ -818,7 +818,7 @@ summary(TTRdiffModelAllele) #Look at model output
 ```
 
 ```{r}
-TTRdiffNullAlleleC <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+TTRdiffNullAlleleC <- lmer(TTRdiff ~ treatment +
                              as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
                              presenceT +
                              (1|crab.ID), 
@@ -827,7 +827,7 @@ anova(TTRdiffNullAlleleC, TTRdiffModelAllele) #C presence is not a signficiant p
 ```
 
 ```{r}
-TTRdiffNullAlleleT <- lmer(TTRdiff ~ treatment + day + treatment:day + 
+TTRdiffNullAlleleT <- lmer(TTRdiff ~ treatment + 
                              as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) +
                              presenceC +
                              (1|crab.ID), 
