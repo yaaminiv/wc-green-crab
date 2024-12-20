@@ -87,6 +87,37 @@ modTTR <- rawTTR %>%
 head(modTTR) #Confirm formatting
 ```
 
+# Population assessment
+
+Before proceeding, I want to understand the distribution of genotypes in the population.
+
+```{r}
+modTTR %>%
+  group_by(., genotype) %>%
+  summarize(., count = n()) %>%
+  ggplot(mapping = aes(x = "", y = count, fill = genotype)) +
+  geom_col(color = "black") +
+  coord_polar(theta = "y") +
+  scale_fill_manual(name = "Genotype",
+                    values = c("grey90", "grey45", "grey0")) +
+  theme_void(base_size = 15) #Group data by genotype and summarize. Plot counts as a pie chart.
+ggsave("figures/genotype-pie-chart.jpg", height = 8.5, width = 11)
+```
+
+# Hardy-Weinberg equilibrium
+
+Since I have the genotype data, I want to see if my population is in Hardy-Weinbergy equilibrium. I will need to do this for the full MA population, as well as for the individual New Bedford and Eel Pond populations. I used [this calculator](https://www.cog-genomics.org/software/stats) to obtain p-values.
+
+```{r}
+modTTR %>%
+  group_by(., genotype) %>%
+  summarize(., count = n())
+```
+
+P-value: 0.32976593218497
+
+This population is in Hardy-Weinberg equilibrium!
+
 # Assess differences in average TTR
 
 ## Mixed effects model
