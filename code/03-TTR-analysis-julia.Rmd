@@ -17,8 +17,6 @@ knitr::opts_knit$set(root.dir = normalizePath("../output/03-TTR-analysis-julia/"
 getwd()
 ```
 
-## Install Packages
-
 # Install packages
 
 ```{r packages, include=FALSE}
@@ -28,12 +26,14 @@ getwd()
 #install.packages(lme4)
 #install.packages("ggpubr")
 #install.packages("patchwork")
+#install.packages("ggrain")
 require(tidyverse)
 require(plotrix)
 require(RColorBrewer)
 require(lme4)
 require(ggpubr)
 require(patchwork)
+require(ggrain)
 ```
 
 ```{r}
@@ -47,14 +47,15 @@ rawTTR <- read.csv("../../data/time-to-right-genotype-julia.csv", header = TRUE)
 head(rawTTR) #Confirm import. Trial data is in seconds.
 ```
 
+# Format data
+
 ```{r}
 modTTR <- rawTTR %>%
   dplyr::select(., -c(notes, probe.number)) %>%
-  mutate(., day = case_when(X == "7/31/2023" ~ 1,
-                            X == "8/1/2023" ~ 2,
-                            X == "8/2/2023" ~ 3,
-                            X == "8/4/2023" ~ 5)) %>%
-  rename(., date = "X") %>%
+  mutate(., day = case_when(date == "7/31/23" ~ 1,
+                            date == "8/1/23" ~ 2,
+                            date == "8/2/23" ~ 3,
+                            date == "8/4/23" ~ 5)) %>%
   mutate(., treatment = case_when (tank == "10" | tank == "12" ~ "No Pulse",
                                    tank == "11" | tank == "13" ~ "Pulse")) %>%
   mutate(., integument.cont = case_when(integument.color == "BG" ~ 0.5,
@@ -63,6 +64,12 @@ modTTR <- rawTTR %>%
                                         integument.color == "Y" ~ 2.0,
                                         integument.color == "YO" ~ 2.5,
                                         integument.color == "O" ~ 3)) %>%
+  mutate(., presenceC = case_when(genotype == "CC" ~ "Y",
+                                  genotype == "CT" ~ "Y",
+                                  genotype == "TT" ~ "N")) %>%
+  mutate(., presenceT = case_when(genotype == "CC" ~ "N",
+                                  genotype == "CT" ~ "Y",
+                                  genotype == "TT" ~ "Y")) %>%
   mutate(., trial.1 = na_if(trial.1, 91.00)) %>%
   mutate(., trial.2 = na_if(trial.2, 91.00)) %>%
   mutate(., trial.3 = na_if(trial.3, 91.00)) %>%
@@ -80,7 +87,9 @@ modTTR <- rawTTR %>%
 head(modTTR) #Confirm formatting
 ```
 
-# Assess differences by treatment
+# Assess differences in average TTR
+
+## Mixed effects model
 
 I will use an ANOVA to assess treatment differences, as a linear model or ANOVA seems to be common practice in the literature (ex. [Blakeslee et al. 2021](https://doi.org/10.1098/rspb.2021.0703)).
 
@@ -88,8 +97,6 @@ I will use an ANOVA to assess treatment differences, as a linear model or ANOVA 
 hist(modTTR$TTRavg)
 hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
 ```
-
-## Mixed effects model
 
 ```{r}
 TTRmodel <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(treatment):day + 
@@ -132,11 +139,206 @@ write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = F
 ```{r}
 hist(residuals(TTRmodel)) #Residuals normally distributed
 
-plot(fitted(TTRmodel), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+plot(fitted(TTRmodel), residuals(TTRmodel)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
 abline(h = 0, lty = 2, col = "grey")
 ```
 
+## Effect of genotype
 
+Now that I know treatment, time, and their interaction significantly impact TTR, I want to add in genotype and sourcing information.
+
+```{r}
+TTRfullGenotype <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(treatment):day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(genotype) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model with genotype to identify significance of predictor
+anova(TTRmodel, TTRfullGenotype) #No significant impact of genotype
+```
+
+```{r}
+TTRpresenceC <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(treatment):day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceC) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model with genotype to identify significance of predictor
+anova(TTRmodel, TTRpresenceC) #No significant impact of C allele
+```
+
+```{r}
+TTRpresenceT <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(treatment):day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + as.factor(presenceT) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model with genotype to identify significance of predictor
+anova(TTRmodel, TTRpresenceT) #Marginal impact of T allele
+```
+
+```{r}
+TTRModelComparisons<- rbind(broom::tidy(anova(TTRnullTreatment, TTRmodel)),
+                            broom::tidy(anova(TTRnullDay, TTRmodel)),
+                            broom::tidy(anova(TTRnullInteraction, TTRmodel)),
+                            broom::tidy(anova(TTRmodel, TTRfullGenotype)),
+                            broom::tidy(anova(TTRmodel, TTRpresenceC)),
+                            broom::tidy(anova(TTRmodel, TTRpresenceT))) #Create table for model comparison output
+TTRModelComparisons
+```
+
+```{r}
+write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
+```
+
+There is a marginally significant impact of the T allele on average TTR. My next step is to understand how the difference in TTR is impacted by treatment, time, and genotype.
+
+# Assess impacts on differences in TTR
+
+To understand how various factors impact the difference in TTR, I need to reformat my dataframe.
+
+```{r}
+modTTRWide <- modTTR %>%
+  select(-c(date, trial.1:trial.3, integument.color:carapace.length, integument.cont, TTRSE:TTRavgFullHigh)) %>%
+  pivot_wider(., names_from = "day", names_prefix = "day", values_from = "TTRavg") %>%
+  select(., -c(day2:day3)) %>% 
+  mutate(., TTRdiff = day5 - day1) %>%
+  left_join(x = ., 
+            y = (modTTR %>%
+                   filter(., day == 5) %>%
+                   select(., crab.ID, integument.cont, weight, carapace.width, missing.swimmer)), 
+            by = "crab.ID") #Take data and remove extraneous columns. Pivot dataframe and remove intermediate timepoints to have day 1 (before the experiment) and day 5 (after every crab experienced the 24 hr pulse). Calculate the difference in TTR between timepoints. Add demographic information from the final sampling point back to the dataframe.
+modTTRWide #Confirm changes
+```
+
+```{r}
+hist(modTTRWide$TTRdiff)
+hist(modTTRWide$TTRdiff %>% log(.))
+```
+
+
+## Linear model
+
+Since I don't have multiple timepoints for each crab, I don't need to include individual as a random effect. Therefore, I can run a general linear model instead of a mixed effects model.
+
+```{r}
+TTRDiffModel <- lm(log(TTRdiff) ~ as.factor(treatment) +
+                     as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer), 
+                   data = modTTRWide) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later. Use data without rows with NAs
+summary(TTRDiffModel) #Look at model output.
+#Residuals explain more random effect variation than crab ID, crab ID explains very little variation
+```
+
+Now that I've run the full model, I want to test the importance of treatment, day, and their interaction as predictors. I'll include all other factors in the null model to account for any variation they may contribute.
+
+```{r}
+step(TTRDiffModel, direction = "backward")
+```
+
+
+```{r}
+TTRDiffModel2 <- lm(formula = log(TTRdiff) ~ as.factor(treatment) + integument.cont + 
+                      carapace.width + weight + as.factor(missing.swimmer), data = modTTRWide) #Model identified by step
+summary(TTRDiffModel2) #Summary of model information from step
+```
+
+## Effect of genotype
+
+Now that I have a significant base model, I'm going to add genotype information to it.
+
+```{r}
+TTRDiffModel3 <- lm(formula = log(TTRdiff) ~ as.factor(treatment) + integument.cont + 
+                      carapace.width + weight + as.factor(missing.swimmer) +
+                      genotype, data = modTTRWide) #Model identified by step + genotype
+summary(TTRDiffModel3)
+```
+
+```{r}
+TTRDiffModel4 <- lm(formula = log(TTRdiff) ~ as.factor(treatment) + integument.cont + 
+                      carapace.width + weight + as.factor(missing.swimmer) +
+                      presenceC, data = modTTRWide) #Model identified by step + presenceC
+summary(TTRDiffModel4)
+```
+
+```{r}
+TTRDiffModel5 <- lm(formula = log(TTRdiff) ~ as.factor(treatment) + integument.cont + 
+                      carapace.width + weight + as.factor(missing.swimmer) +
+                      presenceT, data = modTTRWide) #Model identified by step + presenceC
+summary(TTRDiffModel5)
+```
+
+No significant effect of any genotype variable on differences in TTR! Also interestingly no significant effect of pre-conditioning on differences.
+
+# Plots
+
+```{bash}
+mkdir figures
+```
+
+## Average TTR plot
+
+```{r}
+modTTR %>%
+  filter(., day == 1 | day == 5) %>%
+  ggplot(mapping = aes(x = as.factor(day), y = TTRavg, fill = treatment)) +
+  geom_rain(alpha = 0.5, id.long.var = "crab.ID") +
+  facet_wrap(~treatment, scale = "free_y", nrow = 2) +
+  scale_x_discrete(name = "",
+                   labels = c("Before", "After")) +
+  scale_y_continuous(name = "Average TTR (s)") +
+  scale_fill_manual(name = "Treatment",
+                    values = c('#9699eb', '#eb8d88')) +
+  scale_shape_manual(name = "Genotype",
+                     labels = c("CC", "CT or TT"),
+                     values = c(17, 19)) +
+  theme_classic(base_size = 15) + theme(strip.background = element_rect(color = "white"))
+ggsave("figures/average-TTR-raincloud-lines.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+modTTR %>%
+  filter(., day == 1 | day == 5) %>%
+  ggplot(mapping = aes(x = as.factor(day), y = TTRavg, fill = treatment)) +
+  geom_rain(alpha = 0.5) +
+  facet_wrap(~treatment, scale = "free_y", nrow = 2) +
+  scale_x_discrete(name = "",
+                   labels = c("Before", "After")) +
+  scale_y_continuous(name = "Average TTR (s)") +
+  scale_fill_manual(name = "Treatment",
+                    values = c('#9699eb', '#eb8d88')) +
+  scale_shape_manual(name = "Genotype",
+                     labels = c("CC", "CT or TT"),
+                     values = c(17, 19)) +
+  theme_classic(base_size = 15) + theme(strip.background = element_rect(color = "white"))
+ggsave("figures/average-TTR-raincloud.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+presenceT_labels <- c("N" = "CC",
+                      "Y" = "CT or TT") #Modify facet labels for precense of the T allele
+```
+
+```{r}
+modTTR %>%
+  filter(., day == 1 | day == 5) %>%
+  ggplot(mapping = aes(x = as.factor(day), y = TTRavg, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(aes(shape = presenceT), position = position_dodge(width = 0.1)) +
+  facet_grid(treatment~presenceT, scale = "free_y", labeller = labeller(presenceT = presenceT_labels)) +
+  scale_x_discrete(name = "",
+                   labels = c("Before", "After")) +
+  scale_y_continuous(name = "Average TTR (s)") +
+  scale_color_manual(guide = "none",
+                    values = c('#9699eb', '#eb8d88')) +
+  scale_shape_manual(guide = "none",
+                     values = c(17, 19)) +
+  theme_classic(base_size = 15) + theme(strip.background = element_rect(color = "white"))
+ggsave("figures/average-TTR-boxplot-treatT.pdf", height = 8.5, width = 11)
+```
+
+## Difference in TTR plot
+
+```{r}
+modTTRWide %>%
+  ggplot(mapping = aes(x = treatment, y = TTRdiff, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + 
+  geom_jitter(aes(shape = presenceT), position = position_dodge(width = 0.1)) +
+  facet_grid(~presenceT, scale = "free_y", labeller = labeller(presenceT = presenceT_labels)) +
+  scale_x_discrete(name = "",
+                   labels = c("Before", "After")) +
+  scale_y_continuous(name = "Difference in TTR (s)") +
+  scale_color_manual(guide = "none",
+                    values = c('#9699eb', '#eb8d88')) +
+  scale_shape_manual(guide = "none",
+                     values = c(17, 19)) +
+  theme_classic(base_size = 15) + theme(strip.background = element_rect(color = "white"))
+ggsave("figures/difference-TTR-boxplot-treatT.pdf", height = 8.5, width = 11)
+```
 
 # JULIA'S CODE
 
@@ -240,7 +442,7 @@ packageVersion("rlang")
 
 ```{r}
 if (!require(remotes)) {
-    install.packages("remotes")
+  install.packages("remotes")
 }
 remotes::install_github('jorvlan/raincloudplots')
 
@@ -294,8 +496,8 @@ raincloud_2 <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 1") + 
   ylab("TTR (s)") +
   theme_classic()
@@ -343,8 +545,8 @@ raincloud_2 <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 2") + 
   ylab("TTR (s)") +
   theme_classic() + 
@@ -388,8 +590,8 @@ raincloud_3 <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 2") + 
   ylab("TTR (s)") +
   theme_classic() +
@@ -421,8 +623,8 @@ raincloud_2x2_spread <- raincloud_2x2_repmes(
   size = 1,
   alpha = .7,
   spread_x_ticks = TRUE) +
-
-scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  
+  scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
   xlab("Primary Pulse                        No Primary Pulse") + 
   ylab("Average TTR (s)") +
   theme_classic() +
@@ -487,16 +689,16 @@ t-test with 91 s values:
 ```         
 
 
-    Paired t-test
+Paired t-test
 
 data:  TTRavgDiffNP2$TTRavg and TTRavgDiffP2$TTRavg
 t = 2.5036, df = 11, p-value = 0.02932
 alternative hypothesis: true mean difference is not equal to 0
 95 percent confidence interval:
-  1.008835 15.682832
+1.008835 15.682832
 sample estimates:
 mean difference 
-       8.345833 
+8.345833 
 ```
 
 ### Standard t-test
@@ -595,8 +797,8 @@ raincloud_CC <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 2") + 
   ylab("TTR (s)") +
   theme_classic() + 
@@ -680,14 +882,14 @@ CCraincloud_2x2_spread <- raincloud_2x2_repmes(
   size = 1,
   alpha = .7,
   spread_x_ticks = TRUE) +
-
-scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  
+  scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
   xlab("Primary Pulse                        No Primary Pulse") + 
   ylab("Average TTR (s)") +
   theme_classic() +
   
-labs(
-  title = "Difference in Avg TTR(s) for CC")
+  labs(
+    title = "Difference in Avg TTR(s) for CC")
 
 CCraincloud_2x2_spread
 ```
@@ -728,8 +930,8 @@ raincloud_CT <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 2") + 
   ylab("TTR (s)") +
   theme_classic() + 
@@ -815,14 +1017,14 @@ CTraincloud_2x2_spread <- raincloud_2x2_repmes(
   size = 1,
   alpha = .7,
   spread_x_ticks = TRUE) +
-
-scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  
+  scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
   xlab("Primary Pulse                        No Primary Pulse") + 
   ylab("Average TTR (s)") +
   theme_classic() +
   
-labs(
-  title = "Difference in Avg TTR(s) for CT")
+  labs(
+    title = "Difference in Avg TTR(s) for CT")
 
 CTraincloud_2x2_spread
 ```
@@ -863,8 +1065,8 @@ raincloud_TT <- raincloud_1x1_repmes(
   size = 1,
   alpha = .6,
   align_clouds = FALSE) +
- 
-scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  
+  scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
   xlab("Time to Pulse 2") + 
   ylab("TTR (s)") +
   theme_classic() + 
@@ -950,14 +1152,14 @@ TTraincloud_2x2_spread <- raincloud_2x2_repmes(
   size = 1,
   alpha = .7,
   spread_x_ticks = TRUE) +
-
-scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  
+  scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
   xlab("Primary Pulse                        No Primary Pulse") + 
   ylab("Average TTR (s)") +
   theme_classic() +
   
-labs(
-  title = "Difference in Avg TTR(s) for TT")
+  labs(
+    title = "Difference in Avg TTR(s) for TT")
 
 TTraincloud_2x2_spread
 ```
