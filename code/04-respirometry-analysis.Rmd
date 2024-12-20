@@ -3132,37 +3132,42 @@ write.csv(baseModelComparisons, "respirometry-base-model-comparison-stat-output.
 Now that I know what parameters shouldbe in the base model, I will add genotype to see if that makes a difference.
 
 ```{r}
-lmAllSlopeResults <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
-                            sex + weight + carapace.width + integument.cont + missing.legs +
-                            (1|crab.ID), 
-                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
-summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
+lmAllSlopeResultsGenotype <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+                                    final.genotype +
+                                    sex + weight + carapace.width + integument.cont + missing.legs +
+                                    (1|crab.ID), 
+                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+summary(lmAllSlopeResultsGenotype) #Significant impact of treatment and treatment:day on respiration
 ```
 
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
 lmAllSlopeResultsHasC <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
-                                    hasC +
-                                    sex + weight + carapace.width + integument.cont + missing.legs +
-                                    (1|crab.ID), 
-                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+                                hasC +
+                                sex + weight + carapace.width + integument.cont + missing.legs +
+                                (1|crab.ID), 
+                              data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
 anova(lmAllSlopeResults, lmAllSlopeResultsHasC) #Compare models. C allele is not significant
 ```
 
 ```{r}
 lmAllSlopeResultsHasT <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
-                                    hasT +
-                                    sex + weight + carapace.width + integument.cont + missing.legs +
-                                    (1|crab.ID), 
-                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
+                                hasT +
+                                sex + weight + carapace.width + integument.cont + missing.legs +
+                                (1|crab.ID), 
+                              data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
 anova(lmAllSlopeResults, lmAllSlopeResultsHasT) #Compare models. T allele is marginally significant
 ```
 
 ```{r}
+summary(lmAllSlopeResultsHasT)
+```
+
+```{r}
 genotypeModelComparisons <- rbind(broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsGenotype)),
-                              broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasC)),
-                              broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasT))) #Create table for model comparison output
+                                  broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasC)),
+                                  broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasT))) #Create table for model comparison output
 genotypeModelComparisons
 ```
 
