@@ -1,0 +1,981 @@
+---
+title: "KelsoTTRAnalysis"
+output: html_document
+date: '2023-07-30'
+---
+
+In this document I'll examine how time-to-right (TTR) varies by temperature, time, and genotype for Julia's data.
+
+# Set up R Markdown document
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = normalizePath("../output/03-TTR-analysis-julia/")) #Set root directory
+```
+
+```{r}
+getwd()
+```
+
+## Install Packages
+
+# Install packages
+
+```{r packages, include=FALSE}
+#install.packages("tidyverse")
+#install.packages("plotrix")
+#install.packages("RColorBrewer")
+#install.packages(lme4)
+#install.packages("ggpubr")
+#install.packages("patchwork")
+require(tidyverse)
+require(plotrix)
+require(RColorBrewer)
+require(lme4)
+require(ggpubr)
+require(patchwork)
+```
+
+```{r}
+sessionInfo()
+```
+
+# Import data
+
+```{r}
+rawTTR <- read.csv("../../data/time-to-right-genotype-julia.csv", header = TRUE) #Import raw data
+head(rawTTR) #Confirm import. Trial data is in seconds.
+```
+
+```{r}
+modTTR <- rawTTR %>%
+  dplyr::select(., -c(notes, probe.number)) %>%
+  mutate(., day = case_when(X == "7/31/2023" ~ 1,
+                            X == "8/1/2023" ~ 2,
+                            X == "8/2/2023" ~ 3,
+                            X == "8/4/2023" ~ 5)) %>%
+  rename(., date = "X") %>%
+  mutate(., treatment = case_when (tank == "10" | tank == "12" ~ "No Pulse",
+                                   tank == "11" | tank == "13" ~ "Pulse")) %>%
+  mutate(., integument.cont = case_when(integument.color == "BG" ~ 0.5,
+                                        integument.color == "G" ~ 1.0,
+                                        integument.color == "YG" ~ 1.5,
+                                        integument.color == "Y" ~ 2.0,
+                                        integument.color == "YO" ~ 2.5,
+                                        integument.color == "O" ~ 3)) %>%
+  mutate(., trial.1 = na_if(trial.1, 91.00)) %>%
+  mutate(., trial.2 = na_if(trial.2, 91.00)) %>%
+  mutate(., trial.3 = na_if(trial.3, 91.00)) %>%
+  rowwise(.) %>% 
+  mutate(., TTRavg = mean(c(trial.1, trial.2, trial.3), na.rm = TRUE)) %>%
+  filter(., is.na(TTRavg) == FALSE) %>%
+  mutate(., TTRSE = std.error(c(trial.1, trial.2, trial.3), na.rm = TRUE)) %>%
+  filter(., is.na(TTRSE) == FALSE) %>%
+  group_by(., day, treatment) %>%
+  mutate(., TTRavgFull = mean(TTRavg)) %>%
+  mutate(., TTRSEFull = std.error(TTRavg)) %>%
+  mutate(., TTRavgFullLow = TTRavgFull - TTRSEFull) %>%
+  mutate(., TTRavgFullHigh = TTRavgFull + TTRSEFull) %>%
+  ungroup(.) #Remove sampling ID and notes columns. Add new column with day information. Create a a new column that with an index for width/length. Create new column as a binary for whether or not crabs are missing legs. Use case_when to create a column of continuous integument color metrics. Change all 91 to NA, calculate average and SE using data from the three TTR trials using rowwise operations, and remove rows where TTRavg | TTRSE = NA. Calculate average and SE for all samples in a treatment for each day. Add/subtract TTRSEFull to/from TTRavgFull to get bounds. Ungroup.a.
+head(modTTR) #Confirm formatting
+```
+
+# Assess differences by treatment
+
+I will use an ANOVA to assess treatment differences, as a linear model or ANOVA seems to be common practice in the literature (ex. [Blakeslee et al. 2021](https://doi.org/10.1098/rspb.2021.0703)).
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
+```
+
+## Mixed effects model
+
+```{r}
+TTRmodel <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(treatment):day + 
+                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   (1|crab.ID), 
+                 data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later. Use data without rows with NAs
+summary(TTRmodel) #Look at model output.
+#Residuals explain more random effect variation than crab ID, crab ID explains very little variation
+```
+Now that I've run the full model, I want to test the importance of treatment, day, and their interaction as predictors. I'll include all other factors in the null model to account for any variation they may contribute.
+
+```{r}
+TTRnullTreatment <- lmer(log(TTRavg) ~ day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRnullTreatment, TTRmodel) #Treatment is a significant predictor
+```
+
+```{r}
+TTRnullDay <- lmer(log(TTRavg) ~ as.factor(treatment) + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without day to identify significance of predictor
+anova(TTRnullDay, TTRmodel) #Day is a significant predictor
+```
+
+```{r}
+TTRnullInteraction <- lmer(log(TTRavg) ~ as.factor(treatment) + day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullInteraction, TTRmodel) #Interaction is a significant predictor
+```
+
+```{r}
+TTRModelComparisons<- rbind(broom::tidy(anova(TTRnullTreatment, TTRmodel)),
+                            broom::tidy(anova(TTRnullDay, TTRmodel)),
+                            broom::tidy(anova(TTRnullInteraction, TTRmodel))) #Create table for model comparison output
+TTRModelComparisons
+```
+
+```{r}
+write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
+```
+
+## Check assumptions
+
+```{r}
+hist(residuals(TTRmodel)) #Residuals normally distributed
+
+plot(fitted(TTRmodel), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+abline(h = 0, lty = 2, col = "grey")
+```
+
+
+
+# JULIA'S CODE
+
+## Assess Differences by Treatment
+
+### ANOVA
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = log(modTTR$TTRavg))
+```
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = (1/(modTTR$TTRavg)))
+```
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = (1/log(modTTR$TTRavg)))
+```
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = (log10(modTTR$TTRavg)))
+```
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = (modTTR$TTRavg)^(1/3))
+```
+
+```{r}
+hist(modTTR$TTRavg)
+hist(x = sqrt(modTTR$TTRavg))
+```
+
+```{r}
+TTRmodel <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + weight + as.factor(genotype), data = modTTR) ##ANOVA with log(TTRavg) as response variable, all other factors as explanatory variables #add size back in later
+
+summary(TTRmodel)
+```
+
+```{r}
+#TTRmodel with modTTR2 data
+TTRmodel2 <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + weight + as.factor(missing.legs) + as.factor(genotype), data = modTTR2) ##ANOVA with log(TTRavg) as response variable, all other factors as explanatory variables #add size back in later
+
+summary(TTRmodel2)
+```
+
+```{r}
+write.csv(broom::tidy(TTRmodel), "TTR-ANOVA-output.csv", quote = FALSE) ##save table of ANOVA output
+```
+
+#### ANOVA (without 4 later pulse crabs)
+
+```{r}
+hist(modTTRoutlier$TTRavg)
+hist(x = log(modTTRoutlier$TTRavg))
+```
+
+```{r}
+TTRmodel <- aov(log(TTRavg) ~ treatment + day + treatment*day + as.factor(sex) + as.factor(integument.color) + weight + as.factor(missing.legs) + as.factor(genotype), data = modTTRoutlier) ##ANOVA with log(TTRavg) as response variable, all other factors as explanatory variables #add size back in later
+
+summary(TTRmodel)
+```
+
+## TTR Plot
+
+```{r}
+modTTR %>%
+  dplyr::select(., c(day, treatment, TTRavgFull, TTRavgFullLow, TTRavgFullHigh)) %>%
+  distinct(.) %>%
+  ggplot(., mapping = aes(x = day, y = TTRavgFull, color = treatment, shape = treatment)) +
+  geom_pointrange(aes(ymin = TTRavgFullLow,
+                      ymax = TTRavgFullHigh),
+                  size = 0.5, alpha = 0.75) +
+  scale_x_continuous(name = "Day",
+                     breaks = unique(modTTR$day),
+                     limits = c(1,3)) +
+  scale_y_continuous(name = "Average Time-to-Right (s)",
+                     breaks = c(0, seq(1, 5, 1)),
+                     limits = c(0, 5)) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1]),
+                     name = "Treatment",
+                     breaks = c("No Pulse", "Pulse"),
+                     labels = c("No Pulse", "Pulse")) +
+  scale_shape_manual(values = c(19, 17),
+                     name = "Treatment",
+                     breaks = c("No Pulse", "Pulse"),
+                     labels = c("No Pulse", "Pulse")) +
+  theme_classic(base_size = 15) ## Plot avg TTR and add lm fits without SE bars #add vertical line for boxplot outlier threshold #modify x-axis to only show experimental days where TTR was measured #scale y axis to include 91 = crabs do not right within 90 s #assign colors to treatment #increase base font size
+ggsave("time-to-right-avg.pdf", height = 8.5, width = 11)
+```
+
+## Raincloud Plots
+
+```{r}
+packageVersion("rlang")
+```
+
+```{r}
+if (!require(remotes)) {
+    install.packages("remotes")
+}
+remotes::install_github('jorvlan/raincloudplots')
+
+library(raincloudplots)
+```
+
+```{r}
+library(tidyverse)
+```
+
+### Make Dataframe
+
+```{r}
+TTRavgDay1 <- subset(modTTR$TTRavg, modTTR$day == "1", select = 1)
+TTRavgDay2 <- subset(modTTR$TTRavg, modTTR$day == "2", select = 2)
+TTRavgDay3 <- subset(modTTR$TTRavg, modTTR$day == "3", select = 3)
+TTRavgDay5 <- subset(modTTR$TTRavg, modTTR$day == "5", select = 5)
+
+TTRavgDay2.3 <- append(TTRavgDay2, TTRavgDay3)
+
+TTRavgDF <- data.frame(TTRavgDay1, TTRavgDay2.3, TTRavgDay5)
+```
+
+### Initialize Data Format
+
+```{r}
+df_1x1 <- data_1x1(
+  array_1 = TTRavgDF$TTRavgDay1,
+  array_2 = TTRavgDF$TTRavgDay5)
+```
+
+```{r}
+head(df_1x1)
+tail(df_1x1)
+```
+
+### Make Plot
+
+```{bash}
+cd ~/Desktop/WHOI/kelsofigures
+pwd
+```
+
+```{r}
+raincloud_2 <- raincloud_1x1_repmes(
+  data = df_1x1,
+  colors = (c('dodgerblue', 'darkorange')),
+  fills = (c('dodgerblue', 'darkorange')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 1") + 
+  ylab("TTR (s)") +
+  theme_classic()
+
+raincloud_2
+
+##can't figure out how to save non-ggplot plot, tried opening pdf file and closing with dev.off after running commnd but i get an error saying i can't close off the null device
+```
+
+## Raincloud Dataframe for No Pulse
+
+("No Pulse")
+
+```{r}
+NPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "No Pulse")
+TTRavgNPday1 <- NPday1 %>%
+  select(TTRavg,crab.ID,genotype,sex,treatment)
+
+NPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "No Pulse")
+TTRavgNPday5 <- NPday5 %>%
+  select(TTRavg,crab.ID,genotype,sex,treatment)
+
+TTRavgNPDF <- data.frame(TTRavgNPday1, TTRavgNPday5$TTRavg)
+```
+
+```{r}
+NoPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgNPDF$TTRavg,
+  array_2 = TTRavgNPDF$TTRavgNPday5.TTRavg)
+
+head(NoPulsedf_1x1)
+```
+
+```{r}
+raincloud_2 <- raincloud_1x1_repmes(
+  data = NoPulsedf_1x1,
+  colors = (c('#9699eb', '#eb8d88')),
+  fills = (c('#9699eb', '#eb8d88')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 2") + 
+  ylab("TTR (s)") +
+  theme_classic() + 
+  ggtitle("No Primary Heat Pulse")
+raincloud_2
+```
+
+## Raincloud Dataframe for Pulse
+
+```{r}
+Pday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "Pulse")
+TTRavgPday1 <- Pday1 %>%
+  select(TTRavg, crab.ID,genotype,sex,treatment)
+
+Pday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "Pulse")
+TTRavgPday5 <- Pday5 %>%
+  select(TTRavg, crab.ID,genotype,sex,treatment)
+
+TTRavgPDF <- data.frame(TTRavgPday1, TTRavgPday5$TTRavg)
+```
+
+```{r}
+Pulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgPDF$TTRavg,
+  array_2 = TTRavgPDF$TTRavgPday5.TTRavg)
+
+head(Pulsedf_1x1)
+```
+
+```{r}
+raincloud_3 <- raincloud_1x1_repmes(
+  data = Pulsedf_1x1,
+  colors = (c('#9699eb', '#eb8d88')),
+  fills = (c('#9699eb', '#eb8d88')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 2") + 
+  ylab("TTR (s)") +
+  theme_classic() +
+  ggtitle("Primary Heat Pulse")
+
+raincloud_3
+```
+
+```{r}
+df_2x2_spread <- data_2x2(
+  array_1 = TTRavgPDF$TTRavg,
+  array_2 = TTRavgPDF$TTRavgPday5.TTRavg,
+  array_3 = TTRavgNPDF$TTRavg,
+  array_4 = TTRavgNPDF$TTRavgNPday5.TTRavg,
+  labels = (c("Pulse", "No Pulse")),
+  jit_distance = .09,
+  jit_seed = 321,
+  spread_x_ticks = TRUE)
+```
+
+```{r}
+pdf("/Users/juliakelso/Desktop/raincloud_2x2_spread.pdf", width = 11, height = 8)
+raincloud_2x2_spread <- raincloud_2x2_repmes(
+  data = df_2x2_spread,
+  colors = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  fills = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .7,
+  spread_x_ticks = TRUE) +
+
+scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  xlab("Primary Pulse                        No Primary Pulse") + 
+  ylab("Average TTR (s)") +
+  theme_classic() +
+  labs(title = "Difference in Avg TTR(s)")
+raincloud_2x2_spread
+dev.off()
+
+raincloud_2x2_spread
+```
+
+```{bash}
+pwd
+```
+
+## Individual TTR
+
+```{r}
+TTRavgDiffNP <- data.frame(TTRavgNPday5$TTRavg - TTRavgNPday1$TTRavg)
+TTRavgDiffP <-  data.frame(TTRavgPday5$TTRavg - TTRavgPday1$TTRavg)
+
+TTRavgDiffNP2 <- cbind(TTRavgDiffNP,TTRavgNPDF$crab.ID,TTRavgNPday1$genotype,TTRavgNPday1$sex,TTRavgNPday1$treatment)
+TTRavgDiffP2 <- cbind(TTRavgDiffP,TTRavgPDF$crab.ID,TTRavgPday1$genotype,TTRavgPday1$sex,TTRavgPday1$treatment)
+
+# TTRavgDiffNP2 <- data.frame((TTRavgDiffNP), c(rep("No Pulse", times = 12)))
+# TTRavgDiffP2 <- data.frame((TTRavgDiffP), c(rep("Pulse", times = 12)))
+
+colnames(TTRavgDiffNP2)[1] = "TTRavg"
+colnames(TTRavgDiffP2)[1] = "TTRavg"
+colnames(TTRavgDiffNP2)[2] = "crab.ID"
+colnames(TTRavgDiffP2)[2] = "crab.ID"
+colnames(TTRavgDiffNP2)[5] = "treatment"
+colnames(TTRavgDiffP2)[5] = "treatment"
+colnames(TTRavgDiffNP2)[3] = "genotype"
+colnames(TTRavgDiffP2)[3] = "genotype"
+colnames(TTRavgDiffNP2)[4] = "sex"
+colnames(TTRavgDiffP2)[4] = "sex"
+
+TTRavgDiff <- rbind(TTRavgDiffNP2, TTRavgDiffP2)
+```
+
+```{r}
+hist(log10(TTRavgDiff$TTRavg))
+hist(TTRavgDiff$TTRavg)
+hist(1/TTRavgDiff$TTRavg)
+```
+
+### Paired t-test for differences with treatment groups
+
+```{r}
+t.test(TTRavgNPday5$TTRavg, TTRavgNPday1$TTRavg, paired = TRUE, alternative = "two.sided")
+t.test(TTRavgPday5$TTRavg, TTRavgPday1$TTRavg, paired = TRUE, alternative = "two.sided")
+```
+
+### Paired t-test between treatment groups
+
+```{r}
+t.test(TTRavgDiffNP2$TTRavg, TTRavgDiffP2$TTRavg, paired = TRUE, alternative = "two.sided")
+```
+
+t-test with 91 s values:
+
+```         
+
+
+    Paired t-test
+
+data:  TTRavgDiffNP2$TTRavg and TTRavgDiffP2$TTRavg
+t = 2.5036, df = 11, p-value = 0.02932
+alternative hypothesis: true mean difference is not equal to 0
+95 percent confidence interval:
+  1.008835 15.682832
+sample estimates:
+mean difference 
+       8.345833 
+```
+
+### Standard t-test
+
+```{r}
+t.test(TTRavgDiffNP2$TTRavg, TTRavgDiffP2$TTRavg, paired = , alternative = "two.sided")
+```
+
+### Kruskal-Wallis Non-parametric Test
+
+```{r}
+kruskal.test(TTRavgDiffP2$TTRavg ~ genotype, data = TTRavgDiffP2)
+```
+
+```{r}
+kruskal.test((TTRavgDiff$TTRavg) ~ treatment, data = TTRavgDiff)
+```
+
+```{r}
+kruskal.test((TTRavgDiff$TTRavg) ~ genotype, data = TTRavgDiff)
+```
+
+```{r}
+pairwise.wilcox.test(TTRavgDiffP2$TTRavg, TTRavgDiffP2$genotype)
+```
+
+```{r}
+pairwise.wilcox.test(TTRavgDiff$TTRavg,TTRavgDiff$genotype)
+```
+
+### ANOVA for Differences
+
+```{r}
+TTRmodelDiff <- aov((TTRavgDiff$TTRavg) ~ treatment + as.factor(genotype), data = TTRavgDiff) ##ANOVA with log(TTRavg) as response variable, all other factors as explanatory variables #add size back in later
+
+summary(TTRmodelDiff)
+```
+
+```{r}
+TTRmodelDiffTuk <- TukeyHSD(TTRmodelDiff)
+print(TTRmodelDiffTuk)
+```
+
+## Boxplot
+
+```{r}
+##pdf("/Users/juliakelso/Desktop/TTRavgDiffwGeno.pdf", width = 11, height = 8)
+ggplot(TTRavgDiff, aes(genotype, TTRavg, color = genotype)) + 
+  geom_boxplot() +
+  labs(x="Genotype", y="Difference in TTRavg (s)") +
+  theme_bw() + 
+  scale_color_manual(values = c('#fbbb06','#4285f4', '#93c47d'), 
+                     guide = "none") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+  facet_wrap(~treatment)
+##dev.off()
+```
+
+## Raincloud for Genotype
+
+### CC
+
+```{r}
+CCday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., genotype == "CC")
+TTRavgCCday1 <- CCday1 %>%
+  select(TTRavg)
+
+CCday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., genotype == "CC")
+TTRavgCCday5 <- CCday5 %>%
+  select(TTRavg)
+
+TTRavgCCDF <- data.frame(TTRavgCCday1, TTRavgCCday5)
+```
+
+```{r}
+CCdf_1x1 <- data_1x1(
+  array_1 = TTRavgCCDF$TTRavg,
+  array_2 = TTRavgCCDF$TTRavg.1)
+
+head(CCdf_1x1)
+```
+
+#### Pulse
+
+```{r}
+raincloud_CC <- raincloud_1x1_repmes(
+  data = CCdf_1x1,
+  colors = (c('#9699eb', '#eb8d88')),
+  fills = (c('#9699eb', '#eb8d88')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 2") + 
+  ylab("TTR (s)") +
+  theme_classic() + 
+  ggtitle("CC")
+raincloud_CC
+```
+
+```{r}
+CCPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "CC")
+TTRavgCCPday1 <- CCPday1 %>%
+  select(TTRavg)
+
+CCPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "CC")
+TTRavgCCPday5 <- CCPday5 %>%
+  select(TTRavg)
+
+TTRavgCCPDF <- data.frame(TTRavgCCPday1, TTRavgCCPday5)
+```
+
+```{r}
+CCPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgCCPDF$TTRavg,
+  array_2 = TTRavgCCPDF$TTRavg.1)
+
+head(CCPulsedf_1x1)
+```
+
+#### No Pulse
+
+```{r}
+CCNPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "CC")
+TTRavgCCNPday1 <- CCNPday1 %>%
+  select(TTRavg)
+
+CCNPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "CC")
+TTRavgCCNPday5 <- CCNPday5 %>%
+  select(TTRavg)
+
+TTRavgCCNPDF <- data.frame(TTRavgCCNPday1, TTRavgCCNPday5)
+```
+
+```{r}
+CCNoPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgCCNPDF$TTRavg,
+  array_2 = TTRavgCCNPDF$TTRavg.1)
+
+head(CCNoPulsedf_1x1)
+```
+
+```{r}
+CCdf_2x2_spread <- data_2x2(
+  array_1 = TTRavgCCPDF$TTRavg,
+  array_2 = TTRavgCCPDF$TTRavg.1,
+  array_3 = TTRavgCCNPDF$TTRavg,
+  array_4 = TTRavgCCNPDF$TTRavg.1,
+  labels = (c("Pulse", "No Pulse")),
+  jit_distance = .09,
+  jit_seed = 321,
+  spread_x_ticks = TRUE)
+```
+
+```{r}
+CCraincloud_2x2_spread <- raincloud_2x2_repmes(
+  data = CCdf_2x2_spread,
+  colors = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  fills = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .7,
+  spread_x_ticks = TRUE) +
+
+scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  xlab("Primary Pulse                        No Primary Pulse") + 
+  ylab("Average TTR (s)") +
+  theme_classic() +
+  
+labs(
+  title = "Difference in Avg TTR(s) for CC")
+
+CCraincloud_2x2_spread
+```
+
+### CT
+
+```{r}
+CTday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., genotype == "CT")
+TTRavgCTday1 <- CTday1 %>%
+  select(TTRavg)
+
+CTday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., genotype == "CT")
+TTRavgCTday5 <- CTday5 %>%
+  select(TTRavg)
+
+TTRavgCTDF <- data.frame(TTRavgCTday1, TTRavgCTday5)
+```
+
+```{r}
+CTdf_1x1 <- data_1x1(
+  array_1 = TTRavgCTDF$TTRavg,
+  array_2 = TTRavgCTDF$TTRavg.1)
+
+head(CTdf_1x1)
+```
+
+```{r}
+raincloud_CT <- raincloud_1x1_repmes(
+  data = CTdf_1x1,
+  colors = (c('#9699eb', '#eb8d88')),
+  fills = (c('#9699eb', '#eb8d88')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 2") + 
+  ylab("TTR (s)") +
+  theme_classic() + 
+  ggtitle("CT")
+raincloud_CT
+```
+
+#### Pulse
+
+```{r}
+CTPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "CT")
+TTRavgCTPday1 <- CTPday1 %>%
+  select(TTRavg)
+
+CTPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "CT")
+TTRavgCTPday5 <- CTPday5 %>%
+  select(TTRavg)
+
+TTRavgCTPDF <- data.frame(TTRavgCTPday1, TTRavgCTPday5)
+```
+
+```{r}
+CTPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgCTPDF$TTRavg,
+  array_2 = TTRavgCTPDF$TTRavg.1)
+
+head(CTPulsedf_1x1)
+```
+
+#### No Pulse
+
+```{r}
+CTNPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "CT")
+TTRavgCTNPday1 <- CTNPday1 %>%
+  select(TTRavg)
+
+CTNPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "CT")
+TTRavgCTNPday5 <- CTNPday5 %>%
+  select(TTRavg)
+
+TTRavgCTNPDF <- data.frame(TTRavgCTNPday1, TTRavgCTNPday5)
+```
+
+```{r}
+CTNoPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgCTNPDF$TTRavg,
+  array_2 = TTRavgCTNPDF$TTRavg.1)
+
+head(CTNoPulsedf_1x1)
+```
+
+```{r}
+CTdf_2x2_spread <- data_2x2(
+  array_1 = TTRavgCTPDF$TTRavg,
+  array_2 = TTRavgCTPDF$TTRavg.1,
+  array_3 = TTRavgCTNPDF$TTRavg,
+  array_4 = TTRavgCTNPDF$TTRavg.1,
+  labels = (c("Pulse", "No Pulse")),
+  jit_distance = .09,
+  jit_seed = 321,
+  spread_x_ticks = TRUE)
+```
+
+```{r}
+CTraincloud_2x2_spread <- raincloud_2x2_repmes(
+  data = CTdf_2x2_spread,
+  colors = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  fills = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .7,
+  spread_x_ticks = TRUE) +
+
+scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  xlab("Primary Pulse                        No Primary Pulse") + 
+  ylab("Average TTR (s)") +
+  theme_classic() +
+  
+labs(
+  title = "Difference in Avg TTR(s) for CT")
+
+CTraincloud_2x2_spread
+```
+
+### TT
+
+```{r}
+TTday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., genotype == "TT")
+TTRavgTTday1 <- TTday1 %>%
+  select(TTRavg)
+
+TTday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., genotype == "TT")
+TTRavgTTday5 <- TTday5 %>%
+  select(TTRavg)
+
+TTRavgTTDF <- data.frame(TTRavgTTday1, TTRavgTTday5)
+```
+
+```{r}
+TTdf_1x1 <- data_1x1(
+  array_1 = TTRavgTTDF$TTRavg,
+  array_2 = TTRavgTTDF$TTRavg.1)
+
+head(TTdf_1x1)
+```
+
+```{r}
+raincloud_TT <- raincloud_1x1_repmes(
+  data = TTdf_1x1,
+  colors = (c('#9699eb', '#eb8d88')),
+  fills = (c('#9699eb', '#eb8d88')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .6,
+  align_clouds = FALSE) +
+ 
+scale_x_continuous(breaks=c(1,2), labels=c("Before", "After"), limits=c(0, 3)) +
+  xlab("Time to Pulse 2") + 
+  ylab("TTR (s)") +
+  theme_classic() + 
+  ggtitle("TT")
+raincloud_TT
+```
+
+#### Pulse
+
+```{r}
+TTPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "TT")
+TTRavgTTPday1 <- TTPday1 %>%
+  select(TTRavg)
+
+TTPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "Pulse") %>%
+  filter(., genotype == "TT")
+TTRavgTTPday5 <- TTPday5 %>%
+  select(TTRavg)
+
+TTRavgTTPDF <- data.frame(TTRavgTTPday1, TTRavgTTPday5)
+```
+
+```{r}
+TTPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgTTPDF$TTRavg,
+  array_2 = TTRavgTTPDF$TTRavg.1)
+
+head(TTPulsedf_1x1)
+```
+
+#### No Pulse
+
+```{r}
+TTNPday1 <- modTTR %>%
+  filter(., day == "1") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "TT")
+TTRavgTTNPday1 <- TTNPday1 %>%
+  select(TTRavg)
+
+TTNPday5 <- modTTR %>%
+  filter(., day == "5") %>%
+  filter(., treatment == "No Pulse") %>%
+  filter(., genotype == "TT")
+TTRavgTTNPday5 <- TTNPday5 %>%
+  select(TTRavg)
+
+TTRavgTTNPDF <- data.frame(TTRavgTTNPday1, TTRavgTTNPday5)
+```
+
+```{r}
+TTNoPulsedf_1x1 <- data_1x1(
+  array_1 = TTRavgTTNPDF$TTRavg,
+  array_2 = TTRavgTTNPDF$TTRavg.1)
+
+head(TTNoPulsedf_1x1)
+```
+
+```{r}
+TTdf_2x2_spread <- data_2x2(
+  array_1 = TTRavgTTPDF$TTRavg,
+  array_2 = TTRavgTTPDF$TTRavg.1,
+  array_3 = TTRavgTTNPDF$TTRavg,
+  array_4 = TTRavgTTNPDF$TTRavg.1,
+  labels = (c("Pulse", "No Pulse")),
+  jit_distance = .09,
+  jit_seed = 321,
+  spread_x_ticks = TRUE)
+```
+
+```{r}
+TTraincloud_2x2_spread <- raincloud_2x2_repmes(
+  data = TTdf_2x2_spread,
+  colors = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  fills = (c('gray48', '#eb8d88', 'gray48', '#9699eb')),
+  line_color = 'gray',
+  line_alpha = .3,
+  size = 1,
+  alpha = .7,
+  spread_x_ticks = TRUE) +
+
+scale_x_continuous(breaks=c(1,2,3,4), labels=c("Pre-Pulse 2", "Post-Pulse 2", "Pre-Pulse 2", "Post-Pulse 2"), limits=c(0, 5)) +
+  xlab("Primary Pulse                        No Primary Pulse") + 
+  ylab("Average TTR (s)") +
+  theme_classic() +
+  
+labs(
+  title = "Difference in Avg TTR(s) for TT")
+
+TTraincloud_2x2_spread
+```
+
+MEETING NOTES
+
+-   color of genotype distribution
+
+-   potentially separate distribution graph by treatment
+
+-   respirometry genotype
+
+-   rephrase (2) in conclusions to show i am doing it now
+
+-   try to flip raincloud no pulse to left
+
+-   maybe show raincloud and respo first, distribution second
+
+-   transition between individual and genotype
+
+-   say why TTR is importants
