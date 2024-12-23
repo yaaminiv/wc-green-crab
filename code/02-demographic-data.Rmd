@@ -882,13 +882,25 @@ head(genotypeData) #Confirm genotype dataframe creation
 ```{r}
 genotypeData %>%
   group_by(., final.genotype) %>%
+  summarize(., count = n())
+```
+
+I took the above numbers and put them into [this Hardy-Weinberg equilibrium calculator](https://www.cog-genomics.org/software/stats).
+
+P-value: 0.4238149514542
+
+This population is in Hardy-Weinberg equilibrium!
+
+```{r}
+genotypeData %>%
+  group_by(., final.genotype) %>%
   summarise(., count = n()) %>%
   ggplot(., aes(x= "", y = count, fill = final.genotype)) +
   geom_bar(stat = "identity", width = 1) +
   coord_polar("y", start = 0) +
-  geom_text(aes(label = paste0(round((count/sum(count)*100), digits = 0), "%")), position = position_stack(vjust = 0.5), size = 6) +
+  # geom_text(aes(label = paste0(round((count/sum(count)*100), digits = 0), "%")), position = position_stack(vjust = 0.5), size = 6) +
   scale_fill_manual(name = "Genotype",
-                    values = c("#BAE4B3", "#74C476", "#006D2C")) +
+                    values = c("grey90", "grey45", "grey0")) +
   theme_void(base_size = 15) #Group genotype data by genotype, then count the number of crabs in each genotype. Create a pie chart for genotype distribution, irrespective of treatment by using geom_bar then setting polar coordinates. Add text labels for % crabs in each genotype. Create a manual color scale.
 ggsave("figures/genotype.pdf", height = 8.5, width = 11)
 ```
