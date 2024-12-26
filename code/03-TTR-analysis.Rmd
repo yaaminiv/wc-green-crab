@@ -443,7 +443,6 @@ modTTR %>%
                                   treatment != "5C" ~ treatment)) %>%
   ggplot(mapping = aes(x = day, y = TTRavg, color = treatment, shape = treatment)) +
   geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_dodge(width = 0.75)) +
-  geom_hline(aes(yintercept = boxplot.stats(modTTR$TTRavg)$stats[5]), lty = 2, color = "black") +
   ylab("Average Time-to-Right (s)") +
   scale_x_discrete(name = "Day",
                    breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42", "49"),
