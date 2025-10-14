@@ -282,8 +282,6 @@ ggsave("figures/time-to-right-genotype.pdf", height = 8.5, width = 11)
 
 # Assess differences by treatment
 
-I will use an ANOVA to assess treatment differences, as a linear model or ANOVA seems to be common practice in the literature (ex. [Blakeslee et al. 2021](https://doi.org/10.1098/rspb.2021.0703)).
-
 ```{r}
 hist(modTTR$TTRavg)
 hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
@@ -291,35 +289,116 @@ hist(x = log(modTTR$TTRavg)) #Log transformation helps normalize data
 
 ## Mixed effects model
 
+I will use a mixed effects model in three steps to assess the impact of various factors on righting response:
+
+1. Assess impact of demographic variables on righting response
+2. Include significant demographic variables in model to assess the impacts treatment, day, and their interaction
+3. Assess significance of factors in final model
+
+### Demographic variables
+
+```{r}
+TTRmodelDV <- lmer(log(TTRavg) ~ as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                     (1|crab.ID), 
+                   data = modTTR, REML = FALSE) #Run preliminary model with only demographic variables
+summary(TTRmodelDV)
+```
+
+```{r}
+TTRDVnullSex <- lmer(log(TTRavg) ~ integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                       (1|crab.ID), 
+                     data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRDVnullSex, TTRmodelDV) #Sex is not significant
+```
+
+```{r}
+TTRDVnullIntegument <- lmer(log(TTRavg) ~ as.factor(sex) + carapace.width + weight + as.factor(missing.swimmer) + 
+                              (1|crab.ID), 
+                            data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRDVnullIntegument, TTRmodelDV) #Integument color is significant
+```
+
+```{r}
+TTRDVnullCW <- lmer(log(TTRavg) ~ as.factor(sex) + integument.cont + weight + as.factor(missing.swimmer) + 
+                      (1|crab.ID), 
+                    data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRDVnullCW, TTRmodelDV) #CW is not significant
+```
+
+```{r}
+TTRDVnullWeight <- lmer(log(TTRavg) ~ as.factor(sex) + integument.cont + carapace.width + as.factor(missing.swimmer) + 
+                          (1|crab.ID), 
+                        data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRDVnullWeight, TTRmodelDV) #Weight is not significant
+```
+
+```{r}
+TTRDVnullSwimmer <- lmer(log(TTRavg) ~ as.factor(sex) + integument.cont + carapace.width + weight + 
+                           (1|crab.ID), 
+                         data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+anova(TTRDVnullSwimmer, TTRmodelDV) #Missing swimmer is significant
+```
+
+```{r}
+TTRModelComparisons <- rbind(broom::tidy(anova(TTRDVnullSex, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullIntegument, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullCW, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullWeight, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullSwimmer, TTRmodelDV))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni")) #Create table for model comparison output
+TTRModelComparisons
+```
+
+After multiple comparison corrections, only integument color is significant. I will include that in the model.
+
+### Main effects
+
 ```{r}
 TTRmodel <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
-                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                   integument.cont + 
                    (1|crab.ID), 
                  data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later. Use data without rows with NAs
 summary(TTRmodel) #Look at model output.
 #Residuals explain more random effect variation than crab ID, crab ID explains very little variation
 ```
-Now that I've run the full model, I want to test the importance of treatment, day, and their interaction as predictors. I'll include all other factors in the null model to account for any variation they may contribute.
+
+Now that I've run the full model, I want to test the importance of treatment, day, and their interaction as predictors. I'll include all other factors in the null model to account for any variation they may contribute. I'll also re-test the significance of integument color in this context.
 
 ```{r}
-TTRnullTreatment <- lmer(log(TTRavg) ~ day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
+TTRnullTreatment <- lmer(log(TTRavg) ~ day + integument.cont + 
+                           (1|crab.ID), 
+                         data = modTTR, REML = FALSE) #Run null model without treatment to identify significance of predictor
 anova(TTRnullTreatment, TTRmodel) #Treatment is a significant predictor
 ```
 
 ```{r}
-TTRnullDay <- lmer(log(TTRavg) ~ treatment + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without day to identify significance of predictor
-anova(TTRnullTreatment, TTRmodel) #Day is a significant predictor
+TTRnullDay <- lmer(log(TTRavg) ~ treatment + integument.cont + 
+                     (1|crab.ID), data = modTTR, REML = FALSE) #Run null model without day to identify significance of predictor
+anova(TTRnullDay, TTRmodel) #Day is a significant predictor
 ```
 
 ```{r}
-TTRnullInteraction <- lmer(log(TTRavg) ~ treatment + day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+TTRnullInteraction <- lmer(log(TTRavg) ~ treatment + day + integument.cont +
+                             (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
 anova(TTRnullInteraction, TTRmodel) #Interaction is a significant predictor
 ```
 
 ```{r}
-TTRModelComparisons<- rbind(broom::tidy(anova(TTRnullTreatment, TTRmodel)),
-                            broom::tidy(anova(TTRnullDay, TTRmodel)),
-                            broom::tidy(anova(TTRnullInteraction, TTRmodel))) #Create table for model comparison output
+TTRnullIntegument2 <- lmer(log(TTRavg) ~ treatment + day + treatment:day +
+                             (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
+anova(TTRnullIntegument2, TTRmodel) #Integument color is not a significant predictor
+```
+```{r}
+TTRModelComparisons <- rbind(broom::tidy(anova(TTRDVnullSex, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullIntegument, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullCW, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullWeight, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullSwimmer, TTRmodelDV)),
+                             broom::tidy(anova(TTRnullTreatment, TTRmodel)),
+                             broom::tidy(anova(TTRnullDay, TTRmodel)),
+                             broom::tidy(anova(TTRnullInteraction, TTRmodel)),
+                             broom::tidy(anova(TTRnullIntegument2, TTRmodel))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni")) #Create table for model comparison output
 TTRModelComparisons
 ```
 
@@ -327,12 +406,23 @@ TTRModelComparisons
 write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
 ```
 
-## Check assumptions
+Since integument color is not significant when included just with temperature, day, and their interaction, I will compare AIC between a model that has integument color and a model that does not.
 
 ```{r}
-hist(residuals(TTRmodel)) #Residuals normally distributed
+AIC(TTRnullIntegument2, TTRmodel) #The model that does not include integument color has a slightly lower AIC than a model that includes integument color. I will remove integument color from the final model.
+```
 
-plot(fitted(TTRmodel), residuals(TTRmodelSig)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
+```{r}
+TTRmodelFinal <- TTRnullIntegument2 #The final model includes treatment, day, and their interaction as fixed effects and crab ID as a random effect.
+summary(TTRmodelFinal)
+```
+
+# Check assumptions
+
+```{r}
+hist(residuals(TTRmodelFinal)) #Residuals normally distributed
+
+plot(fitted(TTRmodelFinal), residuals(TTRmodelFinal)) #Borderline heteroskedastic but probably okay? Lack of dispersion across x-axis is likely related to discrete variables
 abline(h = 0, lty = 2, col = "grey")
 ```
 
@@ -750,24 +840,24 @@ head(modTTRSubsetDiffStats) #Confirm dataframe creation
 
 ```{r}
 TTRDiffmodel <- lmer(TTRdiff ~ treatment + day + treatment:day + 
-                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                   (1|crab.ID), 
-                 data = modTTRSubsetDiffStats, REML = FALSE) #Run model
+                       as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                       (1|crab.ID), 
+                     data = modTTRSubsetDiffStats, REML = FALSE) #Run model
 summary(TTRDiffmodel) #Look at model output.
 ```
 ```{r}
 TTRnullDiffTreatment <- lmer(TTRdiff ~ day + 
-                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                   (1|crab.ID), 
-                 data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
+                               as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                               (1|crab.ID), 
+                             data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
 anova(TTRnullDiffTreatment, TTRDiffmodel) #Treatment is a significant predictor
 ```
 
 ```{r}
 TTRnullDiffDay <- lmer(TTRdiff ~ treatment + 
-                   as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                   (1|crab.ID), 
-                 data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
+                         as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
+                         (1|crab.ID), 
+                       data = modTTRSubsetDiffStats, REML = FALSE) #Run null model without treatment to identify significance of predictor
 anova(TTRnullDiffDay, TTRDiffmodel) #Day is not a significant predictor
 ```
 
@@ -778,8 +868,8 @@ anova(TTRnullDiffInteraction, TTRDiffmodel) #Interaction is not a significant pr
 
 ```{r}
 TTRDiffModelComparisons<- rbind(broom::tidy(anova(TTRnullDiffTreatment, TTRDiffmodel)),
-                            broom::tidy(anova(TTRnullDiffDay, TTRDiffmodel)),
-                            broom::tidy(anova(TTRnullDiffInteraction, TTRDiffmodel))) #Create table for model comparison output
+                                broom::tidy(anova(TTRnullDiffDay, TTRDiffmodel)),
+                                broom::tidy(anova(TTRnullDiffInteraction, TTRDiffmodel))) #Create table for model comparison output
 TTRDiffModelComparisons
 ```
 
@@ -836,8 +926,8 @@ anova(TTRdiffNullAlleleT, TTRdiffModelAllele) #T presence is not a signficiant p
 
 ```{r}
 TTRdiffGenotypeModelComparisons <- rbind(broom::tidy(anova(TTRdiffNullGenotype, TTRdiffModelGenotype)),
-                                 broom::tidy(anova(TTRdiffNullAlleleC, TTRdiffModelAllele)),
-                                 broom::tidy(anova(TTRdiffNullAlleleT, TTRdiffModelAllele))) #Create a table of model comparison output
+                                         broom::tidy(anova(TTRdiffNullAlleleC, TTRdiffModelAllele)),
+                                         broom::tidy(anova(TTRdiffNullAlleleT, TTRdiffModelAllele))) #Create a table of model comparison output
 TTRdiffGenotypeModelComparisons
 ```
 
