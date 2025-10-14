@@ -467,13 +467,31 @@ TTRmodelpresenceT <- lmer(log(TTRavg) ~ treatment + day + treatment:day +
 anova(TTRmodelFinal, TTRmodelpresenceT) #Presence of T allele is not a significant predictor
 ```
 
+```{r}
+TTRModelComparisons <- rbind(broom::tidy(anova(TTRDVnullSex, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullIntegument, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullCW, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullWeight, TTRmodelDV)),
+                             broom::tidy(anova(TTRDVnullSwimmer, TTRmodelDV)),
+                             broom::tidy(anova(TTRnullTreatment, TTRmodel)),
+                             broom::tidy(anova(TTRnullDay, TTRmodel)),
+                             broom::tidy(anova(TTRnullInteraction, TTRmodel)),
+                             broom::tidy(anova(TTRnullIntegument2, TTRmodel)),
+                             broom::tidy(anova(TTRmodelFinal, TTRmodelGenotype)),
+                             broom::tidy(anova(TTRmodelFinal, TTRmodelpresenceC)),
+                             broom::tidy(anova(TTRmodelFinal, TTRmodelpresenceT))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni")) #Create table for model comparison output
+TTRModelComparisons
+```
+
+```{r}
+write.csv(TTRModelComparisons, "ttr-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save dataframe as a csv
+```
+
 
 
 # CODE IN PROGRESS #
 
-```{r}
-write.csv(TTRGenotypeModelComparisons, "ttr-genotype-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
-```
 
 #### Plot
 
