@@ -63,8 +63,6 @@ head(genotypeData) #Confirm genotype dataframe creation
 
 # Format data
 
-FIX NAS BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
-
 ```{r}
 modTTR <- rawTTR %>%
   dplyr::select(., -c(notes, probe.number)) %>%
@@ -107,6 +105,16 @@ modTTR <- rawTTR %>%
 head(modTTR) #Confirm formatting
 ```
 
+```{r}
+#Check that crabs aren't missing any variables
+
+is.na(modTTR$sex) %>% sum(.)
+is.na(modTTR$integument.cont) %>% sum(.)
+is.na(modTTR$carapace.width) %>% sum(.)
+is.na(modTTR$weight) %>% sum(.)
+is.na(modTTR$missing.swimmer) %>% sum(.)
+is.na(modTTR$final.genotype) %>% sum(.)
+```
 # Data exploration
 
 ```{bash}
@@ -293,7 +301,7 @@ I will use a mixed effects model in three steps to assess the impact of various 
 
 1. Assess impact of demographic variables on righting response
 2. Include significant demographic variables in model to assess the impacts treatment, day, and their interaction
-3. Assess significance of factors in final model
+3. Include significant demographic and explanatory variables in a model with genotype information
 
 ### Demographic variables
 
@@ -415,6 +423,96 @@ AIC(TTRnullIntegument2, TTRmodel) #The model that does not include integument co
 ```{r}
 TTRmodelFinal <- TTRnullIntegument2 #The final model includes treatment, day, and their interaction as fixed effects and crab ID as a random effect.
 summary(TTRmodelFinal)
+```
+
+### Genotype analysis
+
+I will now investigate the impact of genotype-associated variables on righting response. The genotype variables are as follows:
+
+1. Genotype
+2. Presence of "C" (cold-adapted allele)
+3. Presence of "T" (warm-adapted allele)
+
+```{r}
+modTTR <- modTTR %>%
+  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "N")) %>%
+  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
+                                  final.genotype == "CT" ~ "Y",
+                                  final.genotype == "TT" ~ "Y")) #Subset data with genotype information. Add two columns for presence of C or T allele
+head(modTTR)
+```
+
+```{r}
+TTRmodelGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                           final.genotype +
+                           (1|crab.ID), 
+                         data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+anova(TTRmodelFinal, TTRmodelGenotype) #Full genotype is not a significant predictor
+```
+```{r}
+TTRmodelpresenceC <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                           presenceC +
+                           (1|crab.ID), 
+                         data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+anova(TTRmodelFinal, TTRmodelpresenceC) #Presence of C allele is not a significant predictor
+```
+
+```{r}
+TTRmodelpresenceT <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
+                           presenceT +
+                           (1|crab.ID), 
+                         data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
+anova(TTRmodelFinal, TTRmodelpresenceT) #Presence of T allele is not a significant predictor
+```
+
+
+
+# CODE IN PROGRESS #
+
+```{r}
+write.csv(TTRGenotypeModelComparisons, "ttr-genotype-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
+```
+
+#### Plot
+
+No genotype variable has a significant influence on average TTR. Can we see if any of our outliers in our average TTR boxplots are associated with a particular genotype?
+
+```{r}
+facet_labels <- c("05C" = "5ºC",
+                  "15C" = "15ºC",
+                  "25C" = "25ºC") #Assign labels for facets
+```
+
+```{r}
+modTTRGenotype %>%
+  dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
+  distinct(.) %>%
+  filter(., treatment != "15C") %>%
+  mutate(., day = case_when(day == 1 ~ "01",
+                            day == 2 ~ "02",
+                            day == 7 ~ "07",
+                            day != 1 | 2 | 7 ~ as.character(day))) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  ggplot(mapping = aes(x = day, y = TTRavg, color = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
+  facet_wrap(. ~ treatment, nrow = 3, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
+  ylab("Average Time-to-Right (s)") +
+  scale_x_discrete(name = "Day",
+                   breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42", "49"),
+                   labels = c("0", "1", "2", "7", "12", "14", "19", "21", "26", "28", "42", "49")) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(3, 4, 1),
+                     name = "Genotype",
+                     breaks = c("CC", "CT", "TT"),
+                     labels = c("CC", "CT", "TT")) +
+  theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
+ggsave("figures/time-to-right-avg-boxplot-genotype.pdf", height = 8.5, width = 11)
 ```
 
 # Check assumptions
@@ -548,6 +646,7 @@ modTTR %>%
   theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
 ```
+
 # Individual-level analysis
 
 ## Respirometry crabs
@@ -678,119 +777,7 @@ modTTRSubsetR %>%
 ggsave("figures/time-to-right-avg-individuals-percChange.pdf", height = 8.5, width = 11)
 ```
 
-## Genotype analysis
-
-I'm going to examine the effect of genotype on TTR in a few ways. 
-
-### Average TTR
-
-I'm going to start by looking the influnce of genotype variables on overall TTR:
-
-1. Genotype
-2. Presence of "C" (warm-adapted allele) (the inverse )
-
-```{r}
-modTTRGenotype <- modTTR %>%
-  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
-                                  final.genotype == "CT" ~ "Y",
-                                  final.genotype == "TT" ~ "N")) %>%
-  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
-                                  final.genotype == "CT" ~ "Y",
-                                  final.genotype == "TT" ~ "Y")) #Subset data with genotype information. Add two columns for presence of C or T allele
-head(modTTRGenotype)
-```
-
-#### Full genotype 
-
-```{r}
-TTRmodelGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
-                           final.genotype +
-                           as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                           (1|crab.ID), 
-                         data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
-summary(TTRmodelGenotype) #Look at model output
-#Individual crab still explains less than model residuals
-```
-
-```{r}
-TTRnullGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
-anova(TTRnullGenotype, TTRmodelGenotype) #Full genotype is not a significant predictor
-```
-
-#### Presence of C or T
-
-```{r}
-TTRmodelAllele <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
-                         presenceC + presenceT +
-                         as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + 
-                         (1|crab.ID), 
-                       data = modTTRGenotype, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
-summary(TTRmodelAllele) #Look at model output
-#Individual crab still explains less than model residuals
-```
-
-```{r}
-TTRnullAlleleC <- lmer(log(TTRavg) ~ treatment + day + treatment:day + presenceT + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
-anova(TTRnullAlleleC, TTRmodelAllele) #Presence of C is not a significant predictor
-```
-
-```{r}
-TTRnullAlleleT <- lmer(log(TTRavg) ~ treatment + day + treatment:day + presenceC + as.factor(sex) + integument.cont + carapace.width + weight + as.factor(missing.swimmer) + (1|crab.ID), data = modTTRGenotype, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
-anova(TTRnullAlleleT, TTRmodelAllele) #Presence of T is not a significant predictor
-```
-
-```{r}
-TTRGenotypeModelComparisons <- rbind(broom::tidy(anova(TTRnullGenotype, TTRmodelGenotype)),
-                                     broom::tidy(anova(TTRnullAlleleC, TTRmodelAllele)),
-                                     broom::tidy(anova(TTRnullAlleleT, TTRmodelAllele))) #Create a table of model comparison output
-TTRGenotypeModelComparisons
-```
-
-```{r}
-write.csv(TTRGenotypeModelComparisons, "ttr-genotype-model-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
-```
-
-#### Plot
-
-No genotype variable has a significant influence on average TTR. Can we see if any of our outliers in our average TTR boxplots are associated with a particular genotype?
-
-```{r}
-facet_labels <- c("05C" = "5ºC",
-                  "15C" = "15ºC",
-                  "25C" = "25ºC") #Assign labels for facets
-```
-
-```{r}
-modTTRGenotype %>%
-  dplyr::select(., c(day, treatment, TTRavg, final.genotype)) %>%
-  distinct(.) %>%
-  filter(., treatment != "15C") %>%
-  mutate(., day = case_when(day == 1 ~ "01",
-                            day == 2 ~ "02",
-                            day == 7 ~ "07",
-                            day != 1 | 2 | 7 ~ as.character(day))) %>%
-  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
-                                  treatment != "5C" ~ treatment)) %>%
-  ggplot(mapping = aes(x = day, y = TTRavg, color = treatment)) +
-  geom_boxplot(outlier.shape = NA) + geom_point(aes(shape = final.genotype), size = 2) +
-  facet_wrap(. ~ treatment, nrow = 3, scales = "free_y", labeller = labeller(treatment = facet_labels)) +
-  ylab("Average Time-to-Right (s)") +
-  scale_x_discrete(name = "Day",
-                   breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42", "49"),
-                   labels = c("0", "1", "2", "7", "12", "14", "19", "21", "26", "28", "42", "49")) +
-  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
-                     name = "Temperature (ºC)",
-                     breaks = c("05C", "15C", "25C"),
-                     labels = c("5", "15", "25")) +
-  scale_shape_manual(values = c(3, 4, 1),
-                     name = "Genotype",
-                     breaks = c("CC", "CT", "TT"),
-                     labels = c("CC", "CT", "TT")) +
-  theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
-ggsave("figures/time-to-right-avg-boxplot-genotype.pdf", height = 8.5, width = 11)
-```
-
-### Difference in TTR
+## Difference in TTR
 
 I'm going to do a similar analysis, but this time look at the effects of genotype on the difference in TTR between days 2 and 7, days 2 and 21, and days 2 and 42. Although the 5ºC treatment was run for 49 days, since we know time has a significant influence on TTR I'm going to use the same time point for all variables. Looking at differences with day 7 can represent short-term differences, while days 21 and 42 would be longer-term differences. Day 21 is also a nice parallel to the three-week experiment run in 2022. I also have day 0 data for some of the crabs.
 
@@ -836,7 +823,7 @@ hist(log(modTTRSubsetDiffStats$TTRdiff))
 head(modTTRSubsetDiffStats) #Confirm dataframe creation
 ```
 
-#### Treatment, day, and treatment x day
+### Treatment, day, and treatment x day
 
 ```{r}
 TTRDiffmodel <- lmer(TTRdiff ~ treatment + day + treatment:day + 
@@ -877,7 +864,7 @@ TTRDiffModelComparisons
 write.csv(TTRDiffModelComparisons, "ttr-diff-base-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
 ```
 
-#### Full genotype
+### Full genotype
 
 ```{r}
 TTRdiffModelGenotype <- lmer(TTRdiff ~ treatment + 
@@ -895,7 +882,7 @@ TTRdiffNullGenotype <- lmer(TTRdiff ~ treatment +
 anova(TTRdiffNullGenotype, TTRdiffModelGenotype) #Final genotype is not a signficiant predictor of difference in TTR
 ```
 
-#### Presence of C or T
+### Presence of C or T
 
 ```{r}
 TTRdiffModelAllele <- lmer(TTRdiff ~ treatment + 
@@ -935,9 +922,9 @@ TTRdiffGenotypeModelComparisons
 write.csv(TTRdiffGenotypeModelComparisons, "ttr-diff-genotype-comparison-output.csv", quote = FALSE, row.names = FALSE) #Save model comparison table
 ```
 
-#### Plot
+### Plot
 
-##### Facet by genotype
+#### Facet by genotype
 
 ```{r}
 modTTRSubsetDiff %>%
@@ -1086,7 +1073,7 @@ day7vs2Plot / day21vs2Plot / day42v2Plot
 ggsave("figures/time-to-right-average-individuals-genotype-multipanel.pdf", height = 11, width = 8.5)
 ```
 
-##### Facet by temperature
+#### Facet by temperature
 
 ```{r}
 modTTRSubsetDiff %>%
@@ -1222,6 +1209,10 @@ day42v2byTempPlot
 day7vs2byTempPlot / day21vs2byTempPlot / day42v2byTempPlot
 ggsave("figures/time-to-right-average-individuals-genotype-byTemp-multipanel.pdf", height = 11, width = 8.5)
 ```
+
+
+
+
 
 ## Q10 analysis
 
