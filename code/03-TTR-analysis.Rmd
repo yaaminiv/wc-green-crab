@@ -1226,13 +1226,7 @@ Q10 is a metric used to quantify temperature sensitivity, generally defined as t
 
 ```{r}
 modTTRQ10 <- modTTR %>%
-  select(., day, crab.ID, TTRavg, treatment, final.genotype) %>%
-  mutate(., presenceC = case_when(final.genotype == "CC" ~ "Y",
-                                  final.genotype == "CT" ~ "Y",
-                                  final.genotype == "TT" ~ "N")) %>%
-  mutate(., presenceT = case_when(final.genotype == "CC" ~ "N",
-                                  final.genotype == "CT" ~ "Y",
-                                  final.genotype == "TT" ~ "Y")) %>%
+  select(., day, crab.ID, TTRavg, treatment, final.genotype, presenceC, presenceT) %>%
   filter(., day == 0 | day == 2 | day == 7 | day == 21 | day == 42) %>%
   filter(., treatment != "15C") %>%
   pivot_wider(., names_from = day, values_from = TTRavg, names_prefix = "day") %>%
@@ -1269,7 +1263,7 @@ modTTRQ10 <- modTTR %>%
                                   treatment != "5C" ~ treatment))
 #Select columns of interest. Add columns for presence of C or T alleles. Filter days of interest, remove 15C crabs, and pivot wider. Remove crabs without a day 0 measurement. Add a column for temperature based on the treatment column, and arrange data by temperature. Use the Q10 function within the respirometry package to calculate Q10 values for day 0 vs. day 2, 7, 21, and 42. Remove any rows without a day 2 Q10 value. Select columns of interest and pivot longer. Remove any rows without a Q10 value. Use a series of gsub to modify day column and convert to a character format that would be organized numerically. Use a similar approach for treatment.
 head(modTTRQ10)
-length(modTTRQ10$crab.ID %>% unique(.)) #18 crabs
+length(modTTRQ10$crab.ID %>% unique(.)) #29 crabs
 ```
 
 ```{r}
@@ -1288,6 +1282,3 @@ modTTRQ10 %>%
 ggsave("figures/time-to-right-average-individuals-Q10.pdf", height = 8.5, width = 11)
 ```
 
-# TO DO LIST
-
-- FIX NAS IN MODTTR BY GOING THROUGH AND FIXING MISLABELLED CRABS IN TTR DATA.
