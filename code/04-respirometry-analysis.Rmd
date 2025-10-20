@@ -3082,11 +3082,64 @@ hist(log(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transform
 hist(sqrt(-(all_MO2_slope_results$slope_nmol_hr_corrected))) #Check log transformation
 ```
 
-#### Base model
+#### Assess impact of demographic variables
+
+```{r}
+lmAllSlopeDV <- lmer(log(-slope_nmol_hr_corrected) ~ sex + weight + carapace.width + integument.cont + missing.legs +
+                       (1|crab.ID), 
+                     data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+summary(lmAllSlopeDV) #Significant impact of treatment and treatment:day on respiration
+```
+
+```{r}
+lmAllSlopeDVSex <- lmer(log(-slope_nmol_hr_corrected) ~ weight + carapace.width + integument.cont + missing.legs +
+                          (1|crab.ID), 
+                        data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+anova(lmAllSlopeDV, lmAllSlopeDVSex) #Sex is not a significant predictor
+```
+
+```{r}
+lmAllSlopeDVWeight <- lmer(log(-slope_nmol_hr_corrected) ~ sex + carapace.width + integument.cont + missing.legs +
+                             (1|crab.ID), 
+                           data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+anova(lmAllSlopeDV, lmAllSlopeDVWeight) #Weight is not a significant predictor
+```
+
+```{r}
+lmAllSlopeDVCW <- lmer(log(-slope_nmol_hr_corrected) ~ sex + weight + integument.cont + missing.legs +
+                         (1|crab.ID), 
+                       data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+anova(lmAllSlopeDV, lmAllSlopeDVCW) #CW is not a significant predictor
+```
+
+```{r}
+lmAllSlopeDVIntegument <- lmer(log(-slope_nmol_hr_corrected) ~ sex + weight + carapace.width + missing.legs +
+                                 (1|crab.ID), 
+                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+anova(lmAllSlopeDV, lmAllSlopeDVIntegument) #Integument color is a marginally significant predictor, will likely not be significant after multiple test correction
+```
+
+```{r}
+lmAllSlopeDVMissing <- lmer(log(-slope_nmol_hr_corrected) ~ sex + weight + carapace.width + integument.cont +
+                              (1|crab.ID), 
+                            data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
+anova(lmAllSlopeDV, lmAllSlopeDVMissing) #Missing legs are not a significant predictor
+```
+```{r}
+rbind(broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVSex)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVWeight)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVCW)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVIntegument)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVMissing))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni")) #Combine all statistical test information and adjust for multiple comparisons
+```
+
+Based on this, there are no demographic variables significantly impacting oxygen consumption.
+
+#### Assess impact of experimental variables (treatment, day, and their interaction)
 
 ```{r}
 lmAllSlopeResults <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
-                            sex + weight + carapace.width + integument.cont + missing.legs +
                             (1|crab.ID), 
                           data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
 summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on respiration
@@ -3094,7 +3147,6 @@ summary(lmAllSlopeResults) #Significant impact of treatment and treatment:day on
 
 ```{r}
 lmAllSlopeResultsNullTemperature <- lmer(log(-slope_nmol_hr_corrected) ~ as.numeric(day) +
-                                           sex + weight + carapace.width + integument.cont + missing.legs +
                                            (1|crab.ID), 
                                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
 anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults) #Compare models. Temperature is significant
@@ -3102,18 +3154,16 @@ anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults) #Compare models. Temp
 
 ```{r}
 lmAllSlopeResultsNullDay <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + 
-                                   sex + weight + carapace.width + integument.cont + missing.legs +
                                    (1|crab.ID), 
                                  data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
-anova(lmAllSlopeResultsNullDay, lmAllSlopeResults) #Compare models. Day is significant
+anova(lmAllSlopeResultsNullDay, lmAllSlopeResults) #Compare models. Day is significant, but may not be after multiple test correction
 ```
 
 ```{r}
 lmAllSlopeResultsNullInteraction <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) +
-                                           sex + weight + carapace.width + integument.cont + missing.legs +
                                            (1|crab.ID), 
                                          data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
-anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults) #Compare models. Interaction is significant
+anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults) #Compare models. Interaction is significant, but may not be after multiple test correction
 ```
 
 ```{r}
@@ -3124,63 +3174,92 @@ baseModelComparisons
 ```
 
 ```{r}
-write.csv(baseModelComparisons, "respirometry-base-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
+rbind(broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVSex)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVWeight)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVCW)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVIntegument)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVMissing)),
+      broom::tidy(anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults)),
+      broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResults)),
+      broom::tidy(anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni"))
 ```
 
-#### Model with genotype 
+Day and treatment are not significant after multiple test correction.
 
-Now that I know what parameters shouldbe in the base model, I will add genotype to see if that makes a difference.
+#### Assess impact of genotype
+
+Now that I know what parameters should be in the base model, I will add genotype to see if that makes a difference.
 
 ```{r}
-lmAllSlopeResultsGenotype <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+lmAllSlopeResultsNullDay #Model that just has temperature which is the best model for comparing genotype variable addition
+```
+
+
+```{r}
+lmAllSlopeResultsGenotype <- lmer(log(-slope_nmol_hr_corrected) ~ treatment +
                                     final.genotype +
-                                    sex + weight + carapace.width + integument.cont + missing.legs +
                                     (1|crab.ID), 
                                   data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Examine the influence of treatment, day, genotype, and various demographic factors on respiration rate. Remove outliers based on blank ratios prior to analysis.
-summary(lmAllSlopeResultsGenotype) #Significant impact of treatment and treatment:day on respiration
+anova(lmAllSlopeResultsGenotype, lmAllSlopeResultsNullDay) #No impact of genotype on oxygen consumption
 ```
 
 Another way to incorporate genotype data is to use binary variables for whether or not the crab has at least one C or T allele. This assumes that having at least one allele would be enough to impact physiological response.
 
 ```{r}
-lmAllSlopeResultsHasC <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+lmAllSlopeResultsHasC <- lmer(log(-slope_nmol_hr_corrected) ~ treatment +
                                 hasC +
-                                sex + weight + carapace.width + integument.cont + missing.legs +
                                 (1|crab.ID), 
                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
-anova(lmAllSlopeResults, lmAllSlopeResultsHasC) #Compare models. C allele is not significant
+anova(lmAllSlopeResultsHasC, lmAllSlopeResultsNullDay) #Compare models. C allele is not significant
 ```
 
 ```{r}
-lmAllSlopeResultsHasT <- lmer(log(-slope_nmol_hr_corrected) ~ treatment + as.numeric(day) + treatment:as.numeric(day) +
+lmAllSlopeResultsHasT <- lmer(log(-slope_nmol_hr_corrected) ~ treatment +
                                 hasT +
-                                sex + weight + carapace.width + integument.cont + missing.legs +
                                 (1|crab.ID), 
                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
-anova(lmAllSlopeResults, lmAllSlopeResultsHasT) #Compare models. T allele is marginally significant
+anova(lmAllSlopeResultsHasT, lmAllSlopeResultsNullDay) #Compare models. T allele is not significant
+```
+```{r}
+modelStatOutput <- rbind(broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVSex)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVWeight)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVCW)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVIntegument)),
+      broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVMissing)),
+      broom::tidy(anova(lmAllSlopeResultsNullTemperature, lmAllSlopeResults)),
+      broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResults)),
+      broom::tidy(anova(lmAllSlopeResultsNullInteraction, lmAllSlopeResults)),
+      broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResultsGenotype)),
+      broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResultsHasC)),
+      broom::tidy(anova(lmAllSlopeResultsNullDay, lmAllSlopeResultsHasT))) %>%
+  mutate(p.adj = p.adjust(p.value, method = "bonferroni"))
+modelStatOutput
 ```
 
 ```{r}
-summary(lmAllSlopeResultsHasT)
+write.csv(modelStatOutput, "model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
+```
+
+#### Final model
+
+```{r}
+lmAllSlopeResultsFinal <- lmAllSlopeResultsNullDay #Save final model
+summary(lmAllSlopeResultsFinal)
 ```
 
 ```{r}
-genotypeModelComparisons <- rbind(broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsGenotype)),
-                                  broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasC)),
-                                  broom::tidy(anova(lmAllSlopeResults, lmAllSlopeResultsHasT))) #Create table for model comparison output
-genotypeModelComparisons
+var.lmer <- c(0.006216, 0.07884) #Save variances of random effects as a new vector (crab ID, residual)
+percentvar.lmer <- (100*var.lmer)/sum(var.lmer) #Calculate percent variances
+percentvar.lmer[1] #Crab ID accounts for 7.308126% of variance
 ```
 
-```{r}
-write.csv(genotypeModelComparisons, "respirometry-genotype-model-comparison-stat-output.csv", quote = FALSE, row.names = FALSE) #Save model output
-```
-
-### Check assumptions
+#### Check assumptions
 
 ```{r}
-hist(residuals(lmBinarySlopeResultsSig)) #Residuals normally distributed
+hist(residuals(lmAllSlopeResultsFinal)) #Residuals normally distributed
 
-plot(fitted(lmBinarySlopeResultsSig), residuals(lmBinarySlopeResultsSig)) #Slight heteroskedasticity
+plot(fitted(lmAllSlopeResultsFinal), residuals(lmAllSlopeResultsFinal)) #Very heteroskedastic...
 abline(h = 0, lty = 2, col = "grey")
 ```
 
@@ -3231,6 +3310,7 @@ all_MO2_slope_results_reorder %>%
 ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
 #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
+
 ```{r}
 all_MO2_slope_results_reorder %>%
   filter(., blank_ratio < 0.10) %>%
