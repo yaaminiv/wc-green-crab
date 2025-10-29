@@ -31,6 +31,7 @@ raw_reads_dir=/vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/
 # Paths to programs
 fastqc=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/fastqc
 multiqc=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/multiqc
+python=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python
 
 # Programs associative array
 declare -A programs_array
@@ -45,7 +46,8 @@ programs_array=(
 set -e
 
 # Load Python module on Poseidon for Python module availability
-module load python3/intel
+# module load bio
+# module load python3/intel
 
 # Sync raw FastQ files to working directory
 rsync --archive --verbose \
@@ -86,7 +88,6 @@ done < ${fastq_list}
 
 # Run MultiQC
 ${programs_array[multiqc]} .
-
 
 # Capture program options
 for program in "${!programs_array[@]}"
