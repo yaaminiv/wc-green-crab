@@ -1,0 +1,27 @@
+Python path configuration:
+  PYTHONHOME = '/vortexfs1/apps/intel-python/intelpython3'
+  PYTHONPATH = '/vortexfs1/apps/intel-python/intelpython3'
+  program name = '/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python3.9'
+  isolated = 0
+  environment = 1
+  user site = 1
+  import site = 1
+  sys._base_executable = '/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python3.9'
+  sys.base_prefix = '/vortexfs1/apps/intel-python/intelpython3'
+  sys.base_exec_prefix = '/vortexfs1/apps/intel-python/intelpython3'
+  sys.platlibdir = 'lib'
+  sys.executable = '/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python3.9'
+  sys.prefix = '/vortexfs1/apps/intel-python/intelpython3'
+  sys.exec_prefix = '/vortexfs1/apps/intel-python/intelpython3'
+  sys.path = [
+    '/vortexfs1/apps/intel-python/intelpython3',
+    '/vortexfs1/apps/intel-python/intelpython3/lib/python39.zip',
+    '/vortexfs1/apps/intel-python/intelpython3/lib/python3.9',
+    '/vortexfs1/apps/intel-python/intelpython3/lib/python3.9/lib-dynload',
+  ]
+Fatal Python error: init_fs_encoding: failed to get the Python codec of the filesystem encoding
+Python runtime state: core initialized
+ModuleNotFoundError: No module named 'encodings'
+
+Current thread 0x00002aaaaaaedd80 (most recent call first):
+<no Python frame>
