@@ -18,24 +18,25 @@ set -e
 TRIMGALORE=/vortexfs1/home/yaamini.venkataraman/TrimGalore-0.6.6/trim_galore
 CUTADAPT=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/cutadapt
 MULTIQC=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/multiqc
+python=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python
 
 #Directory paths
-DATA_DIR=/vortexfs1/home/yaamini.venkataraman/apalm-hypoxia-omics/data
-OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/apalm-hypoxia-omics/02-trimgalore
+DATA_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06a-fastqc/
+OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/
 
 #Trimming
 
 echo "Start TrimGalore"
 
-echo "Trim 1: Remove low quality sequences"
+echo "Trim 1: Remove adapter sequences"
 
-#Remove sequences with quality < 20
+#Remove adapter sequences
 ${TRIMGALORE} \
 --output_dir ${OUTPUT_DIR} \
 --fastqc_args \
 "--outdir ${OUTPUT_DIR} \
 --threads 28" \
---quality 20 \
+--illumina \
 --path_to_cutadapt ${CUTADAPT} \
 ${DATA_DIR}/Apalm_01.fastq.gz \
 ${DATA_DIR}/Apalm_02.fastq.gz \
@@ -58,13 +59,13 @@ mv ${OUTPUT_DIR}/*trimmed.fq.gz ${OUTPUT_DIR}/trim1/.
 mv ${OUTPUT_DIR}/*trimmed_fastqc* ${OUTPUT_DIR}/trim1/.
 mv ${OUTPUT_DIR}/*fastq.gz_trimming_report.txt ${OUTPUT_DIR}/trim1/.
 
-echo "Trim 1 MutiQC"
+echo "Trim 2 MutiQC"
 
 #MultiQC
 ${MULTIQC} \
 ${OUTPUT_DIR}/trim1/*
 
-echo "Trim 1 complete"
+echo "Trim 2 complete"
 
 echo "Trim 2: Remove the first 12 bp"
 
@@ -135,7 +136,6 @@ mkdir ${OUTPUT_DIR}/trim3
 mv ${OUTPUT_DIR}/*trimmed_trimmed_trimmed.fq.gz ${OUTPUT_DIR}/trim3/.
 mv ${OUTPUT_DIR}/*trimmed_trimmed_trimmed_fastqc* ${OUTPUT_DIR}/trim3/.
 mv ${OUTPUT_DIR}*_trimmed_trimmed.fq.gz_trimming_report.txt ${OUTPUT_DIR}/trim3/.
-
 
 echo "Trim 3 MutiQC"
 
