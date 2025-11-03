@@ -65,13 +65,65 @@ mv ${OUTPUT_DIR}/*fastq.gz_trimming_report.txt ${OUTPUT_DIR}/trim1/.
 
 echo "Trim 1 MutiQC"
 
-#MultiQC
+#MultiQC. Move completed MultiQC output to the correct trimming directory
 ${MULTIQC} \
 ${OUTPUT_DIR}/trim1/*
 
+mv ${OUTPUT_DIR}/multiqc_data ${OUTPUT_DIR}/trim1/.
+
+echo "Trim 1 complete. Check MultiQC output before proceeding."
+
+# ALTERNATIVE TRIMMING: SPECIFY ILLUMINA AND POLY A AT THE SAME TIME #
+
+echo "Trim by auto-detecting illumina adapters and remove poly A tails"
+
+#Loop through input files in the directory
+for input_file in ${DATA_DIR}/*_R1_001.fastq.gz; do
+ # Extract the base filename
+  filename=$(basename "$input_file")
+ # Construct the corresponding R2 filename
+  input_r2="${input_file/_R1/_R2}"
+  # Run TrimGalore to trim adapters, remove low-quality sequences, and retain sequences of a specific length
+    ${TRIMGALORE} \
+    --cores 8 \
+    --output_dir ${OUTPUT_DIR} \
+    --paired \
+    --illumina
+    --poly-a \
+    --quality 20 \
+    --length 20 \
+    --fastqc_args \
+    "--outdir ${OUTPUT_DIR} \
+    --threads 28" \
+    --path_to_cutadapt ${CUTADAPT} \
+    $input_file \
+    $input_r2
+  # Print completion message
+  echo "Trimming complete for $filename"
+done
+
+#Move trimmed files to a new directory
+mkdir ${OUTPUT_DIR}/trim-illumina-polyA
+mv ${OUTPUT_DIR}/*trimmed.fq.gz ${OUTPUT_DIR}/trim-illumina-polyA/.
+mv ${OUTPUT_DIR}/*trimmed_fastqc* ${OUTPUT_DIR}/trim-illumina-polyA/.
+mv ${OUTPUT_DIR}/*fastq.gz_trimming_report.txt ${OUTPUT_DIR}/trim-illumina-polyA/.
+
+echo "Perform MutiQC"
+
+#MultiQC. Move completed MultiQC output to the correct trimming directory
+${MULTIQC} \
+${OUTPUT_DIR}/trim1/*
+
+mv ${OUTPUT_DIR}/multiqc_data ${OUTPUT_DIR}/trim1/.
+
+echo "Triming complete. Check MultiQC output before proceeding."
+
+
+# CODE IN PROGRESS - MAY NOT NEED #
+
 echo "Trim 2: Remove poly A tails"
 
-#Remove adapter sequences. Specify universal adapters instead of using --illumina
+#Remove poly A tails
 ${TRIMGALORE} \
 --cores 8 \
 --output_dir ${OUTPUT_DIR} \
@@ -81,6 +133,7 @@ ${TRIMGALORE} \
 --threads 28" \
 --paired \
 -a "AAAAAAAAAA" \
+-A "AAAAAAAAAA" \ #CHECK THIS PART
 --path_to_cutadapt ${CUTADAPT} \
 ${OUTPUT_DIR}/trim1/*fq.gz
 
