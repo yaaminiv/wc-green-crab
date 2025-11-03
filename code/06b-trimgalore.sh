@@ -73,9 +73,9 @@ mv ${OUTPUT_DIR}/multiqc_data ${OUTPUT_DIR}/trim1/.
 
 echo "Trim 1 complete. Check MultiQC output before proceeding."
 
-# ALTERNATIVE TRIMMING: SPECIFY ILLUMINA AND POLY A AT THE SAME TIME #
+# ALTERNATIVE TRIMMING: AUTO-DETECT ILLUMINA ADAPTERS#
 
-echo "Trim by auto-detecting illumina adapters and remove poly A tails"
+echo "Trim by auto-detecting illumina adapters"
 
 #Loop through input files in the directory
 for input_file in ${DATA_DIR}/*_R1_001.fastq.gz; do
@@ -88,8 +88,7 @@ for input_file in ${DATA_DIR}/*_R1_001.fastq.gz; do
     --cores 8 \
     --output_dir ${OUTPUT_DIR} \
     --paired \
-    --illumina
-    --poly-a \
+    --illumina \
     --quality 20 \
     --length 20 \
     --fastqc_args \
@@ -112,9 +111,9 @@ echo "Perform MutiQC"
 
 #MultiQC. Move completed MultiQC output to the correct trimming directory
 ${MULTIQC} \
-${OUTPUT_DIR}/trim1/*
+${OUTPUT_DIR}/trim-illumina-polyA/*
 
-mv ${OUTPUT_DIR}/multiqc_data ${OUTPUT_DIR}/trim1/.
+mv ${OUTPUT_DIR}/multiqc_data ${OUTPUT_DIR}/trim-illumina-polyA/.
 
 echo "Triming complete. Check MultiQC output before proceeding."
 
