@@ -1,0 +1,87 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-125_R1_001.fastq.gz
+Trimming mode: single-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.5
+Python version: could not detect
+Number of cores used for trimming: 8
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT' (user defined)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length before a sequence gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: --outdir /vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore     --threads 28
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.5 with Python 3.9.5
+Command line parameters: -j 8 -e 0.1 -q 20 -O 1 -a AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-125_R1_001.fastq.gz
+Processing reads on 8 cores in single-end mode ...
+Finished in 77.79 s (2 µs/read; 29.78 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:              38,616,225
+Reads with adapters:                15,309,534 (39.6%)
+Reads written (passing filters):    38,616,225 (100.0%)
+
+Total basepairs processed: 5,792,433,750 bp
+Quality-trimmed:              12,671,666 bp (0.2%)
+Total written (filtered):  5,741,128,168 bp (99.1%)
+
+=== Adapter 1 ===
+
+Sequence: AGATCGGAAGAGCGTCGTGTAGGGAAAGAGTGT; Type: regular 3'; Length: 33; Trimmed: 15309534 times
+
+Minimum overlap: 1
+No. of allowed errors:
+1-9 bp: 0; 10-19 bp: 1; 20-29 bp: 2; 30-33 bp: 3
+
+Bases preceding removed adapters:
+  A: 25.5%
+  C: 25.9%
+  G: 20.0%
+  T: 28.6%
+  none/other: 0.0%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	9245614	9654056.2	0	9245614
+2	2359494	2413514.1	0	2359494
+3	1167835	603378.5	0	1167835
+4	468681	150844.6	0	468681
+5	249850	37711.2	0	249850
+6	220173	9427.8	0	220173
+7	220963	2356.9	0	220963
+8	200432	589.2	0	200432
+9	193614	147.3	0	192577 1037
+10	192932	36.8	1	189491 3441
+11	189376	9.2	1	185695 3681
+12	195364	2.3	1	191384 3980
+13	202403	0.6	1	199109 3294
+14	202705	0.1	1	20 202685
+15	66	0.0	1	2 64
+16	4	0.0	1	0 4
+17	3	0.0	1	3
+18	8	0.0	1	5 3
+20	1	0.0	2	0 0 1
+21	2	0.0	2	1 1
+23	1	0.0	2	0 0 1
+25	1	0.0	2	0 0 1
+27	2	0.0	2	0 0 2
+33	1	0.0	3	0 0 0 1
+39	1	0.0	3	0 0 1
+77	1	0.0	3	0 0 0 1
+80	4	0.0	3	0 0 1 3
+81	2	0.0	3	1 0 1
+97	1	0.0	3	0 0 1
+
+RUN STATISTICS FOR INPUT FILE: /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-125_R1_001.fastq.gz
+=============================================
+38616225 sequences processed in total
+Sequences removed because they became shorter than the length cutoff of 20 bp:	23 (0.0%)
+
