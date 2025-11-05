@@ -61,7 +61,9 @@ mkdir ${OUTPUT_DIR}/trim-illumina
 mv ${OUTPUT_DIR}/*fq.gz ${OUTPUT_DIR}/trim-illumina/.
 mv ${OUTPUT_DIR}/*fastqc* ${OUTPUT_DIR}/trim-illumina/.
 
-echo "Perform MutiQC"
+echo "Trim 1 complete."
+
+echo "Trim 1 MutiQC"
 
 #MultiQC. Move completed MultiQC output to the correct trimming directory
 ${MULTIQC} \
@@ -69,22 +71,23 @@ ${OUTPUT_DIR}/trim-illumina/*
 
 mv ${OUTPUT_DIR}/multiqc* ${OUTPUT_DIR}/trim-illumina/.
 
-echo "Triming complete. Check MultiQC output before proceeding."
+echo "Trim 1 MultiQC complete."
 
 echo "Trim 2: Remove poly A tails"
 
 #Loop through input files in the directory
-for input_file in ${OUTPUT_DIR}/trim-illumina/*_val_1.fq.gz; do
+for input_file in ${OUTPUT_DIR}/trim-illumina/*_R1_001_val_1.fq.gz; do
  # Extract the base filename
   filename=$(basename "$input_file")
  # Construct the corresponding R2 filename
-  input_r2="${input_file/_val_1/_va1_2}"
+  input_r2="${input_file/_R1_001_val_1/_R2_001_val_2}"
   # Run TrimGalore to trim adapters, remove low-quality sequences, and retain sequences of a specific length
     ${TRIMGALORE} \
     --cores 8 \
     --output_dir ${OUTPUT_DIR} \
     --paired \
-    --polyA \
+    -a "AAAAAAAAAA" \
+    -a2 "TTTTTTTTTT" \
     --fastqc_args \
     "--outdir ${OUTPUT_DIR} \
     --threads 28" \
@@ -100,7 +103,7 @@ mkdir ${OUTPUT_DIR}/trim-illumina-polyA
 mv ${OUTPUT_DIR}/*fq.gz ${OUTPUT_DIR}/trim-illumina-polyA/.
 mv ${OUTPUT_DIR}/*fastqc* ${OUTPUT_DIR}/trim-illumina-polyA/.
 
-echo "Perform MutiQC"
+echo "Trim 2 MutiQC"
 
 #MultiQC. Move completed MultiQC output to the correct trimming directory
 ${MULTIQC} \
@@ -108,36 +111,6 @@ ${OUTPUT_DIR}/trim-illumina-polyA/*
 
 mv ${OUTPUT_DIR}/multiqc* ${OUTPUT_DIR}/trim-illumina-polyA/.
 
-echo "Triming complete. Check MultiQC output before proceeding."
+echo "Trim 2 MultiQC complete."
 
-## CODE BELOW IN PROGRESS##
-
-#Remove poly A tails
-${TRIMGALORE} \
---cores 8 \
---output_dir ${OUTPUT_DIR} \
---paired \
---fastqc_args \
-"--outdir ${OUTPUT_DIR} \
---threads 28" \
---paired \
--a "AAAAAAAAAA" \
--A "AAAAAAAAAA" \ #CHECK THIS PART
---path_to_cutadapt ${CUTADAPT} \
-${OUTPUT_DIR}/trim1/*fq.gz
-
-#Move trimmed files to a new directory
-mkdir ${OUTPUT_DIR}/trim2
-mv ${OUTPUT_DIR}/*trimmed_trimmed.fq.gz ${OUTPUT_DIR}/trim2/.
-mv ${OUTPUT_DIR}/*trimmed_trimmed_fastqc* ${OUTPUT_DIR}/trim2/.
-mv ${OUTPUT_DIR}*_trimmed.fq.gz_trimming_report.txt ${OUTPUT_DIR}/trim2/.
-
-echo "Trim 2 MutiQC"
-
-#MultiQC
-${MULTIQC} \
-${OUTPUT_DIR}/trim2/*
-
-echo "Trim 2 complete"
-
-echo "TrimGalore complete"
+echo "TrimGalore complete. Check MultiQC output before proceeding."
