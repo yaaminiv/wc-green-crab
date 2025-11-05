@@ -1,0 +1,210 @@
+
+SUMMARISING RUN PARAMETERS
+==========================
+Input filename: /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-122_R2_001.fastq.gz
+Trimming mode: paired-end
+Trim Galore version: 0.6.6
+Cutadapt version: 3.5
+Python version: could not detect
+Number of cores used for trimming: 8
+Quality Phred score cutoff: 20
+Quality encoding type selected: ASCII+33
+Adapter sequence: 'AGATCGGAAGAGC' (Illumina TruSeq, Sanger iPCR; user defined)
+Maximum trimming error rate: 0.1 (default)
+Minimum required adapter overlap (stringency): 1 bp
+Minimum required sequence length for both reads before a sequence pair gets removed: 20 bp
+Running FastQC on the data once trimming has completed
+Running FastQC with the following extra arguments: --outdir /vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore     --threads 28
+Output file will be GZIP compressed
+
+
+This is cutadapt 3.5 with Python 3.9.5
+Command line parameters: -j 8 -e 0.1 -q 20 -O 1 -a AGATCGGAAGAGC /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-122_R2_001.fastq.gz
+Processing reads on 8 cores in single-end mode ...
+Finished in 50.87 s (2 µs/read; 27.71 M reads/minute).
+
+=== Summary ===
+
+Total reads processed:              23,488,608
+Reads with adapters:                10,753,679 (45.8%)
+Reads written (passing filters):    23,488,608 (100.0%)
+
+Total basepairs processed: 3,523,291,200 bp
+Quality-trimmed:               9,749,041 bp (0.3%)
+Total written (filtered):  3,419,378,780 bp (97.1%)
+
+=== Adapter 1 ===
+
+Sequence: AGATCGGAAGAGC; Type: regular 3'; Length: 13; Trimmed: 10753679 times
+
+Minimum overlap: 1
+No. of allowed errors:
+1-9 bp: 0; 10-13 bp: 1
+
+Bases preceding removed adapters:
+  A: 28.9%
+  C: 25.4%
+  G: 23.3%
+  T: 22.3%
+  none/other: 0.1%
+
+Overview of removed sequences
+length	count	expect	max.err	error counts
+1	5762311	5872152.0	0	5762311
+2	1347618	1468038.0	0	1347618
+3	443297	367009.5	0	443297
+4	173586	91752.4	0	173586
+5	102819	22938.1	0	102819
+6	85691	5734.5	0	85691
+7	83955	1433.6	0	83955
+8	79556	358.4	0	79556
+9	77051	89.6	0	76693 358
+10	77045	22.4	1	75532 1513
+11	74400	5.6	1	72914 1486
+12	79208	1.4	1	77513 1695
+13	74156	0.4	1	72817 1339
+14	77645	0.4	1	75769 1876
+15	85561	0.4	1	83505 2056
+16	74899	0.4	1	73258 1641
+17	78238	0.4	1	76051 2187
+18	75345	0.4	1	73307 2038
+19	82987	0.4	1	80547 2440
+20	73811	0.4	1	72027 1784
+21	63806	0.4	1	62221 1585
+22	63403	0.4	1	61810 1593
+23	71226	0.4	1	69471 1755
+24	72199	0.4	1	70050 2149
+25	65492	0.4	1	63910 1582
+26	64678	0.4	1	62941 1737
+27	68671	0.4	1	66840 1831
+28	57180	0.4	1	55680 1500
+29	55782	0.4	1	54431 1351
+30	55913	0.4	1	54620 1293
+31	48100	0.4	1	47172 928
+32	53300	0.4	1	52075 1225
+33	50835	0.4	1	49743 1092
+34	61749	0.4	1	60271 1478
+35	39818	0.4	1	38973 845
+36	50061	0.4	1	48913 1148
+37	46743	0.4	1	45774 969
+38	45137	0.4	1	44305 832
+39	38283	0.4	1	37563 720
+40	50213	0.4	1	49130 1083
+41	30989	0.4	1	30376 613
+42	34679	0.4	1	33950 729
+43	35633	0.4	1	34817 816
+44	32203	0.4	1	31589 614
+45	36867	0.4	1	36013 854
+46	29142	0.4	1	28485 657
+47	27484	0.4	1	26915 569
+48	30579	0.4	1	29958 621
+49	24547	0.4	1	24030 517
+50	22279	0.4	1	21770 509
+51	21394	0.4	1	20869 525
+52	22028	0.4	1	21510 518
+53	17726	0.4	1	17366 360
+54	18303	0.4	1	17905 398
+55	18299	0.4	1	17866 433
+56	16004	0.4	1	15657 347
+57	17103	0.4	1	16683 420
+58	17510	0.4	1	17164 346
+59	11599	0.4	1	11344 255
+60	12763	0.4	1	12519 244
+61	10986	0.4	1	10787 199
+62	11042	0.4	1	10826 216
+63	8665	0.4	1	8489 176
+64	10042	0.4	1	9827 215
+65	7133	0.4	1	6948 185
+66	7409	0.4	1	7252 157
+67	7511	0.4	1	7343 168
+68	6056	0.4	1	5930 126
+69	5020	0.4	1	4926 94
+70	6679	0.4	1	6547 132
+71	2871	0.4	1	2795 76
+72	3883	0.4	1	3791 92
+73	3881	0.4	1	3796 85
+74	3773	0.4	1	3696 77
+75	4000	0.4	1	3933 67
+76	1139	0.4	1	1086 53
+77	2446	0.4	1	2384 62
+78	2508	0.4	1	2440 68
+79	2142	0.4	1	2083 59
+80	2041	0.4	1	1983 58
+81	1824	0.4	1	1776 48
+82	1689	0.4	1	1643 46
+83	1422	0.4	1	1362 60
+84	1306	0.4	1	1262 44
+85	1156	0.4	1	1098 58
+86	1055	0.4	1	1012 43
+87	1093	0.4	1	1056 37
+88	1023	0.4	1	975 48
+89	919	0.4	1	890 29
+90	867	0.4	1	836 31
+91	810	0.4	1	772 38
+92	716	0.4	1	689 27
+93	656	0.4	1	627 29
+94	568	0.4	1	537 31
+95	470	0.4	1	448 22
+96	452	0.4	1	424 28
+97	461	0.4	1	430 31
+98	443	0.4	1	415 28
+99	431	0.4	1	404 27
+100	364	0.4	1	346 18
+101	338	0.4	1	318 20
+102	291	0.4	1	266 25
+103	297	0.4	1	288 9
+104	194	0.4	1	182 12
+105	234	0.4	1	202 32
+106	226	0.4	1	206 20
+107	251	0.4	1	227 24
+108	185	0.4	1	166 19
+109	199	0.4	1	181 18
+110	163	0.4	1	153 10
+111	174	0.4	1	154 20
+112	147	0.4	1	132 15
+113	136	0.4	1	123 13
+114	115	0.4	1	107 8
+115	138	0.4	1	110 28
+116	137	0.4	1	114 23
+117	127	0.4	1	111 16
+118	91	0.4	1	78 13
+119	122	0.4	1	97 25
+120	105	0.4	1	93 12
+121	167	0.4	1	129 38
+122	96	0.4	1	81 15
+123	101	0.4	1	86 15
+124	60	0.4	1	52 8
+125	65	0.4	1	57 8
+126	47	0.4	1	43 4
+127	62	0.4	1	53 9
+128	49	0.4	1	44 5
+129	52	0.4	1	47 5
+130	164	0.4	1	148 16
+131	2326	0.4	1	2040 286
+132	53	0.4	1	49 4
+133	58	0.4	1	51 7
+134	139	0.4	1	123 16
+135	57	0.4	1	54 3
+136	43	0.4	1	40 3
+137	48	0.4	1	46 2
+138	115	0.4	1	109 6
+139	57	0.4	1	52 5
+140	60	0.4	1	55 5
+141	109	0.4	1	107 2
+142	49	0.4	1	48 1
+143	87	0.4	1	85 2
+144	113	0.4	1	102 11
+145	100	0.4	1	97 3
+146	164	0.4	1	156 8
+147	130	0.4	1	118 12
+148	95	0.4	1	90 5
+149	201	0.4	1	135 66
+150	9291	0.4	1	8189 1102
+
+RUN STATISTICS FOR INPUT FILE: /vortexfs1/omics/tepolt/raw_reads/C_maenas/Cm_yrv_2023/5-122_R2_001.fastq.gz
+=============================================
+23488608 sequences processed in total
+
+Total number of sequences analysed for the sequence pair length validation: 23488608
+
+Number of sequence pairs removed because at least one read was shorter than the length cutoff (20 bp): 243372 (1.04%)
