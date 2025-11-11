@@ -1,11 +1,11 @@
 ---
 title: "05-metabolomics-analysis"
 author: "Yaamini Venkataraman"
-date: '2023-12-18'
+date: '2025-11-11'
 output: html_document
 ---
 
-In this script, I will analyze metabolomics data from the West Coast Metabolomics Center (UC Davis). I will conduct an initial assessment of the data (PLS-DA), understand important metabolites and pathways (VIP analysis and WGCNA), and prepare for additional network analysis through MetaboAnalyst. This workflow and script is modified from [Huffmyer et al. (2023)](https://www.biorxiv.org/content/10.1101/2023.03.20.533475v2.full) and [Trigg et al. (2019)](http://dx.doi.org/10.1038/s41598-019-46947-6).
+In this script, I will analyze metabolomics data from the West Coast Metabolomics Center (UC Davis). I will conduct an initial assessment of the data (PLS-DA), understand important metabolites and pathways (VIP analysis and WGCNA), and prepare for additional network analysis through MetaboAnalyst.
 
 # Set up R Markdown document
 
@@ -67,24 +67,23 @@ sessionInfo()
 # Import data
 
 ```{r}
-rawMetabolomicsData <- read.csv("../../data/raw_metabolomics_data.csv", header = TRUE) %>% 
+rawMetabolomicsData <- read.csv("../../data/raw-metabolomics-data-2023.csv", header = TRUE) %>% 
   dplyr::rename_with(~stringr::str_replace_all(., "X", "")) #Import data. Remove the "X" prefix for crab IDs
-head(rawMetabolomicsData) #Confirm import
+head(rawMetabolomicsData) #Confirm import. Crab IDs have "." instead of "-"
 ```
 
 ```{r}
-metabolomicsMetadata <- read.csv("../../data/metabolomics_metadata.csv", header = FALSE, strip.white = TRUE) %>% 
-  dplyr::rename_with(~stringr::str_replace_all(., "V", "")) %>%
-  t(.) %>% as.data.frame(.) %>% 
-  purrr::set_names(as.character(dplyr::slice(., 1))) %>%
-  dplyr::slice(., -1) %>% 
-  mutate(., unite(., "treatment_day", treatment:day, sep = "_")) %>%
-  mutate(., treatment_day = gsub(x = treatment_day, pattern = "_  3", replacement = "_3")) %>%
-  mutate(., treatment_day = gsub(x = treatment_day, pattern = "_ 22", replacement = "_22")) %>%
-  mutate(., treatment_day = gsub(x = treatment_day, pattern = " 13_", replacement = "13_")) %>%
-  mutate(., treatment_day = gsub(x = treatment_day, pattern = " 30_", replacement = "30_")) %>%
-  mutate(., treatment_day = gsub(x = treatment_day, pattern = "  5_", replacement = "5_")) #Import metadata. Do not include any header information. Remove "V" from column names. Transform so crab.ID, treatment, and day are all columns. Set the first row in the dataframe as column names, then remove that row.
-tail(metabolomicsMetadata) #Confirm import
+crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
+  dplyr::select(., c("ID", "treatment", "carapace.width", "carapace.length", "respirometry")) %>%
+  dplyr::rename(crab.ID = "ID") #Import metadata. Select ID, treatment, width and length columns. Rename "ID" as "crab.ID"
+head(crabMetadata) #Confirm changes
+```
+
+```{r}
+genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
+  filter(., is.na(final.genotype) == FALSE) %>%
+  dplyr::select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
+head(genotypeData) #Confirm genotype dataframe creation
 ```
 
 # Format data
