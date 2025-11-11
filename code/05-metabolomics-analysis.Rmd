@@ -122,19 +122,35 @@ nrow(transMetabData) #88 samples, which is how many were sequenced
 I have three different questions I am trying to answer with the metabolomic data:
 
 1. Is there temperature-specific differences in the metabolome?
+
+> To answer this question, I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time.
+
 2. Are there different metabolic pathways activated over time in each temperature treatment?
+
+> I can't answer this question by looking at all metabolomes, since my 15ºC control is not specific to any timepoint (control crabs were taken from throughout the experiment to use as a representative sample). Therefore, I would need to split this into two analyses: one for the control (day 0) vs. all timepoints at 25ºC, and one for the control vs. all timepoints at 5ºC.
+
 3. Do different supergene genotypes have varied responses to chronic temperature exposure?
 
-To answer questions 1 and 2, I can follow a protocol [similar to one I've used previously](https://github.com/yaaminiv/green-crab-metabolomics/blob/main/code/05-metabolomics-analysis.Rmd) to examine the impact of temperature, time, and their interaction on the metabolome. To answer question 3, I will need to subset data to the beginning and end of the experiment, then examine the impact of temperature, genotype, and their interaction on the metabolome.
+> This is where I can compare control crabs with the crabs sampled at day 42, taking into account the crab's genotype. Essentially, this would be a temperature x genotype interaction test, since the control is both day 0 and 15ºC.
 
-# Impact of temperature, time, and their interaction on the metabolome
-
-## Initial data investigation with PCA
+# Impact of temperature on the metabolome
 
 ```{bash}
 mkdir PCA
 mkdir PCA/figures
 ```
+
+```{r}
+plotColors <- c(brewer.pal(9, "Reds")[7],
+                brewer.pal(9, "Greys")[7],
+                brewer.pal(9, "Blues")[7]) #Create color scheme
+```
+
+This is where I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time.
+
+## PCA
+
+### All metabolites
 
 ```{r}
 scaled.pca <- prcomp(transMetabData[c(6:691)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
@@ -148,16 +164,6 @@ ordiMonteRandTest
 
 #All of these PCs are significant! Will move forward with PC1-2
 ```
-
-### Plot PCA
-
-```{r}
-plotColors <- c(brewer.pal(9, "Reds")[7],
-                brewer.pal(9, "Greys")[7],
-                brewer.pal(9, "Blues")[7]) #Create color scheme
-```
-
-#### All metabolites
 
 ```{r}
 pcaPlot1 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
@@ -177,6 +183,25 @@ pcaPlot1 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
 pcaPlot1
 ggsave("PCA/figures/all-data-PCA-treatment.pdf", height = 8.5, width = 11)
 ```
+
+### Identified metabolites
+
+## Conduct PERMANOVA
+
+### All metabolites
+
+### Identified metabolites
+
+
+
+
+# CODE IN PROGRESS BELOW #
+
+
+
+#### All metabolites
+
+
 
 ```{r}
 pcaPlot2 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
@@ -252,63 +277,62 @@ pcaPlot4
 ggsave("PCA/figures/known-metabolites-PCA-day-treatment.pdf", height = 8.5, width = 11)
 ```
 
-## Conduct PERMANOVA
+### Conduct PERMANOVA
 
 I'll use a global permutational multivariate analysis of variance (PERMANOVA) to determine if treatment and day had a significant influence on metabolite profiles. The significant effects from the PCA will be used in the downstream PLS-DA to interrogate trends.
 
-### All metabolites
+#### All metabolites
 
 ```{r}
-dissim.metab <- vegdist(scale(transMetabData[c(5:601)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.temp.time <- vegdist(scale(transMetabData[c(6:190)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
-permanova.metab <- adonis2(dissim.metab ~ as.factor(treatment)*as.numeric(day), data = transMetabData, method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
-permanova.metab #Significant influence of all factors
+permanova.temp.time <- adonis2(dissim.temp.time ~ as.factor(treatment)*as.numeric(day), data = transMetabData, method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.temp.time #Significant influence of all factors
 ```
 
 ```{r}
-broom::tidy(permanova.metab) %>%
+broom::tidy(permanova.temp.time) %>%
   write.csv(., "PCA/all-data-PERMANOVA-results.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
 I will need to use a PERMDISP test to determine if significant differences are due to centroid or variance differences. I will do a separate test for each variable.
 
 ```{r}
-disp.metab.temp <- betadisper(dissim.metab, group = as.factor(transMetabData$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.metab.temp) #Dispersion differences exist
-boxplot(disp.metab.temp) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
-anova(disp.metab.temp) #Variance is different between groups. Temperature significance is due to centroid and dispersion differences!
+disp.TT.temp <- betadisper(dissim.temp.time, group = as.factor(transMetabData$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TT.temp) #Dispersion differences exist
+boxplot(disp.TT.temp) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TT.temp) #Variance is different between groups. Temperature significance is due to centroid and dispersion differences!
 ```
 
 ```{r}
-disp.metab.day <- betadisper(dissim.metab, group = as.factor(transMetabData$day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.metab.day) #Similar dispersion, but some clear outliers for day 22
-boxplot(disp.metab.day) #Similar dispersion differences, outliers seen more easily
-anova(disp.metab.day) #Variance is the same between groups. Day significance is due to centroiddifferences!
+disp.TT.day <- betadisper(dissim.temp.time, group = as.factor(transMetabData$day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TT.day) #Similar dispersion, but some clear outliers for day 22
+boxplot(disp.TT.day) #Similar dispersion differences, outliers seen more easily
+anova(disp.TT.day) #Variance is the same between groups. Day significance is due to centroid differences!
 ```
 
 ```{r}
-disp.metab.tempDay <- betadisper(dissim.metab, group = as.factor(transMetabData$treatment_day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.metab.tempDay) #Dispersion differences exist, especially with 30_22
-boxplot(disp.metab.tempDay) #Very clear dispersion differences for each unique treatment!
-anova(disp.metab.tempDay) #Variance is different between groups. Interaction significance is due to centroid and dispersion differences!
+disp.TT.tempDay <- betadisper(dissim.temp.time, group = as.factor(transMetabData$treatment_day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TT.tempDay) #Dispersion differences exist, especially with 30_22
+boxplot(disp.TT.tempDay) #Very clear dispersion differences for each unique treatment!
+anova(disp.TT.tempDay) #Variance is different between groups. Interaction significance is due to centroid and dispersion differences!
 ```
 
 ```{r}
-rbind(broom::tidy(anova(disp.metab.temp)) %>%
+rbind(broom::tidy(anova(disp.TT.temp)) %>%
         mutate(var = "temperature"),
-      broom::tidy(anova(disp.metab.day)) %>%
+      broom::tidy(anova(disp.TT.day)) %>%
         mutate(var = "day"),
-      broom::tidy(anova(disp.metab.tempDay)) %>%
+      broom::tidy(anova(disp.TT.tempDay)) %>%
         mutate(var = "interaction")) %>%
   write.csv("PCA/all-data-PERMDISP-results.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
-### Identified metabolites
+#### Identified metabolites
 
 I'm going to repeat the same analysis, but only look at trends for metabolites identified by the West Coast Metabolomics Center.
-
 
 ```{r}
 dissim.metabid <- vegdist(scale(transMetabData[c(5:156)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
@@ -356,15 +380,6 @@ rbind(broom::tidy(anova(disp.metabid.temp)) %>%
         mutate(var = "interaction")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-results.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
-
-# CODE IN PROGRESS # 
-
-
-
-
-
-
-
 
 # PLSDA for all metabolites
 
