@@ -223,12 +223,13 @@ Overall, it seems like there is more diversity in the metabolome at 25ºC than a
 I'm going to make a very similar PCA to the one above, but only using metabolites identified by the sequencer.
 
 ```{r}
-transMetabData[c(5:156)] #All known metabolites
+transMetabData[c(6:190)] #All known metabolites
+ncol(transMetabData[c(6:190)]) #There are 185 known metabolites
 ```
 
 
 ```{r}
-scaled.pca.id <- prcomp(transMetabData[c(5:156)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.id <- prcomp(transMetabData[c(6:190)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.id) #Standard deviations for each PC
 ```
 
@@ -237,12 +238,14 @@ pcaPlot4 <- autoplot(scaled.pca.id, data = transMetabData, x = 1, y = 2,
                      size = 4, alpha = 0.8, colour = "treatment", shape = "day", 
                      frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     labels = c("5", "15", "25"),
                      name = "Temperature (ºC)") +
   scale_fill_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                    labels = c("5", "15", "25"),
                     name = "Temperature (ºC)") +
-  scale_shape_manual(values = c(18, 20),
-                     name = "Day",
-                     labels = c("4", "22")) +
+  scale_shape_manual(values = c(1, 2, 0, 3, 4),
+                     labels = c("0", "1", "7", "26", "42"),
+                     name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
 pcaPlot4
