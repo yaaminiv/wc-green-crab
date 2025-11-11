@@ -176,7 +176,7 @@ pcaPlot1 <- autoplot(scaled.pca.T, data = transMetabData, x = 1, y = 2,
                     labels = c("5", "15", "25"),
                     name = "Temperature (ºC)") +
   scale_shape_manual(values = c(15, 19, 17),
-                    labels = c("5", "15", "25"),
+                     labels = c("5", "15", "25"),
                      name = "Temperature (ºC)") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each treatment Do not include loadings. Manually define color, fill, and shapes.
@@ -209,7 +209,7 @@ pcaPlot2 <- autoplot(scaled.pca.T.id, data = transMetabData, x = 1, y = 2,
                     labels = c("5", "15", "25"),
                     name = "Temperature (ºC)") +
   scale_shape_manual(values = c(15, 19, 17),
-                    labels = c("5", "15", "25"),
+                     labels = c("5", "15", "25"),
                      name = "Temperature (ºC)") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
@@ -222,56 +222,62 @@ ggsave("PCA/figures/known-metabolites-PCA-treatment.pdf", height = 8.5, width = 
 ### All metabolites
 
 ```{r}
-dissim.temp.time <- vegdist(scale(transMetabData[c(6:190)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.T <- vegdist(scale(transMetabData[c(6:691)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
-permanova.temp.time <- adonis2(dissim.temp.time ~ as.factor(treatment)*as.numeric(day), data = transMetabData, method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
-permanova.temp.time #Significant influence of all factors
+permanova.T <- adonis2(dissim.T ~ as.factor(treatment), data = transMetabData, method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.T #Significant influence of temperature on metabolomes
 ```
 
 ```{r}
-broom::tidy(permanova.temp.time) %>%
+broom::tidy(permanova.T) %>%
   write.csv(., "PCA/all-data-PERMANOVA-treatment.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
 I will need to use a PERMDISP test to determine if significant differences are due to centroid or variance differences. I will do a separate test for each variable.
 
 ```{r}
-disp.TT.temp <- betadisper(dissim.temp.time, group = as.factor(transMetabData$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.TT.temp) #Dispersion differences exist
-boxplot(disp.TT.temp) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
-anova(disp.TT.temp) #Variance is different between groups. Temperature significance is due to centroid and dispersion differences!
+disp.T <- betadisper(dissim.T, group = as.factor(transMetabData$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.T) #Dispersion differences exist
+boxplot(disp.T) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.T) #Variance is different between groups. Temperature significance is due to centroid and dispersion differences (more dispersion in 15 and 25 than 5)
 ```
 
 ```{r}
-disp.TT.day <- betadisper(dissim.temp.time, group = as.factor(transMetabData$day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.TT.day) #Similar dispersion, but some clear outliers for day 22
-boxplot(disp.TT.day) #Similar dispersion differences, outliers seen more easily
-anova(disp.TT.day) #Variance is the same between groups. Day significance is due to centroid differences!
-```
-
-```{r}
-disp.TT.tempDay <- betadisper(dissim.temp.time, group = as.factor(transMetabData$treatment_day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
-plot(disp.TT.tempDay) #Dispersion differences exist, especially with 30_22
-boxplot(disp.TT.tempDay) #Very clear dispersion differences for each unique treatment!
-anova(disp.TT.tempDay) #Variance is different between groups. Interaction significance is due to centroid and dispersion differences!
-```
-
-```{r}
-rbind(broom::tidy(anova(disp.TT.temp)) %>%
-        mutate(var = "temperature"),
-      broom::tidy(anova(disp.TT.day)) %>%
-        mutate(var = "day"),
-      broom::tidy(anova(disp.TT.tempDay)) %>%
-        mutate(var = "interaction")) %>%
-  write.csv("PCA/all-data-PERMDISP-results.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
+broom::tidy(anova(disp.T)) %>%
+  write.csv("PCA/all-data-PERMDISP-treatment.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
 ### Identified metabolites
 
+```{r}
+dissim.T.id <- vegdist(scale(transMetabData[c(6:190)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
 
+```{r}
+permanova.T.id <- adonis2(dissim.T.id ~ as.factor(treatment), data = transMetabData, method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.T.id #Significant influence of temperature on metabolomes
+```
 
+```{r}
+broom::tidy(permanova.T.id) %>%
+  write.csv(., "PCA/known-metabolites-PERMANOVA-treatment.csv", quote = FALSE) #Save PERMANOVA output
+```
+
+I will need to use a PERMDISP test to determine if significant differences are due to centroid or variance differences. I will do a separate test for each variable.
+
+```{r}
+disp.T.id <- betadisper(dissim.T.id, group = as.factor(transMetabData$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.T.id) #Dispersion differences exist
+boxplot(disp.T.id) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.T.id) #Variance is different between groups. Temperature significance is due to centroid and dispersion differences (more dispersion in 15 and 25 than 5)
+```
+
+```{r}
+broom::tidy(anova(disp.T.id)) %>%
+  write.csv("PCA/known-metabolites-PERMDISP-treatment.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
+```
 
 
 # CODE IN PROGRESS BELOW #
@@ -285,8 +291,8 @@ pcaPlot2 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
                      labels = c("0", "1", "7", "26", "42"),
                      name = "Day") +
   scale_fill_manual(values = rainbow(5),
-                     labels = c("0", "1", "7", "26", "42"),
-                     name = "Day") +
+                    labels = c("0", "1", "7", "26", "42"),
+                    name = "Day") +
   scale_shape_manual(values = c(1, 2, 0, 3, 4),
                      labels = c("0", "1", "7", "26", "42"),
                      name = "Day") +
