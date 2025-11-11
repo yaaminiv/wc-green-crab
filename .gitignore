@@ -1,5 +1,5 @@
 .Rproj.user
 .Rhistory
-.RData
+*.RData
 .Ruserdata
 output/03-TTR-analysis/03-TTR-analysis.RData
