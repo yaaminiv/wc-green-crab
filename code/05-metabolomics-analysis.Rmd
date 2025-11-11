@@ -123,7 +123,7 @@ I have three different questions I am trying to answer with the metabolomic data
 
 1. Is there temperature-specific differences in the metabolome?
 
-> To answer this question, I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time.
+> To answer this question, I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time. This first question is more of a "sanity check" since I already know temperature has an outsized impact on the metabolome from previous experiments!
 
 2. Are there different metabolic pathways activated over time in each temperature treatment?
 
@@ -153,12 +153,12 @@ This is where I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time.
 ### All metabolites
 
 ```{r}
-scaled.pca <- prcomp(transMetabData[c(6:691)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
-summary(scaled.pca) #Standard deviations for each PC
+scaled.pca.T <- prcomp(transMetabData[c(6:691)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.T) #Standard deviations for each PC
 ```
 
 ```{r PCA interpretation}
-pca.eigenval(scaled.pca) #Eigenvalues greater than the broken-stick expectation are considered to explain a statistically significance proportion of the variance in the original dataset. PC3 and PC4 eigenvalue > BSV
+pca.eigenval(scaled.pca.T) #Eigenvalues greater than the broken-stick expectation are considered to explain a statistically significance proportion of the variance in the original dataset. PC3 and PC4 eigenvalue > BSV
 ordiMonteRandTest <- ordi.monte(transMetabData[c(6:691)], ord = "pca", dim = 6, plot = FALSE) #Conduct monte carlo randomization test using 1000 random permutations of the input data.
 ordiMonteRandTest
 
@@ -166,7 +166,7 @@ ordiMonteRandTest
 ```
 
 ```{r}
-pcaPlot1 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
+pcaPlot1 <- autoplot(scaled.pca.T, data = transMetabData, x = 1, y = 2,
                      size = 3, alpha = 0.8, colour = "treatment", shape = "treatment", 
                      frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -185,6 +185,37 @@ ggsave("PCA/figures/all-data-PCA-treatment.pdf", height = 8.5, width = 11)
 ```
 
 ### Identified metabolites
+
+I'm going to make a very similar PCA to the one above, but only using metabolites identified by the sequencer.
+
+```{r}
+transMetabData[c(6:190)] #All known metabolites
+ncol(transMetabData[c(6:190)]) #There are 185 known metabolites
+```
+
+```{r}
+scaled.pca.T.id <- prcomp(transMetabData[c(6:190)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.T.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot2 <- autoplot(scaled.pca.T.id, data = transMetabData, x = 1, y = 2,
+                     size = 3, alpha = 0.8, colour = "treatment", shape = "treatment", 
+                     frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                     labels = c("5", "15", "25"),
+                     name = "Temperature (ºC)") +
+  scale_fill_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
+                    labels = c("5", "15", "25"),
+                    name = "Temperature (ºC)") +
+  scale_shape_manual(values = c(15, 19, 17),
+                    labels = c("5", "15", "25"),
+                     name = "Temperature (ºC)") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot2
+ggsave("PCA/figures/known-metabolites-PCA-treatment.pdf", height = 8.5, width = 11)
+```
 
 ## Conduct PERMANOVA
 
@@ -245,37 +276,7 @@ Overall, it seems like there is more diversity in the metabolome at 25ºC than a
 
 #### Identified metabolites
 
-I'm going to make a very similar PCA to the one above, but only using metabolites identified by the sequencer.
 
-```{r}
-transMetabData[c(6:190)] #All known metabolites
-ncol(transMetabData[c(6:190)]) #There are 185 known metabolites
-```
-
-
-```{r}
-scaled.pca.id <- prcomp(transMetabData[c(6:190)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
-summary(scaled.pca.id) #Standard deviations for each PC
-```
-
-```{r}
-pcaPlot4 <- autoplot(scaled.pca.id, data = transMetabData, x = 1, y = 2,
-                     size = 4, alpha = 0.8, colour = "treatment", shape = "day", 
-                     frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
-  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
-                     labels = c("5", "15", "25"),
-                     name = "Temperature (ºC)") +
-  scale_fill_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
-                    labels = c("5", "15", "25"),
-                    name = "Temperature (ºC)") +
-  scale_shape_manual(values = c(1, 2, 0, 3, 4),
-                     labels = c("0", "1", "7", "26", "42"),
-                     name = "Day") +
-  theme_classic(base_size = 15) + theme(legend.position = "right",
-                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
-pcaPlot4
-ggsave("PCA/figures/known-metabolites-PCA-day-treatment.pdf", height = 8.5, width = 11)
-```
 
 ### Conduct PERMANOVA
 
