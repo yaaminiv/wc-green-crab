@@ -127,7 +127,7 @@ I have three different questions I am trying to answer with the metabolomic data
 
 2. Are there different metabolic pathways activated over time in each temperature treatment?
 
-> I can't answer this question by looking at all metabolomes, since my 15ºC control is not specific to any timepoint (control crabs were taken from throughout the experiment to use as a representative sample). Therefore, I would need to split this into two analyses: one for the control (day 0) vs. all timepoints at 25ºC, and one for the control vs. all timepoints at 5ºC.
+> I can't answer this question by looking at all metabolomes, since my 15ºC control is not specific to any timepoint (control crabs were taken from throughout the experiment to use as a representative sample). Therefore, I just need to look at 25ºC and 5ºC for days 1 onwards.
 
 3. Do different supergene genotypes have varied responses to chronic temperature exposure?
 
@@ -279,12 +279,16 @@ broom::tidy(anova(disp.T.id)) %>%
   write.csv("PCA/known-metabolites-PERMDISP-treatment.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
+# Impact of time within temperature-specific metabolomes
 
-# CODE IN PROGRESS BELOW #
+Now that I have established that temperature has an impact on crab metabolomes, I want to know how how these metabolomes changed over time. I'll examine temperature x time interactions for the 25ºC and 5ºC data (no control data since it is not associated with a specific timepoint).
 
+## PCA
+
+### All metabolites
 
 ```{r}
-pcaPlot2 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
+pcaPlot3 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
                      size = 5, alpha = 0.8, colour = "day", shape = "day",
                      frame = TRUE, frame.colour = "day", loadings = FALSE) +
   scale_color_manual(values = rainbow(5),
@@ -298,12 +302,12 @@ pcaPlot2 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
                      name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Same as above but color by day and not treatment
-pcaPlot2
+pcaPlot3
 ggsave("PCA/figures/all-data-PCA-day.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
-pcaPlot3 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
+pcaPlot4 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
                      size = 4, alpha = 0.8, colour = "treatment", shape = "day", 
                      frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
   scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
@@ -317,9 +321,24 @@ pcaPlot3 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
                      name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
-pcaPlot3
+pcaPlot4
 ggsave("PCA/figures/all-data-PCA-day-treatment.pdf", height = 8.5, width = 11)
 ```
+
+### Identified metabolites
+
+## Conduct PERMANOVA
+
+### All metabolites
+
+### Identified metabolites
+
+
+
+# CODE IN PROGRESS BELOW #
+
+
+
 
 #### Identified metabolites
 
