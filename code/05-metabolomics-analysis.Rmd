@@ -288,7 +288,7 @@ Now that I have established that temperature has an impact on crab metabolomes, 
 ### All metabolites
 
 ```{r}
-(transMetabData %>% filter(., day != "0"))[c(7:692)]
+(transMetabData %>% filter(., day != "0"))[c(7:692)] #Data set without control crabs (day 0)
 ```
 
 
@@ -341,6 +341,59 @@ ggsave("PCA/figures/all-data-PCA-temperatureDay.pdf", height = 8.5, width = 11)
 ```
 
 ### Identified metabolites
+
+```{r}
+(transMetabData %>% filter(., day != "0"))[c(7:191)] #Data set without control crabs (day 0)
+```
+
+
+```{r}
+scaled.pca.TT.id <- prcomp((transMetabData %>% filter(., day != "0"))[c(7:191)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.TT.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot5 <- autoplot(scaled.pca.TT.id, data = (transMetabData %>% filter(., day != "0")), x = 1, y = 2,
+                     size = 5, alpha = 0.8, colour = "day", shape = "day",
+                     frame = TRUE, frame.colour = "day", loadings = FALSE) +
+  scale_color_manual(values = rainbow(4),
+                     labels = c("1", "7", "26", "42"),
+                     name = "Day") +
+  scale_fill_manual(values = rainbow(4),
+                    labels = c("1", "7", "26", "42"),
+                    name = "Day") +
+  scale_shape_manual(values = c(1, 2, 0, 4),
+                     labels = c("1", "7", "26", "42"),
+                     name = "Day") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Same as above but color by day and not treatment
+pcaPlot5
+ggsave("PCA/figures/known-metabolites-PCA-day.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot6 <- autoplot(scaled.pca.TT.id, data = (transMetabData %>% filter(., day != "0")), x = 1, y = 2,
+                     size = 4, alpha = 0.8, colour = "treatment_day", shape = "treatment_day", 
+                     frame = TRUE, frame.colour = "treatment_day", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
+  scale_fill_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
+  scale_shape_manual(values = c(1, 2, 0, 4, 1, 2, 0, 4),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot6
+ggsave("PCA/figures/known-metabolites-PCA-temperatureDay.pdf", height = 8.5, width = 11)
+```
 
 ## Conduct PERMANOVA
 
