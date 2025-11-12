@@ -81,7 +81,10 @@ metabolomicsMetadata <- read.csv("../../metadata/metabolomics-sample-list.csv", 
                             date == "7/24/23" ~ "26",
                             date == "8/9/23" ~ "42") %>%
            as.character(.)) %>%
-  dplyr::select(-date)
+  dplyr::select(-date) %>%
+  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
+                                  treatment != "5C" ~ treatment)) %>%
+  mutate(., treatment_day = paste(treatment, day, sep = "_"))
 #Import metadata. Select columns that actually have data
 head(metabolomicsMetadata) #Confirm changes
 ```
@@ -109,10 +112,7 @@ transMetabData <- rawMetabolomicsData %>%
   left_join(x = metabolomicsMetadata, 
             y = ., by = c("crab.ID")) %>%
   dplyr::rename(treatment = treatment.x,
-                original.treatment = treatment.y) %>%
-  mutate(., treatment = case_when(treatment == "5C" ~ "05C",
-                                  treatment != "5C" ~ treatment))
-#Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this.
+                original.treatment = treatment.y) #Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this.
 head(transMetabData) #Confirm changes
 nrow(transMetabData) #88 samples, which is how many were sequenced
 ```
@@ -159,7 +159,7 @@ summary(scaled.pca.T) #Standard deviations for each PC
 
 ```{r PCA interpretation}
 pca.eigenval(scaled.pca.T) #Eigenvalues greater than the broken-stick expectation are considered to explain a statistically significance proportion of the variance in the original dataset. PC3 and PC4 eigenvalue > BSV
-ordiMonteRandTest <- ordi.monte(transMetabData[c(6:691)], ord = "pca", dim = 6, plot = FALSE) #Conduct monte carlo randomization test using 1000 random permutations of the input data.
+ordiMonteRandTest <- ordi.monte(transMetabData[c(7:692)], ord = "pca", dim = 6, plot = FALSE) #Conduct monte carlo randomization test using 1000 random permutations of the input data.
 ordiMonteRandTest
 
 #All of these PCs are significant! Will move forward with PC1-2
@@ -189,12 +189,12 @@ ggsave("PCA/figures/all-data-PCA-treatment.pdf", height = 8.5, width = 11)
 I'm going to make a very similar PCA to the one above, but only using metabolites identified by the sequencer.
 
 ```{r}
-transMetabData[c(6:190)] #All known metabolites
-ncol(transMetabData[c(6:190)]) #There are 185 known metabolites
+transMetabData[c(7:191)] #All known metabolites
+ncol(transMetabData[c(7:191)]) #There are 185 known metabolites
 ```
 
 ```{r}
-scaled.pca.T.id <- prcomp(transMetabData[c(6:190)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.T.id <- prcomp(transMetabData[c(7:191)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.T.id) #Standard deviations for each PC
 ```
 
@@ -222,7 +222,7 @@ ggsave("PCA/figures/known-metabolites-PCA-treatment.pdf", height = 8.5, width = 
 ### All metabolites
 
 ```{r}
-dissim.T <- vegdist(scale(transMetabData[c(6:691)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.T <- vegdist(scale(transMetabData[c(7:692)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -252,7 +252,7 @@ broom::tidy(anova(disp.T)) %>%
 ### Identified metabolites
 
 ```{r}
-dissim.T.id <- vegdist(scale(transMetabData[c(6:190)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.T.id <- vegdist(scale(transMetabData[c(7:191)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -288,17 +288,27 @@ Now that I have established that temperature has an impact on crab metabolomes, 
 ### All metabolites
 
 ```{r}
-pcaPlot3 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
+(transMetabData %>% filter(., day != "0"))[c(7:692)]
+```
+
+
+```{r}
+scaled.pca.TT <- prcomp((transMetabData %>% filter(., day != "0"))[c(7:692)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.TT) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot3 <- autoplot(scaled.pca.TT, data = (transMetabData %>% filter(., day != "0")), x = 1, y = 2,
                      size = 5, alpha = 0.8, colour = "day", shape = "day",
                      frame = TRUE, frame.colour = "day", loadings = FALSE) +
-  scale_color_manual(values = rainbow(5),
-                     labels = c("0", "1", "7", "26", "42"),
+  scale_color_manual(values = rainbow(4),
+                     labels = c("1", "7", "26", "42"),
                      name = "Day") +
-  scale_fill_manual(values = rainbow(5),
-                    labels = c("0", "1", "7", "26", "42"),
+  scale_fill_manual(values = rainbow(4),
+                    labels = c("1", "7", "26", "42"),
                     name = "Day") +
-  scale_shape_manual(values = c(1, 2, 0, 3, 4),
-                     labels = c("0", "1", "7", "26", "42"),
+  scale_shape_manual(values = c(1, 2, 0, 4),
+                     labels = c("1", "7", "26", "42"),
                      name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Same as above but color by day and not treatment
@@ -307,22 +317,27 @@ ggsave("PCA/figures/all-data-PCA-day.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
-pcaPlot4 <- autoplot(scaled.pca, data = transMetabData, x = 1, y = 2,
-                     size = 4, alpha = 0.8, colour = "treatment", shape = "day", 
-                     frame = TRUE, frame.colour = "treatment", loadings = FALSE) +
-  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
-                     labels = c("5", "15", "25"),
-                     name = "Temperature (ºC)") +
-  scale_fill_manual(values = c(plotColors[3], plotColors[2], plotColors[1]),
-                    labels = c("5", "15", "25"),
-                    name = "Temperature (ºC)") +
-  scale_shape_manual(values = c(1, 2, 0, 3, 4),
-                     labels = c("0", "1", "7", "26", "42"),
-                     name = "Day") +
+pcaPlot4 <- autoplot(scaled.pca.TT, data = (transMetabData %>% filter(., day != "0")), x = 1, y = 2,
+                     size = 4, alpha = 0.8, colour = "treatment_day", shape = "treatment_day", 
+                     frame = TRUE, frame.colour = "treatment_day", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
+  scale_fill_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
+  scale_shape_manual(values = c(1, 2, 0, 4, 1, 2, 0, 4),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     name = "Treatment") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
 pcaPlot4
-ggsave("PCA/figures/all-data-PCA-day-treatment.pdf", height = 8.5, width = 11)
+ggsave("PCA/figures/all-data-PCA-temperatureDay.pdf", height = 8.5, width = 11)
 ```
 
 ### Identified metabolites
@@ -462,6 +477,7 @@ treatmentVIP %>%
   theme_classic() + theme(axis.text.y = element_text(size = 5)) #Using only metabolites with VIP > 1, arrange by metabolite name and reorder by cumulative VIP score. Plot points and change x and y axis labels.
 ggsave("PLSDA/figures/all-data-VIP.pdf", height = 8.5, width = 11)
 ```
+
 ## Temperature x day
 
 ```{r}
