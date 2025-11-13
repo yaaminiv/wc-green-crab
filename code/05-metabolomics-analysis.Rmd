@@ -691,7 +691,127 @@ pcaPlot12
 ggsave("PCA/figures/all-data-PCA-temperaturepresenceTNC.pdf", height = 8.5, width = 11)
 ```
 
+### Identified metabolites
 
+```{r}
+(transMetabData %>% filter(., day == "0" | day == "42"))[c(12:196)] #Data from before and after chronic thermal stress
+```
+
+```{r}
+scaled.pca.TG.id <- prcomp((transMetabData %>% filter(., day == "0" | day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.TG.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot13 <- autoplot(scaled.pca.TG.id, data = (transMetabData %>% filter(., day == "0" | day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_genotype", shape = "treatment_genotype", 
+                      frame = TRUE, frame.colour = "treatment_genotype", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                                rep(plotColors[2], times = 3),
+                                "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 15ºC", "CT at 15ºC", "TT at 15ºC",
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                               rep(plotColors[2], times = 3),
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                               "CC at 15ºC", "CT at 15ºC", "TT at 15ºC",
+                               "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2, 0), times = 3)),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 15ºC", "CT at 15ºC", "TT at 15ºC",
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot13
+ggsave("PCA/figures/known-metabolites-PCA-temperatureGenotype.pdf", height = 8.5, width = 11)
+```
+
+Similar to the plot with all the data, the difference between 15ºC and the other two treatments is dominating the PCA.
+
+```{r}
+(transMetabData %>% filter(., day == "42"))[c(12:196)] #Data from after chronic thermal stress
+```
+
+```{r}
+scaled.pca.TGNC.id <- prcomp((transMetabData %>% filter(., day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.TGNC.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot14 <- autoplot(scaled.pca.TGNC.id, data = (transMetabData %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_genotype", shape = "treatment_genotype", 
+                      frame = TRUE, frame.colour = "treatment_genotype", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                                "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                               "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2, 0), times = 2)),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot14
+ggsave("PCA/figures/known-metabolites-PCA-temperatureGenotypeNC.pdf", height = 8.5, width = 11)
+```
+```{r}
+pcaPlot15 <- autoplot(scaled.pca.TGNC.id, data = (transMetabData %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceC", shape = "treatment_presenceC", 
+                      frame = TRUE, frame.colour = "treatment_presenceC", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("TT at 5ºC", "CC or CT at 5ºC",
+                                "TT at 25ºC", "CC or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3],
+                               "salmon2", plotColors[1]),
+                    labels = c("TT at 5ºC", "CC or CT at 5ºC",
+                               "TT at 25ºC", "CC or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
+                     labels = c("TT at 5ºC", "CC or CT at 5ºC",
+                                "TT at 25ºC", "CC or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot15
+ggsave("PCA/figures/known-metabolites-PCA-temperaturepresenceCNC.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot16 <- autoplot(scaled.pca.TGNC.id, data = (transMetabData %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceT", shape = "treatment_presenceT", 
+                      frame = TRUE, frame.colour = "treatment_presenceT", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3],
+                               "salmon2", plotColors[1]),
+                    labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                               "CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot16
+ggsave("PCA/figures/known-metabolites-PCA-temperaturepresenceTNC.pdf", height = 8.5, width = 11)
+```
 
 
 
