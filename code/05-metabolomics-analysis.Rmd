@@ -963,6 +963,150 @@ rbind(
 
 ### Identified metabolites
 
+```{r}
+dissim.TG.id <- vegdist(scale((transMetabData %>% filter(., day == "42"))[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+#### Full genotype
+
+```{r}
+permanova.TGFull.id <- adonis2(dissim.TG.id ~ as.factor(treatment)*as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGFull.id #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGFull.temp.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGFull.temp.id) #PCoA
+boxplot(disp.TGFull.temp.id) #Show distance to group centroids
+anova(disp.TGFull.temp.id) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+```{r}
+disp.TGFull.gen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$final.genotype), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGFull.gen.id)
+boxplot(disp.TGFull.gen.id) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGFull.gen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+```{r}
+disp.TGFull.tempGen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment_genotype), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGFull.tempGen.id)
+boxplot(disp.TGFull.tempGen.id) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGFull.tempGen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+#### Presence C
+
+```{r}
+permanova.TGpresenceC.id <- adonis2(dissim.TG.id ~ as.factor(treatment)*as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGpresenceC.id #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGpresenceC.temp.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceC.temp.id) #PCoA
+boxplot(disp.TGpresenceC.temp.id) #Show distance to group centroids
+anova(disp.TGpresenceC.temp.id) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+```{r}
+disp.TGpresenceC.gen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$presenceC), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceC.gen.id) #PCoA
+boxplot(disp.TGpresenceC.gen.id) #Show distance to group centroids
+anova(disp.TGpresenceC.gen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+```{r}
+disp.TGpresenceC.tempGen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment_presenceC), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceC.tempGen.id) #PCoA
+boxplot(disp.TGpresenceC.tempGen.id) #Show distance to group centroids
+anova(disp.TGpresenceC.tempGen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+#### Presence T
+
+```{r}
+permanova.TGpresenceT.id <- adonis2(dissim.TG.id ~ as.factor(treatment)*as.factor(presenceT), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGpresenceT.id #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGpresenceT.temp.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceT.temp.id) #PCoA
+boxplot(disp.TGpresenceT.temp.id) #Show distance to group centroids
+anova(disp.TGpresenceT.temp.id) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+```{r}
+disp.TGpresenceT.gen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceT.gen.id) #PCoA
+boxplot(disp.TGpresenceT.gen.id) #Show distance to group centroids
+anova(disp.TGpresenceT.gen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+```{r}
+disp.TGpresenceT.tempGen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment_presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGpresenceT.tempGen.id) #PCoA
+boxplot(disp.TGpresenceT.tempGen.id) #Show distance to group centroids
+anova(disp.TGpresenceT.tempGen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+#### Save test output
+
+```{r}
+rbind(
+  broom::tidy(permanova.TGFull.id) %>%
+    mutate(genotype = "full"),
+  broom::tidy(permanova.TGpresenceC.id) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(permanova.TGpresenceT.id) %>%
+    mutate(genotype = "presenceT")
+) %>%
+  write.csv(., "PCA/known-metabolites-PERMANOVA-temperatureGenotype.csv", quote = FALSE) #Save PERMANOVA output
+```
+
+```{r}
+rbind(
+  broom::tidy(anova(disp.TGFull.temp.id)) %>%
+    mutate(genotype = "full",
+           var = "temperature"),
+  broom::tidy(anova(disp.TGFull.gen.id)) %>%
+    mutate(genotype = "full",
+           var = "genotype"),
+  broom::tidy(anova(disp.TGFull.tempGen.id)) %>%
+    mutate(genotype = "full",
+           var = "interaction"),
+  broom::tidy(anova(disp.TGpresenceC.temp.id)) %>%
+    mutate(genotype = "presenceC",
+           var = "temperature"),
+  broom::tidy(anova(disp.TGpresenceC.gen.id)) %>%
+    mutate(genotype = "presenceC",
+           var = "genotype"),
+  broom::tidy(anova(disp.TGpresenceC.tempGen.id)) %>%
+    mutate(genotype = "presenceC",
+           var = "interaction"),
+  broom::tidy(anova(disp.TGpresenceT.temp.id)) %>%
+    mutate(genotype = "presenceT",
+           var = "temperature"),
+  broom::tidy(anova(disp.TGpresenceT.gen.id)) %>%
+    mutate(genotype = "presenceT",
+           var = "genotype"),
+  broom::tidy(anova(disp.TGpresenceT.tempGen.id)) %>%
+    mutate(genotype = "presenceT",
+           var = "interaction")
+) %>%
+  write.csv("PCA/known-metabolites-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
+```
+
+
+
+
+
+
+
+
+
+
 
 # DON'T LOOK BELOW HERE IT'S EMBARASSING #
 
