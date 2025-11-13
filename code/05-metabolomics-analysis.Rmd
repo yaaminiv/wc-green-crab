@@ -813,6 +813,60 @@ pcaPlot16
 ggsave("PCA/figures/known-metabolites-PCA-temperaturepresenceTNC.pdf", height = 8.5, width = 11)
 ```
 
+## Conduct PERMANOVA
+
+Given that the dispersion differences are clearer when I do not include 15ºC data, I'm going to only run the tests with 5ºC and 25ºC only. I am also going to look at the impact of genotype, precense of the C allele, and presence of the T allele.
+
+### All metabolites
+
+```{r}
+(transMetabData %>% filter(., day == "42"))[-c(1:11)] #Data from after chronic thermal stress
+```
+
+```{r}
+dissim.TG <- vegdist(scale((transMetabData %>% filter(., day == "42"))[-c(1:11)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+#### Full genotype
+
+```{r}
+permanova.TGFull <- adonis2(dissim.TG ~ as.factor(treatment)*as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGFull #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGFull.temp <- betadisper(dissim.TG, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGFull.temp) #Dispersion differences exist
+boxplot(disp.TGFull.temp) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGFull.temp) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+#### Presence C
+
+#### Presence T
+
+#### Save test output
+
+MODIFY FOR ALL PERMANOVA OUTPUT
+
+```{r}
+broom::tidy(permanova.TGFull) %>%
+  write.csv(., "PCA/all-data-PERMANOVA-temperatureGenotype.csv", quote = FALSE) #Save PERMANOVA output
+```
+
+MODIFY FOR ALL DISPERSION TEST OUTPUT
+
+```{r}
+rbind(broom::tidy(anova(disp.TT.temp)) %>%
+        mutate(var = "temperature"),
+      broom::tidy(anova(disp.TT.day)) %>%
+        mutate(var = "day"),
+      broom::tidy(anova(disp.TT.tempDay)) %>%
+        mutate(var = "interaction")) %>%
+  write.csv("PCA/all-data-PERMDISP-temperatureDay.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
+```
+
+### Identified metabolites
 
 
 # DON'T LOOK BELOW HERE IT'S EMBARASSING #
