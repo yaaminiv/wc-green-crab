@@ -868,6 +868,55 @@ pcaPlot17
 ggsave("PCA/figures/known-metabolites-PCA-temperatureGenotypeNC-no5075.pdf", height = 8.5, width = 11)
 ```
 
+```{r}
+pcaPlot18 <- autoplot(scaled.pca.TGNC.id.outlier, data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceC", shape = "treatment_presenceC", 
+                      frame = TRUE, frame.colour = "treatment_presenceC", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3],
+                               "salmon2", plotColors[1]),
+                    labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                               "CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot18
+ggsave("PCA/figures/known-metabolites-PCA-temperaturePresenceCNC-no5075.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot17 <- autoplot(scaled.pca.TGNC.id.outlier, data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceT", shape = "treatment_presenceT", 
+                      frame = TRUE, frame.colour = "treatment_presenceT", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3],
+                               "salmon2", plotColors[1]),
+                    labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                               "CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
+                     labels = c("CC at 5ºC", "TT or CT at 5ºC",
+                                "CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot17
+ggsave("PCA/figures/known-metabolites-PCA-temperaturePresenceTNC-no5075.pdf", height = 8.5, width = 11)
+```
+
+Without the outlier present, I'm also seeming some differences in dispersion between CT and homozygotes. I think this would be interesting to plot.
 
 ## Conduct PERMANOVA
 
