@@ -1267,7 +1267,9 @@ Above, I looked at the interaction between temperature and genotype across all t
 
 ## 5ºC
 
-### All metabolites
+### PCA
+
+#### All metabolites
 
 ```{r}
 (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[-c(1:13)] #Data from after chronic thermal stress for 5ºC
@@ -1334,7 +1336,7 @@ pcaPlot21
 ggsave("PCA/figures/all-data-PCA-5PresenceT.pdf", height = 8.5, width = 11)
 ```
 
-### Identified metabolites
+#### Identified metabolites
 
 ```{r}
 (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[c(14:198)] #Data from after chronic thermal stress for 5ºC
@@ -1402,7 +1404,7 @@ pcaPlot24
 ggsave("PCA/figures/known-metabolites-PCA-5PresenceT.pdf", height = 8.5, width = 11)
 ```
 
-#### Check outlier
+##### Check outlier
 
 ```{r}
 scaled.pca.5G.id.outlier <- prcomp((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation without the potential outlier
@@ -1466,11 +1468,65 @@ pcaPlot27
 ggsave("PCA/figures/known-metabolites-PCA-5PresenceT-no5075.pdf", height = 8.5, width = 11)
 ```
 
+### Conduct PERMANOVA
 
+#### All metabolites
 
+```{r}
+(transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[-c(1:13)] #Data from after chronic thermal stress for 5ºC
+```
 
+```{r}
+dissim.5G <- vegdist(scale((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[-c(1:13)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
 
+```{r}
+permanova.5GFull <- adonis2(dissim.5G ~ as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GFull #No significant impact of genotype
+```
 
+```{r}
+permanova.5GpresenceC <- adonis2(dissim.5G ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceC #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+permanova.5GpresenceT <- adonis2(dissim.5G ~ as.factor(presenceT), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceT #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+permanova.5GHet <- adonis2(dissim.5G ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GHet #Significant influence of temperature, but not genotype or the interaction
+```
+
+##### Save test output
+
+```{r}
+rbind(
+  broom::tidy(permanova.5GFull) %>%
+    mutate(genotype = "full"),
+  broom::tidy(permanova.5GpresenceC) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(permanova.5GpresenceT) %>%
+    mutate(genotype = "presenceT"), 
+  broom::tidy(permanova.5GHet) %>%
+    mutate(genotype = "het")
+) %>%
+  write.csv(., "PCA/all-data-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
+```
+
+#### Identified metabolites
+
+##### Full genotype
+
+##### Presence C
+
+##### Presence T
+
+##### Check outlier
+
+##### Save test output
 
 
 ## 25ºC
