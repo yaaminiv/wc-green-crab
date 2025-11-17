@@ -814,6 +814,61 @@ pcaPlot16
 ggsave("PCA/figures/known-metabolites-PCA-temperaturepresenceTNC.pdf", height = 8.5, width = 11)
 ```
 
+##### Check outlier
+
+Looking at these plots, there appears to be an outlier CC crab at 5ºC.
+
+```{r}
+autoplot(scaled.pca.TGNC.id, data = (transMetabData %>% filter(., day == "42")), x = 1, y = 2,
+         size = 0, alpha = 0.8, colour = "treatment_genotype", 
+         frame = TRUE, frame.colour = "treatment_genotype", 
+         loadings = FALSE, label = TRUE, label.label = "crab.ID") +
+  scale_color_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                                "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                               "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank())
+```
+
+This is crab 5-075. I'm going to rerun the PCA without this crab to see if that changes any of the trends.
+
+```{r}
+scaled.pca.TGNC.id.outlier <- prcomp((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation without the potential outlier
+summary(scaled.pca.TGNC.id.outlier) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot17 <- autoplot(scaled.pca.TGNC.id.outlier, data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_genotype", shape = "treatment_genotype", 
+                      frame = TRUE, frame.colour = "treatment_genotype", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                                "salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                               "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2, 0), times = 2)),
+                     labels = c("CC at 5ºC", "CT at 5ºC", "TT at 5ºC", 
+                                "CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot17
+ggsave("PCA/figures/known-metabolites-PCA-temperatureGenotypeNC-no5075.pdf", height = 8.5, width = 11)
+```
+
+
 ## Conduct PERMANOVA
 
 Given that the dispersion differences are clearer when I do not include 15ºC data, I'm going to only run the tests with 5ºC and 25ºC only. I am also going to look at the impact of genotype, precense of the C allele, and presence of the T allele.
@@ -1050,6 +1105,31 @@ plot(disp.TGpresenceT.tempGen.id) #PCoA
 boxplot(disp.TGpresenceT.tempGen.id) #Show distance to group centroids
 anova(disp.TGpresenceT.tempGen.id) #Variance is not different between groups. No differences in dispersion.
 ```
+
+#### Check outlier removal impact on test results
+
+I identified a potential outlier in sample 5-075. I will see if outlier removal impacts the significance of any of the variables tested above. If it does, then I will move forward with that statistical output and outlier removal. If it does not, then everything I've done so far is fine!
+
+```{r}
+dissim.TG.id.outlier <- vegdist(scale((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+```{r}
+permanova.TGFull.id.outlier <- adonis2(dissim.TG.id.outlier ~ as.factor(treatment)*as.factor(final.genotype), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGFull.id.outlier #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+permanova.TGpresenceC.id.outlier <- adonis2(dissim.TG.id.outlier ~ as.factor(treatment)*as.factor(presenceC), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGpresenceC.id.outlier #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+permanova.TGpresenceT.id.outlier <- adonis2(dissim.TG.id.outlier ~ as.factor(treatment)*as.factor(presenceT), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGpresenceT.id.outlier #Significant influence of temperature, but not genotype or the interaction
+```
+
+There is no significant impact of outlier removal on these tests, so I'll move forward with the statistical results that include the outlier.
 
 #### Save test output
 
