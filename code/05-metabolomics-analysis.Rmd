@@ -1518,16 +1518,79 @@ rbind(
 
 #### Identified metabolites
 
-##### Full genotype
+```{r}
+(transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[c(14:198)] #Data from after chronic thermal stress for 5ºC
+```
 
-##### Presence C
+```{r}
+dissim.5G.id <- vegdist(scale((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
 
-##### Presence T
+```{r}
+permanova.5GFull.id <- adonis2(dissim.5G.id ~ as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GFull.id #No significant impact of genotype
+```
+
+```{r}
+permanova.5GpresenceC.id <- adonis2(dissim.5G.id ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceC.id #No significant impact of genotype
+```
+
+```{r}
+permanova.5GpresenceT.id <- adonis2(dissim.5G.id ~ as.factor(presenceT), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceT.id #No significant impact of genotype
+```
+
+```{r}
+permanova.5GHet.id <- adonis2(dissim.5G.id ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GHet.id #No significant impact of genotype
+```
 
 ##### Check outlier
 
+I'm going to see if removal of 5-075 changes anything.
+
+```{r}
+dissim.5G.id.outlier <- vegdist(scale((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+```{r}
+permanova.5GFull.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(final.genotype), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GFull.id.outlier #No significant impact of genotype
+```
+
+```{r}
+permanova.5GpresenceC.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(presenceC), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceC.id.outlier #No significant impact of genotype
+```
+
+```{r}
+permanova.5GpresenceT.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(presenceT), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GpresenceT.id.outlier #No significant impact of genotype
+```
+
+```{r}
+permanova.5GHet.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(het), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.5GHet.id.outlier #No significant impact of genotype
+```
+
+Removing the outlier doesn't change the statistical significance, so I'll include it in the results.
+
 ##### Save test output
 
+```{r}
+rbind(
+  broom::tidy(permanova.5GFull.id) %>%
+    mutate(genotype = "full"),
+  broom::tidy(permanova.5GpresenceC.id) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(permanova.5GpresenceT.id) %>%
+    mutate(genotype = "presenceT"), 
+  broom::tidy(permanova.5GHet.id) %>%
+    mutate(genotype = "het")
+) %>%
+  write.csv(., "PCA/known-metabolites-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
+```
 
 ## 25ºC
 
