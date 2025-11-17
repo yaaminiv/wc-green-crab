@@ -1594,10 +1594,229 @@ rbind(
 
 ## 25ºC
 
+### PCA
 
+#### All metabolites
 
+```{r}
+(transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[-c(1:13)] #Data from after chronic thermal stress for 5ºC
+```
 
+```{r}
+scaled.pca.25G <- prcomp((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[-c(1:13)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.25G) #Standard deviations for each PC
+```
 
+```{r}
+pcaPlot28 <- autoplot(scaled.pca.25G, data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_genotype", shape = "treatment_genotype", 
+                      frame = TRUE, frame.colour = "treatment_genotype", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2, 0), times = 1)),
+                     labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot28
+ggsave("PCA/figures/all-data-PCA-25Genotype.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot29 <- autoplot(scaled.pca.25G, data = (transMetabData %>% filter(., day == "42")  %>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceC", shape = "treatment_presenceC", 
+                      frame = TRUE, frame.colour = "treatment_presenceC", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", plotColors[1]),
+                     labels = c("TT at 25ºC", "CC or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", plotColors[1]),
+                    labels = c("TT at 25ºC", "CC or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 1)),
+                     labels = c("TT at 25ºC", "CC or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot29
+ggsave("PCA/figures/all-data-PCA-25PresenceC.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot30 <- autoplot(scaled.pca.25G, data = (transMetabData %>% filter(., day == "42")%>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceT", shape = "treatment_presenceT", 
+                      frame = TRUE, frame.colour = "treatment_presenceT", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", plotColors[1]),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", plotColors[1]),
+                    labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 1)),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot30
+ggsave("PCA/figures/all-data-PCA-25PresenceT.pdf", height = 8.5, width = 11)
+```
+
+#### Identified metabolites
+
+```{r}
+(transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[c(14:198)] #Data from after chronic thermal stress for 5ºC
+```
+
+```{r}
+scaled.pca.25G.id <- prcomp((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.25G.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot31 <- autoplot(scaled.pca.25G.id, data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_genotype", shape = "treatment_genotype", 
+                      frame = TRUE, frame.colour = "treatment_genotype", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", "firebrick1", plotColors[1]),
+                     labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", "firebrick1", plotColors[1]),
+                    labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2, 0), times = 1)),
+                     labels = c("CC at 25ºC", "CT at 25ºC", "TT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot31
+ggsave("PCA/figures/known-metabolites-PCA-25Genotype.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot32 <- autoplot(scaled.pca.25G.id, data = (transMetabData %>% filter(., day == "42")  %>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceC", shape = "treatment_presenceC", 
+                      frame = TRUE, frame.colour = "treatment_presenceC", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", plotColors[1]),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", plotColors[1]),
+                    labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 1)),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot32
+ggsave("PCA/figures/known-metabolites-PCA-25PresenceC.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+pcaPlot33 <- autoplot(scaled.pca.25G.id, data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_presenceT", shape = "treatment_presenceT", 
+                      frame = TRUE, frame.colour = "treatment_presenceT", loadings = FALSE) +
+  scale_color_manual(values = c("salmon2", plotColors[1]),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("salmon2", plotColors[1]),
+                    labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 1)),
+                     labels = c("CC at 25ºC", "TT or CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot33
+ggsave("PCA/figures/known-metabolites-PCA-25PresenceT.pdf", height = 8.5, width = 11)
+```
+
+### Conduct PERMANOVA
+
+#### All metabolites
+
+```{r}
+dissim.25G <- vegdist(scale((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[-c(1:13)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+```{r}
+permanova.25GFull <- adonis2(dissim.25G ~ as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GFull #No significant impact of genotype
+```
+
+```{r}
+permanova.25GpresenceC <- adonis2(dissim.25G ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "25C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GpresenceC #No significant impact of genotype
+```
+
+```{r}
+permanova.25GpresenceT <- adonis2(dissim.25G ~ as.factor(presenceT), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GpresenceT #No significant impact of genotype
+```
+
+```{r}
+permanova.25GHet <- adonis2(dissim.25G ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GHet #No significant impact of genotype
+```
+
+##### Save test output
+
+```{r}
+rbind(
+  broom::tidy(permanova.25GFull) %>%
+    mutate(genotype = "full"),
+  broom::tidy(permanova.25GpresenceC) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(permanova.25GpresenceT) %>%
+    mutate(genotype = "presenceT"), 
+  broom::tidy(permanova.25GHet) %>%
+    mutate(genotype = "het")
+) %>%
+  write.csv(., "PCA/all-data-PERMANOVA-25Genotype.csv", quote = FALSE) #Save PERMANOVA output
+```
+
+#### Identified metabolites
+
+```{r}
+dissim.25G.id <- vegdist(scale((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+```
+
+```{r}
+permanova.25GFull.id <- adonis2(dissim.25G.id ~ as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GFull.id #No significant impact of genotype
+```
+
+```{r}
+permanova.25GpresenceC.id <- adonis2(dissim.25G.id ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "25C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GpresenceC.id #No significant impact of genotype
+```
+
+```{r}
+permanova.25GpresenceT.id <- adonis2(dissim.25G.id ~ as.factor(presenceT), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GpresenceT.id #No significant impact of genotype
+```
+
+```{r}
+permanova.25GHet.id <- adonis2(dissim.25G.id ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.25GHet.id #No significant impact of genotype
+```
+
+##### Save test output
+
+```{r}
+rbind(
+  broom::tidy(permanova.25GFull.id) %>%
+    mutate(genotype = "full"),
+  broom::tidy(permanova.25GpresenceC.id) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(permanova.25GpresenceT.id) %>%
+    mutate(genotype = "presenceT"), 
+  broom::tidy(permanova.25GHet.id) %>%
+    mutate(genotype = "het")
+) %>%
+  write.csv(., "PCA/known-metabolites-PERMANOVA-25Genotype.csv", quote = FALSE) #Save PERMANOVA output
+```
 
 
 
