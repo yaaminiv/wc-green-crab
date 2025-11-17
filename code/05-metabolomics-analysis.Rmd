@@ -98,7 +98,10 @@ genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = 
                                   final.genotype == "TT" ~ "N"), 
          presenceT = case_when(final.genotype == "CC" ~ "N",
                                final.genotype == "CT" ~ "Y",
-                               final.genotype == "TT" ~ "Y")) #Import genotype data. Add additional informational columns
+                               final.genotype == "TT" ~ "Y"), 
+         het = case_when(final.genotype == "CC" ~ "N",
+                               final.genotype == "CT" ~ "Y",
+                               final.genotype == "TT" ~ "N")) #Import genotype data. Add additional informational columns
 head(genotypeData) #Confirm genotype dataframe creation
 ```
 
@@ -114,7 +117,8 @@ transMetabData <- metabolomicsMetadata %>%
   mutate(., 
          treatment_genotype = paste(treatment, final.genotype, sep = "_"),
          treatment_presenceC = paste(treatment, presenceC, sep = "_"),
-         treatment_presenceT = paste(treatment, presenceT, sep = "_")) %>%
+         treatment_presenceT = paste(treatment, presenceT, sep = "_"),
+         treatment_het = paste(treatment, het, sep = "_")) %>%
   left_join(x = .,
             y = rawMetabolomicsData %>%
               dplyr::select(., -c(2:8)) %>%
@@ -128,8 +132,8 @@ nrow(transMetabData) #88 samples, which is how many were sequenced
 ```
 
 ```{r}
-transMetabData[,-c(1:11)] #All data
-transMetabData[,c(12:196)] #Known data
+transMetabData[,-c(1:13)] #All data
+transMetabData[,c(14:198)] #Known data
 ```
 
 # Analysis overview
@@ -168,13 +172,13 @@ This is where I would compare 15ºC vs. 5ºC and 25ºC, irrespective of time.
 ### All metabolites
 
 ```{r}
-scaled.pca.T <- prcomp(transMetabData[-c(1:11)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.T <- prcomp(transMetabData[-c(1:13)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.T) #Standard deviations for each PC
 ```
 
 ```{r PCA interpretation}
 pca.eigenval(scaled.pca.T) #Eigenvalues greater than the broken-stick expectation are considered to explain a statistically significance proportion of the variance in the original dataset. PC3 and PC4 eigenvalue > BSV
-ordiMonteRandTest <- ordi.monte(transMetabData[-c(1:11)], ord = "pca", dim = 6, plot = FALSE) #Conduct monte carlo randomization test using 1000 random permutations of the input data.
+ordiMonteRandTest <- ordi.monte(transMetabData[-c(1:13)], ord = "pca", dim = 6, plot = FALSE) #Conduct monte carlo randomization test using 1000 random permutations of the input data.
 ordiMonteRandTest
 
 #All of these PCs are significant! Will move forward with PC1-2
@@ -204,12 +208,12 @@ ggsave("PCA/figures/all-data-PCA-treatment.pdf", height = 8.5, width = 11)
 I'm going to make a very similar PCA to the one above, but only using metabolites identified by the sequencer.
 
 ```{r}
-transMetabData[c(12:196)] #All known metabolites
-ncol(transMetabData[c(12:196)]) #There are 185 known metabolites
+transMetabData[c(14:198)] #All known metabolites
+ncol(transMetabData[c(14:198)]) #There are 185 known metabolites
 ```
 
 ```{r}
-scaled.pca.T.id <- prcomp(transMetabData[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.T.id <- prcomp(transMetabData[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.T.id) #Standard deviations for each PC
 ```
 
@@ -237,7 +241,7 @@ ggsave("PCA/figures/known-metabolites-PCA-treatment.pdf", height = 8.5, width = 
 ### All metabolites
 
 ```{r}
-dissim.T <- vegdist(scale(transMetabData[-c(1:11)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.T <- vegdist(scale(transMetabData[-c(1:13)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -267,7 +271,7 @@ broom::tidy(anova(disp.T)) %>%
 ### Identified metabolites
 
 ```{r}
-dissim.T.id <- vegdist(scale(transMetabData[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.T.id <- vegdist(scale(transMetabData[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -303,11 +307,11 @@ Now that I have established that temperature has an impact on crab metabolomes, 
 ### All metabolites
 
 ```{r}
-(transMetabData %>% filter(., day != "0"))[-c(1:11)] #Data set without control crabs (day 0)
+(transMetabData %>% filter(., day != "0"))[-c(1:13)] #Data set without control crabs (day 0)
 ```
 
 ```{r}
-scaled.pca.TT <- prcomp((transMetabData %>% filter(., day != "0"))[-c(1:11)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TT <- prcomp((transMetabData %>% filter(., day != "0"))[-c(1:13)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TT) #Standard deviations for each PC
 ```
 
@@ -357,12 +361,12 @@ ggsave("PCA/figures/all-data-PCA-temperatureDay.pdf", height = 8.5, width = 11)
 ### Identified metabolites
 
 ```{r}
-(transMetabData %>% filter(., day != "0"))[c(12:196)] #Data set without control crabs (day 0)
+(transMetabData %>% filter(., day != "0"))[c(14:198)] #Data set without control crabs (day 0)
 ```
 
 
 ```{r}
-scaled.pca.TT.id <- prcomp((transMetabData %>% filter(., day != "0"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TT.id <- prcomp((transMetabData %>% filter(., day != "0"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TT.id) #Standard deviations for each PC
 ```
 
@@ -414,11 +418,11 @@ ggsave("PCA/figures/known-metabolites-PCA-temperatureDay.pdf", height = 8.5, wid
 ### All metabolites
 
 ```{r}
-(transMetabData %>% filter(., day != "0"))[-c(1:11)]
+(transMetabData %>% filter(., day != "0"))[-c(1:13)]
 ```
 
 ```{r}
-dissim.TT <- vegdist(scale((transMetabData %>% filter(., day != "0"))[-c(1:11)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.TT <- vegdist(scale((transMetabData %>% filter(., day != "0"))[-c(1:13)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -464,11 +468,11 @@ rbind(broom::tidy(anova(disp.TT.temp)) %>%
 ### Identified metabolites
 
 ```{r}
-(transMetabData %>% filter(., day != "0"))[c(12:196)]
+(transMetabData %>% filter(., day != "0"))[c(14:198)]
 ```
 
 ```{r}
-dissim.TT.id <- vegdist(scale((transMetabData %>% filter(., day != "0"))[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.TT.id <- vegdist(scale((transMetabData %>% filter(., day != "0"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -521,11 +525,11 @@ The third question I have is understanding if different supergene genotypes empl
 ### All metabolites
 
 ```{r}
-(transMetabData %>% filter(., day == "0" | day == "42"))[-c(1:11)] #Data from before and after chronic thermal stress
+(transMetabData %>% filter(., day == "0" | day == "42"))[-c(1:13)] #Data from before and after chronic thermal stress
 ```
 
 ```{r}
-scaled.pca.TG <- prcomp((transMetabData %>% filter(., day == "0" | day == "42"))[-c(1:11)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TG <- prcomp((transMetabData %>% filter(., day == "0" | day == "42"))[-c(1:13)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TG) #Standard deviations for each PC
 ```
 
@@ -609,11 +613,11 @@ ggsave("PCA/figures/all-data-PCA-temperatureGenotype.pdf", height = 8.5, width =
 Alright, it seems like genotype doesn't impact metabolome variation at the beginning of the experiment. I'm going to remove the day 0 data, rescale, and look at only the differences in genotype for the 5ºC and 25ºC treatments.
 
 ```{r}
-(transMetabData %>% filter(., day == "42"))[-c(1:11)] #Data from after chronic thermal stress
+(transMetabData %>% filter(., day == "42"))[-c(1:13)] #Data from after chronic thermal stress
 ```
 
 ```{r}
-scaled.pca.TGNC <- prcomp((transMetabData %>% filter(., day == "42"))[-c(1:11)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TGNC <- prcomp((transMetabData %>% filter(., day == "42"))[-c(1:13)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TGNC) #Standard deviations for each PC
 ```
 
@@ -694,11 +698,11 @@ ggsave("PCA/figures/all-data-PCA-temperaturepresenceTNC.pdf", height = 8.5, widt
 ### Identified metabolites
 
 ```{r}
-(transMetabData %>% filter(., day == "0" | day == "42"))[c(12:196)] #Data from before and after chronic thermal stress
+(transMetabData %>% filter(., day == "0" | day == "42"))[c(14:198)] #Data from before and after chronic thermal stress
 ```
 
 ```{r}
-scaled.pca.TG.id <- prcomp((transMetabData %>% filter(., day == "0" | day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TG.id <- prcomp((transMetabData %>% filter(., day == "0" | day == "42"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TG.id) #Standard deviations for each PC
 ```
 
@@ -734,11 +738,11 @@ ggsave("PCA/figures/known-metabolites-PCA-temperatureGenotype.pdf", height = 8.5
 Similar to the plot with all the data, the difference between 15ºC and the other two treatments is dominating the PCA.
 
 ```{r}
-(transMetabData %>% filter(., day == "42"))[c(12:196)] #Data from after chronic thermal stress
+(transMetabData %>% filter(., day == "42"))[c(14:198)] #Data from after chronic thermal stress
 ```
 
 ```{r}
-scaled.pca.TGNC.id <- prcomp((transMetabData %>% filter(., day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+scaled.pca.TGNC.id <- prcomp((transMetabData %>% filter(., day == "42"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
 summary(scaled.pca.TGNC.id) #Standard deviations for each PC
 ```
 
@@ -840,7 +844,7 @@ autoplot(scaled.pca.TGNC.id, data = (transMetabData %>% filter(., day == "42")),
 This is crab 5-075. I'm going to rerun the PCA without this crab to see if that changes any of the trends.
 
 ```{r}
-scaled.pca.TGNC.id.outlier <- prcomp((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(12:196)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation without the potential outlier
+scaled.pca.TGNC.id.outlier <- prcomp((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation without the potential outlier
 summary(scaled.pca.TGNC.id.outlier) #Standard deviations for each PC
 ```
 
@@ -918,6 +922,30 @@ ggsave("PCA/figures/known-metabolites-PCA-temperaturePresenceTNC-no5075.pdf", he
 
 Without the outlier present, I'm also seeming some differences in dispersion between CT and homozygotes. I think this would be interesting to plot.
 
+```{r}
+pcaPlot18 <- autoplot(scaled.pca.TGNC.id.outlier, data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), x = 1, y = 2,
+                      size = 4, alpha = 0.8, colour = "treatment_het", shape = "treatment_het", 
+                      frame = TRUE, frame.colour = "treatment_het", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("CC or TT at 5ºC", "CT at 5ºC",
+                                "CC or TT at 25ºC", "CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3],
+                                "salmon2", plotColors[1]),
+                     labels = c("CC or TT at 5ºC", "CT at 5ºC",
+                                "CC or TT at 25ºC", "CT at 25ºC"),
+                    name = "Treatment x Genotype") +
+  scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
+                     labels = c("CC or TT at 5ºC", "CT at 5ºC",
+                                "CC or TT at 25ºC", "CT at 25ºC"),
+                     name = "Treatment x Genotype") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot18
+ggsave("PCA/figures/known-metabolites-PCA-temperatureHetNC-no5075.pdf", height = 8.5, width = 11)
+```
+
 ## Conduct PERMANOVA
 
 Given that the dispersion differences are clearer when I do not include 15ºC data, I'm going to only run the tests with 5ºC and 25ºC only. I am also going to look at the impact of genotype, precense of the C allele, and presence of the T allele.
@@ -925,11 +953,11 @@ Given that the dispersion differences are clearer when I do not include 15ºC da
 ### All metabolites
 
 ```{r}
-(transMetabData %>% filter(., day == "42"))[-c(1:11)] #Data from after chronic thermal stress
+(transMetabData %>% filter(., day == "42"))[-c(1:13)] #Data from after chronic thermal stress
 ```
 
 ```{r}
-dissim.TG <- vegdist(scale((transMetabData %>% filter(., day == "42"))[-c(1:11)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.TG <- vegdist(scale((transMetabData %>% filter(., day == "42"))[-c(1:13)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 #### Full genotype
@@ -1068,7 +1096,7 @@ rbind(
 ### Identified metabolites
 
 ```{r}
-dissim.TG.id <- vegdist(scale((transMetabData %>% filter(., day == "42"))[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.TG.id <- vegdist(scale((transMetabData %>% filter(., day == "42"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 #### Full genotype
@@ -1160,7 +1188,7 @@ anova(disp.TGpresenceT.tempGen.id) #Variance is not different between groups. No
 I identified a potential outlier in sample 5-075. I will see if outlier removal impacts the significance of any of the variables tested above. If it does, then I will move forward with that statistical output and outlier removal. If it does not, then everything I've done so far is fine!
 
 ```{r}
-dissim.TG.id.outlier <- vegdist(scale((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(12:196)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
+dissim.TG.id.outlier <- vegdist(scale((transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42"))[c(14:198)]), "euclidean") #Create euclidean dissimilarity matrix to use for perMANOVA and PERMDISP
 ```
 
 ```{r}
@@ -1176,6 +1204,11 @@ permanova.TGpresenceC.id.outlier #Significant influence of temperature, but not 
 ```{r}
 permanova.TGpresenceT.id.outlier <- adonis2(dissim.TG.id.outlier ~ as.factor(treatment)*as.factor(presenceT), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.TGpresenceT.id.outlier #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+permanova.TGHet.id.outlier <- adonis2(dissim.TG.id.outlier ~ as.factor(treatment)*as.factor(het), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGHet.id.outlier #Significant influence of temperature, but not genotype or the interaction
 ```
 
 There is no significant impact of outlier removal on these tests, so I'll move forward with the statistical results that include the outlier.
