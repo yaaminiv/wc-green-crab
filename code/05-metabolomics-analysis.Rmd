@@ -1484,10 +1484,22 @@ dissim.5G <- vegdist(scale((transMetabData %>% filter(., day == "42") %>% filter
 permanova.5GFull <- adonis2(dissim.5G ~ as.factor(final.genotype), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GFull #No significant impact of genotype
 ```
+```{r}
+disp.5GFull.gen <- betadisper(dissim.5G, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$final.genotype), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GFull.gen) #PCoA
+boxplot(disp.5GFull.gen) #Show distance to group centroids
+anova(disp.5GFull.gen) #Variance is not different between groups.
+```
 
 ```{r}
 permanova.5GpresenceC <- adonis2(dissim.5G ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GpresenceC #Significant influence of temperature, but not genotype or the interaction
+```
+```{r}
+disp.5GpresenceC.gen <- betadisper(dissim.5G, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceC), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GpresenceC.gen) #PCoA
+boxplot(disp.5GpresenceC.gen) #Show distance to group centroids
+anova(disp.5GpresenceC.gen) #Variance is not different between groups
 ```
 
 ```{r}
@@ -1496,8 +1508,21 @@ permanova.5GpresenceT #Significant influence of temperature, but not genotype or
 ```
 
 ```{r}
+disp.5GpresenceT.gen <- betadisper(dissim.5G, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GpresenceT.gen) #PCoA
+boxplot(disp.5GpresenceT.gen) #Show distance to group centroids
+anova(disp.5GpresenceT.gen) #Variance is not different between groups.
+```
+
+```{r}
 permanova.5GHet <- adonis2(dissim.5G ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GHet #Significant influence of temperature, but not genotype or the interaction
+```
+```{r}
+disp.5GHet.gen <- betadisper(dissim.5G, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$het), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GHet.gen) #PCoA
+boxplot(disp.5GHet.gen) #Show distance to group centroids
+anova(disp.5GHet.gen) #Variance is not different between groups.
 ```
 
 ##### Save test output
@@ -1516,6 +1541,20 @@ rbind(
   write.csv(., "PCA/all-data-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
+```{r}
+rbind(
+  broom::tidy(anova(disp.5GFull.gen)) %>%
+    mutate(genotype = "full"),
+  broom::tidy(anova(disp.5GpresenceC.gen)) %>%
+    mutate(genotype = "presenceC"),
+  broom::tidy(anova(disp.5GpresenceC.gen)) %>%
+    mutate(genotype = "presenceT"),
+  broom::tidy(anova(disp.5GHet.gen)) %>%
+    mutate(genotype = "het")
+) %>%
+  write.csv("PCA/all-data-PERMDISP-5Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
+```
+
 #### Identified metabolites
 
 ```{r}
@@ -1532,8 +1571,22 @@ permanova.5GFull.id #No significant impact of genotype
 ```
 
 ```{r}
+disp.5GFull.gen.id <- betadisper(dissim.5G.id, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$final.genotype), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GFull.gen.id) #PCoA
+boxplot(disp.5GFull.gen.id) #Show distance to group centroids
+anova(disp.5GFull.gen.id) #Variance is not different between groups.
+```
+
+```{r}
 permanova.5GpresenceC.id <- adonis2(dissim.5G.id ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GpresenceC.id #No significant impact of genotype
+```
+
+```{r}
+disp.5GPresenceC.gen.id <- betadisper(dissim.5G.id, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceC), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GPresenceC.gen.id) #PCoA
+boxplot(disp.5GPresenceC.gen.id) #Show distance to group centroids
+anova(disp.5GPresenceC.gen.id) #Variance is not different between groups.
 ```
 
 ```{r}
@@ -1542,8 +1595,22 @@ permanova.5GpresenceT.id #No significant impact of genotype
 ```
 
 ```{r}
+disp.5GPresenceT.gen.id <- betadisper(dissim.5G.id, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GPresenceT.gen.id) #PCoA
+boxplot(disp.5GPresenceT.gen.id) #Show distance to group centroids
+anova(disp.5GPresenceT.gen.id) #Variance is not different between groups.
+```
+
+```{r}
 permanova.5GHet.id <- adonis2(dissim.5G.id ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GHet.id #No significant impact of genotype
+```
+
+```{r}
+disp.5GHet.gen.id <- betadisper(dissim.5G.id, group = as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C"))$het), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GHet.gen.id) #PCoA
+boxplot(disp.5GHet.gen.id) #Show distance to group centroids
+anova(disp.5GHet.gen.id) #Variance is not different between groups.
 ```
 
 ##### Check outlier
@@ -1560,8 +1627,22 @@ permanova.5GFull.id.outlier #No significant impact of genotype
 ```
 
 ```{r}
+disp.5GFull.gen.id.outlier <- betadisper(dissim.5G.id.outlier, group = as.factor((transMetabData  %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))$final.genotype), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GFull.gen.id.outlier) #PCoA
+boxplot(disp.5GFull.gen.id.outlier) #Show distance to group centroids
+anova(disp.5GFull.gen.id.outlier) #Variance is not different between groups.
+```
+
+```{r}
 permanova.5GpresenceC.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(presenceC), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GpresenceC.id.outlier #No significant impact of genotype
+```
+
+```{r}
+disp.5GPresenceC.gen.id.outlier <- betadisper(dissim.5G.id.outlier, group = as.factor((transMetabData  %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceC), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GPresenceC.gen.id.outlier) #PCoA
+boxplot(disp.5GPresenceC.gen.id.outlier) #Show distance to group centroids
+anova(disp.5GPresenceC.gen.id.outlier) #Variance is not different between groups.
 ```
 
 ```{r}
@@ -1570,8 +1651,22 @@ permanova.5GpresenceT.id.outlier #No significant impact of genotype
 ```
 
 ```{r}
+disp.5GPresenceT.gen.id.outlier <- betadisper(dissim.5G.id.outlier, group = as.factor((transMetabData  %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))$presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GPresenceT.gen.id.outlier) #PCoA
+boxplot(disp.5GPresenceT.gen.id.outlier) #Show distance to group centroids
+anova(disp.5GPresenceT.gen.id.outlier) #Variance is not different between groups.
+```
+
+```{r}
 permanova.5GHet.id.outlier <- adonis2(dissim.5G.id.outlier ~ as.factor(het), data = (transMetabData %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
 permanova.5GHet.id.outlier #No significant impact of genotype
+```
+
+```{r}
+disp.5GHet.gen.id.outlier <- betadisper(dissim.5G.id.outlier, group = as.factor((transMetabData  %>% filter(., crab.ID != "5-075") %>% filter(., day == "42") %>% filter(., treatment == "05C"))$het), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.5GHet.gen.id.outlier) #PCoA
+boxplot(disp.5GHet.gen.id.outlier) #Show distance to group centroids
+anova(disp.5GHet.gen.id.outlier) #Variance is not different between groups.
 ```
 
 Removing the outlier doesn't change the statistical significance, so I'll include it in the results.
@@ -1591,6 +1686,16 @@ rbind(
 ) %>%
   write.csv(., "PCA/known-metabolites-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
+
+### Measure dispersion differences
+
+I also want to try out a few metrics 
+
+- distance to centroid calculation
+- measure euclidean distance between sample and centroid, run ANOVA on differences
+- within-group beta diversity
+
+
 
 ## 25ºC
 
