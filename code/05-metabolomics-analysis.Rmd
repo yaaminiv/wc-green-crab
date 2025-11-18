@@ -1687,16 +1687,6 @@ rbind(
   write.csv(., "PCA/known-metabolites-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
-### Measure dispersion differences
-
-I also want to try out a few metrics 
-
-- distance to centroid calculation
-- measure euclidean distance between sample and centroid, run ANOVA on differences
-- within-group beta diversity
-
-
-
 ## 25ºC
 
 ### PCA
