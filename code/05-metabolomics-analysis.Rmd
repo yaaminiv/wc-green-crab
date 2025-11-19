@@ -1181,6 +1181,34 @@ boxplot(disp.TGpresenceT.tempGen) #Show distance to group centroids, can clearly
 anova(disp.TGpresenceT.tempGen) #Variance is not different between groups. No differences in dispersion.
 ```
 
+#### Heterozygote vs. homozygote
+
+```{r}
+permanova.TGHet <- adonis2(dissim.TG ~ as.factor(treatment)*as.factor(het), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGHet #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGHet.temp <- betadisper(dissim.TG, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGHet.temp) #Dispersion differences exist
+boxplot(disp.TGHet.temp) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGHet.temp) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+```{r}
+disp.TGHet.gen <- betadisper(dissim.TG, group = as.factor((transMetabData %>% filter(., day == "42"))$presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGHet.gen)
+boxplot(disp.TGHet.gen) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGHet.gen) #Variance is not different between groups. No differences in dispersion.
+```
+
+```{r}
+disp.TGHet.tempGen <- betadisper(dissim.TG, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment_presenceT), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGHet.tempGen)
+boxplot(disp.TGHet.tempGen) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
+anova(disp.TGHet.tempGen) #Variance is not different between groups. No differences in dispersion.
+```
+
 #### Save test output
 
 ```{r}
@@ -1190,8 +1218,11 @@ rbind(
   broom::tidy(permanova.TGpresenceC) %>%
     mutate(genotype = "presenceC"),
   broom::tidy(permanova.TGpresenceT) %>%
-    mutate(genotype = "presenceT")
+    mutate(genotype = "presenceT"), 
+  broom::tidy(permanova.TGHet) %>%
+    mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/all-data-PERMANOVA-temperatureGenotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -1223,8 +1254,18 @@ rbind(
            var = "genotype"),
   broom::tidy(anova(disp.TGpresenceT.tempGen)) %>%
     mutate(genotype = "presenceT",
-           var = "interaction")
+           var = "interaction"),
+   broom::tidy(anova(disp.TGHet.temp)) %>%
+    mutate(genotype = "het",
+           var = "temperature"),
+  broom::tidy(anova(disp.TGHet.gen)) %>%
+    mutate(genotype = "het",
+           var = "genotype"),
+  broom::tidy(anova(disp.TGHet.tempGen)) %>%
+    mutate(genotype = "het",
+           var = "interaction") 
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/all-data-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
@@ -1318,6 +1359,34 @@ boxplot(disp.TGpresenceT.tempGen.id) #Show distance to group centroids
 anova(disp.TGpresenceT.tempGen.id) #Variance is not different between groups. No differences in dispersion.
 ```
 
+#### Heterozygote vs. homozygote
+
+```{r}
+permanova.TGhet.id <- adonis2(dissim.TG.id ~ as.factor(treatment)*as.factor(het), data = (transMetabData %>% filter(., day == "42")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
+permanova.TGhet.id #Significant influence of temperature, but not genotype or the interaction
+```
+
+```{r}
+disp.TGhet.temp.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGhet.temp.id) #PCoA
+boxplot(disp.TGhet.temp.id) #Show distance to group centroids
+anova(disp.TGhet.temp.id) #Variance is not different between groups. Temperature significance is due to centroid differences only
+```
+
+```{r}
+disp.TGhet.gen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$het), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGhet.gen.id) #PCoA
+boxplot(disp.TGhet.gen.id) #Show distance to group centroids
+anova(disp.TGhet.gen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
+```{r}
+disp.TGhet.tempGen.id <- betadisper(dissim.TG.id, group = as.factor((transMetabData %>% filter(., day == "42"))$treatment_het), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
+plot(disp.TGhet.tempGen.id) #PCoA
+boxplot(disp.TGhet.tempGen.id) #Show distance to group centroids
+anova(disp.TGhet.tempGen.id) #Variance is not different between groups. No differences in dispersion.
+```
+
 #### Check outlier removal impact on test results
 
 I identified a potential outlier in sample 5-075. I will see if outlier removal impacts the significance of any of the variables tested above. If it does, then I will move forward with that statistical output and outlier removal. If it does not, then everything I've done so far is fine!
@@ -1357,7 +1426,9 @@ rbind(
   broom::tidy(permanova.TGpresenceC.id) %>%
     mutate(genotype = "presenceC"),
   broom::tidy(permanova.TGpresenceT.id) %>%
-    mutate(genotype = "presenceT")
+    mutate(genotype = "presenceT"),
+  broom::tidy(permanova.TGhet.id) %>%
+    mutate(genotype = "het")
 ) %>%
   write.csv(., "PCA/known-metabolites-PERMANOVA-temperatureGenotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
@@ -1390,13 +1461,26 @@ rbind(
            var = "genotype"),
   broom::tidy(anova(disp.TGpresenceT.tempGen.id)) %>%
     mutate(genotype = "presenceT",
+           var = "interaction"),
+  broom::tidy(anova(disp.TGhet.temp.id)) %>%
+    mutate(genotype = "het",
+           var = "temperature"),
+  broom::tidy(anova(disp.TGhet.gen.id)) %>%
+    mutate(genotype = "het",
+           var = "genotype"),
+  broom::tidy(anova(disp.TGhet.tempGen.id)) %>%
+    mutate(genotype = "het",
            var = "interaction")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
+<<<<<<< Updated upstream
 
 
+=======
+>>>>>>> Stashed changes
 # Impact of genotype within each temperature
 
 Above, I looked at the interaction between temperature and genotype across all the treatments. However, I have some temperature-specific expectations for each genotype. In cold temperatures, I expect having at least one C (cold-adapted) allele to be beneficial, and I expect having at least one T (warm-adapted) allele to be beneficial in warm temperatures. Since these alleles have differing roles in each tmeperature, and given that we know there are temperature-specific impacts on the metabolome, it may be hard to tease apart genotyping differences when considering both 5ºC and 25ºC. I'm going to look for genotype-specific impacts within each temperature.
@@ -1630,7 +1714,7 @@ anova(disp.5GFull.gen) #Variance is not different between groups.
 
 ```{r}
 permanova.5GpresenceC <- adonis2(dissim.5G ~ as.factor(presenceC), data = (transMetabData %>% filter(., day == "42")) %>% filter(., treatment == "05C"), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
-permanova.5GpresenceC #Significant influence of temperature, but not genotype or the interaction
+permanova.5GpresenceC #No significant impact of genotype
 ```
 
 ```{r}
@@ -1642,7 +1726,7 @@ anova(disp.5GpresenceC.gen) #Variance is not different between groups
 
 ```{r}
 permanova.5GpresenceT <- adonis2(dissim.5G ~ as.factor(presenceT), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
-permanova.5GpresenceT #Significant influence of temperature, but not genotype or the interaction
+permanova.5GpresenceT #No significant impact of genotype
 ```
 
 ```{r}
@@ -1654,7 +1738,7 @@ anova(disp.5GpresenceT.gen) #Variance is not different between groups.
 
 ```{r}
 permanova.5GHet <- adonis2(dissim.5G ~ as.factor(het), data = (transMetabData %>% filter(., day == "42") %>% filter(., treatment == "05C")), method = 'eu', by = "terms") #Conduct global PERMANOVA to assess significance of trends in PCA. Scale metabolomics data and assess influence of treatment, day, and treatment x day on metabolite profiles. Include "by = "terms"" to ensure test assess significance for each term.
-permanova.5GHet #Significant influence of temperature, but not genotype or the interaction
+permanova.5GHet #No significant impact of genotype
 ```
 
 ```{r}
@@ -1677,6 +1761,7 @@ rbind(
   broom::tidy(permanova.5GHet) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/all-data-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -1691,6 +1776,7 @@ rbind(
   broom::tidy(anova(disp.5GHet.gen)) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/all-data-PERMDISP-5Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
@@ -1823,6 +1909,7 @@ rbind(
   broom::tidy(permanova.5GHet.id) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/known-metabolites-PERMANOVA-5Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -1837,6 +1924,7 @@ rbind(
   broom::tidy(anova(disp.5GHet.gen.id)) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-5Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
@@ -2049,6 +2137,7 @@ rbind(
   broom::tidy(permanova.25GHet) %>%
     mutate(genotype = "het")
 ) %>%
+    mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/all-data-PERMANOVA-25Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -2058,11 +2147,12 @@ rbind(
     mutate(genotype = "full"),
   broom::tidy(anova(disp.25GPresenceC.gen)) %>%
     mutate(genotype = "presenceC"),
-  broom::tidy(anova(disp.25GPresenceC.gen)) %>%
+  broom::tidy(anova(disp.25GPresenceT.gen)) %>%
     mutate(genotype = "presenceT"),
   broom::tidy(anova(disp.25GHet.gen)) %>%
     mutate(genotype = "het")
 ) %>%
+    mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/all-data-PERMDISP-25Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
@@ -2133,6 +2223,7 @@ rbind(
   broom::tidy(permanova.25GHet.id) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/known-metabolites-PERMANOVA-25Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -2142,16 +2233,18 @@ rbind(
     mutate(genotype = "full"),
   broom::tidy(anova(disp.25GPresenceC.gen.id)) %>%
     mutate(genotype = "presenceC"),
-  broom::tidy(anova(disp.25GPresenceC.gen.id)) %>%
+  broom::tidy(anova(disp.25GPresenceT.gen.id)) %>%
     mutate(genotype = "presenceT"),
   broom::tidy(anova(disp.25GHet.gen.id)) %>%
     mutate(genotype = "het")
 ) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-25Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
-# DON'T LOOK BELOW HERE IT'S EMBARASSING #
+Presence of the T allele's impact on dispersion is marginally significant after multiple correction testing! That may justify keeping genotype in the mix for the PLS-DA.
 
+# DON'T LOOK BELOW HERE IT'S EMBARASSING #
 
 # CODE IN PROGRESS BELOW #
 
