@@ -100,8 +100,8 @@ genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = 
                                final.genotype == "CT" ~ "Y",
                                final.genotype == "TT" ~ "Y"), 
          het = case_when(final.genotype == "CC" ~ "N",
-                               final.genotype == "CT" ~ "Y",
-                               final.genotype == "TT" ~ "N")) #Import genotype data. Add additional informational columns
+                         final.genotype == "CT" ~ "Y",
+                         final.genotype == "TT" ~ "N")) #Import genotype data. Add additional informational columns
 head(genotypeData) #Confirm genotype dataframe creation
 ```
 
@@ -298,6 +298,8 @@ broom::tidy(anova(disp.T.id)) %>%
   write.csv("PCA/known-metabolites-PERMDISP-treatment.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
+The temperature impact on metabolomes is not as interesting of a question with this dataset, so I won't continue on to a PLS-DA. This does, however, give me necessary supplementary material to show an impact of temperature on metabolomes that needs to be considered for downstream analyses.
+
 # Impact of time within temperature-specific metabolomes
 
 Now that I have established that temperature has an impact on crab metabolomes, I want to know how how these metabolomes changed over time. I'll examine temperature x time interactions for the 25ºC and 5ºC data (no control data since it is not associated with a specific timepoint).
@@ -455,6 +457,7 @@ plot(disp.TT.tempDay) #Dispersion differences exist
 boxplot(disp.TT.tempDay) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
 anova(disp.TT.tempDay) #Variance is different between groups. Interaction significance is due to centroid and dispersion differences
 ```
+
 ```{r}
 rbind(broom::tidy(anova(disp.TT.temp)) %>%
         mutate(var = "temperature"),
@@ -462,6 +465,7 @@ rbind(broom::tidy(anova(disp.TT.temp)) %>%
         mutate(var = "day"),
       broom::tidy(anova(disp.TT.tempDay)) %>%
         mutate(var = "interaction")) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/all-data-PERMDISP-temperatureDay.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
@@ -513,8 +517,139 @@ rbind(broom::tidy(anova(disp.TT.id.temp)) %>%
         mutate(var = "day"),
       broom::tidy(anova(disp.TT.id.tempDay)) %>%
         mutate(var = "interaction")) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureDay.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
+
+
+
+## PLS-DA
+
+I am going to use a PLS-DA to investigate significant effects identified with the PERMANOVA (temperature, time, and their interaction) using the `mixOmics` package. This is a more robust way to analyze differences between treatments and is common in many metabolomics studies. I am going to look at effects that were significant in identified metabolites, not all metabolites detected.
+
+```{bash}
+mkdir PLSDA
+mkdir PLSDA/figures
+ls #Confirm that directory was created in the correct location
+```
+### Format data
+
+- subset data
+- log-transform
+- remove data with near-zero variance (caret package?)
+- rerun plsda
+- rerun perf and see what happens??
+
+### Run initial PLS-DA
+
+```{r}
+X <- log((transMetabData %>% filter(., day != "0"))[c(14:198)]) #Assign known metabolite data to the X dataframe after log transformation
+Y <- as.factor((transMetabData %>% filter(., day != "0"))$treatment_day) #Assign treatment data to the Y dataframe
+```
+
+```{r}
+treatmentday.known.plsda <- plsda(X,Y, ncomp = 10, scale = TRUE) #Initially set a higher number for the number of components since we will be testing this
+plotIndiv(treatmentday.known.plsda) #Preliminary PLS-DAxa
+```
+
+### Validate PLS-DA model
+
+It's important to validate the PLSDA model. First, I'll run a permutation test to determine how many components to include.
+
+```{r}
+perf.treatmentday.known.plsda <- perf(treatmentday.known.plsda, validation = "Mfold", folds = 5,  
+                     progressBar = TRUE, nrepeat = 50, BPPARAM = BiocParallel::SerialParam()) 
+
+plot(perf.treatmentday.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 3 components.
+```
+
+Next, I'll assess the optimal number of metabolites to keep in the analysis.
+
+```{r}
+list.keepX <- c(5:10,  seq(20, 300, 10)) #list.keepX # to output the grid of values tested
+X <- log(transMetabData[c(5:156)]) #Assign known metabolite data to the X dataframe after log transformation
+Y <- as.factor(transMetabData$treatment_day) #Assign treatment data to the Y dataframe
+```
+
+```{r}
+tune.splsda.srbct <- tune.splsda(X, Y, ncomp = 5, 
+                                 validation = 'Mfold', folds = 6,
+                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+plot(tune.splsda.srbct) #Plot results
+```
+
+```{r}
+error <- tune.splsda.srbct$error.rate #Save error rate
+ncomp <- tune.splsda.srbct$choice.ncomp$ncomp #Optimal number of components based on t-tests on the error rate
+ncomp #5 components! That's how many I have
+
+select.keepX <- tune.splsda.srbct$choice.keepX #Optimal number of variables to select (e.g., number of metabolite features)
+select.keepX #sPLSDA should be run with 40 features
+```
+
+```{r}
+myResult.splsda.final_T <- splsda(X, Y, ncomp = ncomp, keepX = select.keepX) #Use the number of components and meatbolites to keep based on optimization from above  
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-sPLSDA-day-treatment-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(myResult.splsda.final_T, comp = c(1,2), ind.names = FALSE,
+          cex = 3, col = c("#525252", "grey80", "#CB181D", "salmon", "#2171B5", "lightblue"), pch = c(12:17), point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
+          title = "sPLS-DA by Temperature and Day", X.label = "Component 1: 9% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 6% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2")
+#dev.off()
+```
+
+
+### Rerun PLS-DA based on validated components
+
+
+
+
+
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
+          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = rep(16, times = 6), point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE, legend.title = "Temperature (ºC) x Day",
+          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
+#dev.off()
+```
+
+```{r}
+#svg("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.svg", height = 8.5, width = 11)
+plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
+          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = rep(16, times = 6), point.lwd = 0.7,
+          ellipse = FALSE, star = TRUE, centroid = FALSE, 
+          legend = TRUE, legend.title = "Temperature (ºC) x Day", legend.position = "bottom",
+          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
+#dev.off()
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp13.pdf", height = 8.5, width = 11)
+plotIndiv(treatmentday.known.plsda, comp = c(1,3), ind.names = FALSE,
+          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = c(12:17), point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
+          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 8% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
+#dev.off()
+```
+
+```{r}
+pdf("PLSDA/figures/known-metabolites-cimPlot-day-treatment.pdf", height = 8.5, width = 11)
+cim(treatmentday.known.plsda, mapping = "Y", row.names = transMetabData$treatment_day, xlab = "Metabolites", ylab = "Temperature (ºC) x Day", margins = c(8, 5), row.cex = 0.5) #Create CIM plot with metabolites on the x-axis and treatment x day on the y-axis. 
+dev.off()
+```
+
+
 
 # Impact of temperature and genotype on metabolomes
 
@@ -932,9 +1067,9 @@ pcaPlot18 <- autoplot(scaled.pca.TGNC.id.outlier, data = (transMetabData %>% fil
                                 "CC or TT at 25ºC", "CT at 25ºC"),
                      name = "Treatment x Genotype") +
   scale_fill_manual(values = c("lightblue2", plotColors[3],
-                                "salmon2", plotColors[1]),
-                     labels = c("CC or TT at 5ºC", "CT at 5ºC",
-                                "CC or TT at 25ºC", "CT at 25ºC"),
+                               "salmon2", plotColors[1]),
+                    labels = c("CC or TT at 5ºC", "CT at 5ºC",
+                               "CC or TT at 25ºC", "CT at 25ºC"),
                     name = "Treatment x Genotype") +
   scale_shape_manual(values = c(rep(c(1, 2), times = 2)),
                      labels = c("CC or TT at 5ºC", "CT at 5ºC",
@@ -1259,6 +1394,7 @@ rbind(
 ) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
+
 
 
 # Impact of genotype within each temperature
@@ -2019,199 +2155,7 @@ rbind(
 
 # CODE IN PROGRESS BELOW #
 
-
-# PLSDA for all metabolites
-
-The next step is for me to conduct a PLS-DA analysis using the `mixOmics` package. This is a more robust way to analyze differences between treatments and is common in many metabolomics studies. Since both temperature and day were significant in the PCA, I'll use both of those factors in the PLSDA.
-
-```{bash}
-mkdir PLSDA
-mkdir PLSDA/figures
-```
-
-## Temperature only
-
-I'm still going to run the PLS-DA with temperature only because I suspect the plot will look cleaner this way.
-
-```{r}
-X <- log(transMetabData[c(5:601)]) #Assign only metabolite data to the X dataframe after log transformation.
-Y <- as.factor(transMetabData$treatment) #Assign treatment data to the Y dataframe
-```
-
-```{r}
-treatment.plsda <- plsda(X,Y, ncomp = 2) #ncomp = # treatments - 1
-plotIndiv(treatment.plsda)
-```
-
-```{r}
-#pdf("PLSDA/figures/all-data-PLSDA-treatment.pdf", height = 8.5, width = 11)
-plotIndiv(treatment.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, col = rev(plotColors), pch = c(15, 17, 19), point.lwd = 0.7,
-          ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC)", 
-          title = "PLS-DA by Temperature", X.label = "Component 1: 14% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 6% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-pdf("PLSDA/figures/all-data-cimPlot-treatment.pdf", height = 8.5, width = 11)
-cim(treatment.plsda, mapping = "Y", row.names = transMetabData$treatment, xlab = "Metabolites", ylab = "Temperature (ºC)", margins = c(8, 5), row.cex = 0.5) #Create CIM plot with metabolites on the x-axis and treatment on the y-axis. 
-dev.off()
-```
-
-### Extract VIP
-
-The VIP are the metabolites most important for distinguishing between treatments.
-
-```{r}
-treatmentVIP <- as.data.frame(PLSDA.VIP(treatment.plsda)[["tab"]]) %>%
-  rownames_to_column(., var = "metabolite") #Extract VIP information and save as a dataframe. Convert metabolite rownames to a column. 
-head(treatmentVIP) #Confirm changes
-```
-
-```{r}
-write.csv(treatmentVIP, "PLSDA/all-data-VIP-treatment.csv", quote = FALSE, row.names = FALSE) #Save VIP scores
-```
-
-```{r}
-treatmentVIP %>%
-  filter(VIP >= 1) %>%
-  nrow(.) #236 metabolites have VIP > 1
-236/596 * 100 #39.6% metabolites VIP > 1
-```
-
-```{r}
-treatmentVIP %>%
-  filter(VIP >= 1) %>%
-  arrange(VIP) %>%
-  ggplot(aes(x = VIP, y = reorder(metabolite, VIP, sum))) +
-  geom_point() +
-  xlab("VIP Score") + ylab("Metabolite") +
-  theme_classic() + theme(axis.text.y = element_text(size = 5)) #Using only metabolites with VIP > 1, arrange by metabolite name and reorder by cumulative VIP score. Plot points and change x and y axis labels.
-ggsave("PLSDA/figures/all-data-VIP.pdf", height = 8.5, width = 11)
-```
-
-## Temperature x day
-
-```{r}
-X <- log(transMetabData[c(5:601)]) #Assign only metabolite data to the X dataframe after log transformation
-Y <- as.factor(transMetabData$treatment_day) #Assign treatment data to the Y dataframe
-```
-
-```{r}
-treatmentday.plsda <- plsda(X,Y, ncomp = 5) #ncomp = # treatments - 1
-plotIndiv(treatmentday.plsda)
-```
-```{r}
-#pdf("PLSDA/figures/all-data-PLSDA-day-treatment-comp12.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = c(12:17), point.lwd = 0.7,
-          ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 14% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 6% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-#pdf("PLSDA/figures/all-data-PLSDA-day-treatment-comp13.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.plsda, comp = c(1,3), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = c(12:17), point.lwd = 0.7,
-          ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 14% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-pdf("PLSDA/figures/all-data-cimPlot-day-treatment.pdf", height = 8.5, width = 11)
-cim(treatment.plsda, mapping = "Y", row.names = transMetabData$treatment_day, xlab = "Metabolites", ylab = "Temperature (ºC) x Day", margins = c(8, 5), row.cex = 0.5) #Create CIM plot with metabolites on the x-axis and treatment x day on the y-axis. 
-dev.off()
-```
-
-### Extract VIP
-
-```{r}
-treatmentdayVIP <- as.data.frame(PLSDA.VIP(treatmentday.plsda)[["tab"]]) %>%
-  rownames_to_column(., var = "metabolite") #Extract VIP information and save as a dataframe. Convert metabolite rownames to a column.
-head(treatmentdayVIP) #Confirm changes
-```
-
-```{r}
-write.csv(treatmentdayVIP, "PLSDA/all-data-VIP-day-treatment.csv", quote = FALSE, row.names = FALSE) #Save VIP scores
-```
-
-```{r}
-treatmentdayVIP %>%
-  filter(VIP >= 1) %>%
-  nrow(.) #251 metabolites have VIP > 1
-251/596 * 100 #42.1% metabolites VIP > 1
-```
-
-```{r}
-treatmentdayVIP %>%
-  filter(VIP >= 1) %>%
-  arrange(VIP) %>%
-  ggplot(aes(x = VIP, y = reorder(metabolite, VIP, sum))) +
-  geom_point() +
-  xlab("VIP Score") + ylab("Metabolite") +
-  theme_classic() + theme(axis.text.y = element_text(size = 5)) #Using only metabolites with VIP > 1, arrange by metabolite name and reorder by cumulative VIP score. Plot points and change x and y axis labels.
-ggsave("PLSDA/figures/all-data-VIP-day-treatment.pdf", height = 8.5, width = 11)
-```
-
 # PLSDA for known features
-
-While I can use the PLSDA with all features to discuss larger patterns and maybe glean insight into functions of unknown metabolites, running the model with only known features will allow me to more confidently assess differences in metabolic pathways due to temperature and time. I will run this PLSDA for both temperature and day.
-
-```{r}
-X <- log(transMetabData[c(5:156)]) #Assign known metabolite data to the X dataframe after log transformation
-Y <- as.factor(transMetabData$treatment_day) #Assign treatment data to the Y dataframe
-```
-
-```{r}
-treatmentday.known.plsda <- plsda(X,Y, ncomp = 5) #ncomp = # treatments - 1
-plotIndiv(treatmentday.known.plsda)
-```
-
-```{r}
-#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = rep(16, times = 6), point.lwd = 0.7,
-          ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day",
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-```{r}
-#svg("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.svg", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = rep(16, times = 6), point.lwd = 0.7,
-          ellipse = FALSE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", legend.position = "bottom",
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp13.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,3), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = c(12:17), point.lwd = 0.7,
-          ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 8% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-pdf("PLSDA/figures/known-metabolites-cimPlot-day-treatment.pdf", height = 8.5, width = 11)
-cim(treatmentday.known.plsda, mapping = "Y", row.names = transMetabData$treatment_day, xlab = "Metabolites", ylab = "Temperature (ºC) x Day", margins = c(8, 5), row.cex = 0.5) #Create CIM plot with metabolites on the x-axis and treatment x day on the y-axis. 
-dev.off()
-```
 
 ### Extract VIP
 
