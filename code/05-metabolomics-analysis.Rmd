@@ -1476,11 +1476,6 @@ rbind(
   write.csv("PCA/known-metabolites-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
-<<<<<<< Updated upstream
-
-
-=======
->>>>>>> Stashed changes
 # Impact of genotype within each temperature
 
 Above, I looked at the interaction between temperature and genotype across all the treatments. However, I have some temperature-specific expectations for each genotype. In cold temperatures, I expect having at least one C (cold-adapted) allele to be beneficial, and I expect having at least one T (warm-adapted) allele to be beneficial in warm temperatures. Since these alleles have differing roles in each tmeperature, and given that we know there are temperature-specific impacts on the metabolome, it may be hard to tease apart genotyping differences when considering both 5ºC and 25ºC. I'm going to look for genotype-specific impacts within each temperature.
