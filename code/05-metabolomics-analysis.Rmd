@@ -23,6 +23,7 @@ getwd()
 ```{r packages, warning = FALSE, message = FALSE}
 # if ("tidyverse" %in% rownames(installed.packages()) == 'FALSE') install.packages('tidyverse')
 # if ("vegan" %in% rownames(installed.packages()) == 'FALSE') install.packages('vegan')
+# if ("caret" %in% rownames(installed.packages()) == 'FALSE') install.packages('caret')
 # if (!requireNamespace("BiocManager", quietly = TRUE))
 #   install.packages("BiocManager")
 # if ("mixOmics" %in% rownames(installed.packages()) == 'FALSE') BiocManager::install("mixOmics")
@@ -41,6 +42,7 @@ getwd()
 # devtools::install_github("andjar/ALASCA", ref = "main")
 require(tidyverse)
 require(vegan)
+require(caret)
 require(mixOmics)
 require(RVAideMemoire)
 require(broom)
@@ -521,8 +523,6 @@ rbind(broom::tidy(anova(disp.TT.id.temp)) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureDay.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
-
-
 ## PLS-DA
 
 I am going to use a PLS-DA to investigate significant effects identified with the PERMANOVA (temperature, time, and their interaction) using the `mixOmics` package. This is a more robust way to analyze differences between treatments and is common in many metabolomics studies. I am going to look at effects that were significant in identified metabolites, not all metabolites detected.
@@ -532,10 +532,18 @@ mkdir PLSDA
 mkdir PLSDA/figures
 ls #Confirm that directory was created in the correct location
 ```
+
 ### Format data
 
-- subset data
-- log-transform
+```{r}
+nzv_indices <- nearZeroVar((transMetabData %>% 
+                              filter(., day != "0"))[c(14:198)] %>%
+                             log(.), 
+                           saveMetrics = FALSE) #Check to see if any variables have near-zero variance.
+nzv_indices #There aren't any columns with near-zero variance!
+```
+
+- FIX -INF VALUES!!!!!!
 - remove data with near-zero variance (caret package?)
 - rerun plsda
 - rerun perf and see what happens??
@@ -543,12 +551,15 @@ ls #Confirm that directory was created in the correct location
 ### Run initial PLS-DA
 
 ```{r}
-X <- log((transMetabData %>% filter(., day != "0"))[c(14:198)]) #Assign known metabolite data to the X dataframe after log transformation
-Y <- as.factor((transMetabData %>% filter(., day != "0"))$treatment_day) #Assign treatment data to the Y dataframe
+X_tempTime <- transMetabData %>% 
+  filter(., day != "0") %>%
+  dplyr::select(c(14:198)) %>%
+  log(.) #Assign known metabolite data to the X dataframe after log transformation
+Y_tempTime <- as.factor((transMetabData %>% filter(., day != "0"))$treatment_day) #Assign treatment data to the Y dataframe
 ```
 
 ```{r}
-treatmentday.known.plsda <- plsda(X,Y, ncomp = 10, scale = TRUE) #Initially set a higher number for the number of components since we will be testing this
+treatmentday.known.plsda <- plsda(x = X_tempTime, y = Y_tempTime, ncomp = 10) #Initially set a higher number for the number of components since we will be testing this
 plotIndiv(treatmentday.known.plsda) #Preliminary PLS-DAxa
 ```
 
@@ -558,7 +569,7 @@ It's important to validate the PLSDA model. First, I'll run a permutation test t
 
 ```{r}
 perf.treatmentday.known.plsda <- perf(treatmentday.known.plsda, validation = "Mfold", folds = 5,  
-                     progressBar = TRUE, nrepeat = 50, BPPARAM = BiocParallel::SerialParam()) 
+                                      progressBar = TRUE, nrepeat = 50, BPPARAM = BiocParallel::SerialParam()) 
 
 plot(perf.treatmentday.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 3 components.
 ```
@@ -1255,7 +1266,7 @@ rbind(
   broom::tidy(anova(disp.TGpresenceT.tempGen)) %>%
     mutate(genotype = "presenceT",
            var = "interaction"),
-   broom::tidy(anova(disp.TGHet.temp)) %>%
+  broom::tidy(anova(disp.TGHet.temp)) %>%
     mutate(genotype = "het",
            var = "temperature"),
   broom::tidy(anova(disp.TGHet.gen)) %>%
@@ -2132,7 +2143,7 @@ rbind(
   broom::tidy(permanova.25GHet) %>%
     mutate(genotype = "het")
 ) %>%
-    mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv(., "PCA/all-data-PERMANOVA-25Genotype.csv", quote = FALSE) #Save PERMANOVA output
 ```
 
@@ -2147,7 +2158,7 @@ rbind(
   broom::tidy(anova(disp.25GHet.gen)) %>%
     mutate(genotype = "het")
 ) %>%
-    mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
+  mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/all-data-PERMDISP-25Genotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
