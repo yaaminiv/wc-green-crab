@@ -2019,7 +2019,7 @@ plotIndiv(final.splsda.5presenceC.known, comp = c(1,2), ind.names = FALSE,
           col = c("lightblue2", plotColors[3]),
           pch = as.factor(rep(c(1, 2), times = 1)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by C Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 26: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by C Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 26% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 #dev.off()
 ```
@@ -2373,7 +2373,7 @@ plotIndiv(presenceT25.known.plsda) #Preliminary PLS-DA
 perf.presenceT25.known.plsda <- perf(presenceT25.known.plsda, validation = "Mfold", folds = 4,  
                                       progressBar = TRUE, nrepeat = 50) 
 
-plot(perf.presenceT25.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 2 components. All distances offers similarly low overall and balanced error rates (BER) when using 2 components
+plot(perf.presenceT25.known.plsda, sd = TRUE) #The lowest error rate is actually achieved at 1 component, but I need 2 components to do the analysis.
 perf.presenceT25.known.plsda$choice.ncomp #Confirm information from plot.
 ```
 
@@ -2381,17 +2381,17 @@ perf.presenceT25.known.plsda$choice.ncomp #Confirm information from plot.
 
 ```{r}
 presenceT25.known.plsda.tuned <- plsda(X_25Gen, Y_25Gen, ncomp = 2) #Run PLS-DA with the appropriate number of components to include based on tuning above.
-plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA. I only have 4 TT crabs for this timepoint (not a mistake)
+plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA. I only have 5 CC crabs for this timepoint (not a mistake)
 ```
 
 ```{r}
 #pdf("PLSDA/figures/known-metabolites-PLSDA-25presenceT-comp12.pdf", height = 8.5, width = 11)
 plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
-          col = c("lightblue2", plotColors[3]),
+          col = c("salmon2", plotColors[1]),
           pch = as.factor(c(1, 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE,
-          title = "PLS-DA by T Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 16% Explained Variance", size.ylabel = 15, size.axis = 13,
+          legend = FALSE,
+          title = "PLS-DA by T Allele Presence", X.label = "Component 1: 11% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 9% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Do not include a legend. Specify the plot title and text label sizes. Use ggplot style.
 #dev.off()
 ```
@@ -2422,10 +2422,10 @@ plotIndiv(final.splsda.25presenceT.known, comp = c(1,2))
 ```{r}
 #pdf("PLSDA/figures/known-metabolites-sPLSDA-25presenceT-comp12.pdf", height = 8.5, width = 11)
 plotIndiv(final.splsda.25presenceT.known, comp = c(1,2), ind.names = FALSE,
-          col = c("lightblue2", plotColors[3]),
+          col = c("salmon2", plotColors[1]),
           pch = as.factor(rep(c(1, 2), times = 1)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by T Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 26: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by T Allele Presence", X.label = "Component 1: 7% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 #dev.off()
 ```
