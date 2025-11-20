@@ -550,16 +550,14 @@ nzv_indices <- nearZeroVar(X_tempTime) #Check to see if any variables have near-
 nzv_indices$Position #There aren't any columns with near-zero variance!
 ```
 
-### Run initial PLS-DA
+### Tune PLS-DA model
+
+First, I need to determine how many components to include in the analysis. I'll create an initial PCA, then run a permutation test to determine how many components to include.
 
 ```{r}
 treatmentday.known.plsda <- plsda(X_tempTime, Y_tempTime, ncomp = 10) #Initially set a higher number for the number of components since we will be testing this
 plotIndiv(treatmentday.known.plsda) #Preliminary PLS-DAxa
 ```
-
-### Tune PLS-DA model
-
-It's important to validate the PLSDA model. First, I'll run a permutation test to determine how many components to include.
 
 ```{r}
 perf.treatmentday.known.plsda <- perf(treatmentday.known.plsda, validation = "Mfold", folds = 5,  
@@ -572,41 +570,35 @@ perf.treatmentday.known.plsda$choice.ncomp #Confirm information from plot.
 ### Run PLS-DA
 
 ```{r}
-treatmentDay.known.plsda.tuned <- plsda(X_tempTime, Y_tempTime, ncomp = 3) #Initially set a higher number for the number of components since we will be testing this
-plotIndiv(treatmentDay.known.plsda.tuned) #Preliminary PLS-DA
+treatmentDay.known.plsda.tuned <- plsda(X_tempTime, Y_tempTime, ncomp = 3) #Run PLS-DA with the appropriate number of components to include based on tuning above.
+plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA
+plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,3)) #Preliminary PLS-DA
 ```
 
 - match shapes and color to PCA figures
 
 ```{r}
-#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, point.lwd = 0.7,
+#pdf("PLSDA/figures/known-metabolites-PLSDA-treatmentDay-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+          pch = as.factor(rep(c(1, 2, 0, 4), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day",
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
+          legend = FALSE,
+          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 19% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Do not include a legend. Specify the plot title and text label sizes. Use ggplot style.
 #dev.off()
 ```
 
 ```{r}
-#svg("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp12.svg", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,2), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = rep(16, times = 6), point.lwd = 0.7,
-          ellipse = FALSE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", legend.position = "bottom",
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
-          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
-#dev.off()
-```
-
-```{r}
-#pdf("PLSDA/figures/known-metabolites-PLSDA-day-treatment-comp13.pdf", height = 8.5, width = 11)
-plotIndiv(treatmentday.known.plsda, comp = c(1,3), ind.names = FALSE,
-          cex = 3, col = c("lightblue", "#2171B5", "grey80", "#525252", "salmon", "#CB181D"), pch = c(12:17), point.lwd = 0.7,
+#pdf("PLSDA/figures/known-metabolites-PLSDA-treatmentDay-comp13.pdf", height = 8.5, width = 11)
+plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,3), ind.names = FALSE,
+          col = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
+                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+          pch = as.factor(rep(c(1, 2, 0, 4), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE, legend.title = "Temperature (ºC) x Day", 
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 8% Explained Variance", size.ylabel = 15, size.axis = 13,
+          legend = FALSE,
+          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 19% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 3.9% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Include a legend and specify the legend title. Specify the plot title and text label sizes. Use ggplot style.
 #dev.off()
 ```
