@@ -1984,8 +1984,8 @@ plotIndiv(presenceC5.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
           col = c("lightblue2", plotColors[3]),
           pch = as.factor(c(1, 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          legend = TRUE,
-          title = "PLS-DA by Temperature and Day", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 16% Explained Variance", size.ylabel = 15, size.axis = 13,
+          legend = FALSE,
+          title = "PLS-DA by C Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 16% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Do not include a legend. Specify the plot title and text label sizes. Use ggplot style.
 #dev.off()
 ```
@@ -2019,7 +2019,7 @@ plotIndiv(final.splsda.5presenceC.known, comp = c(1,2), ind.names = FALSE,
           col = c("lightblue2", plotColors[3]),
           pch = as.factor(rep(c(1, 2), times = 1)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by Temperature and Day", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 26: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by C Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 26: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 #dev.off()
 ```
@@ -2339,6 +2339,102 @@ rbind(
 ```
 
 Presence of the T allele's impact on dispersion is marginally significant after multiple correction testing! That may justify keeping genotype in the mix for the PLS-DA.
+
+### PLS-DA
+
+I'm going to look at the impact of the T allele on the PLS-DA based on the marginally significant disperson result.
+
+#### Format data
+
+```{r}
+X_25Gen <- transMetabData %>% 
+  filter(., day == "42") %>%
+  filter(., treatment == "25C") %>%
+  dplyr::select(c(14:198)) %>%
+  log(.) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) #Assign known metabolite data to the X dataframe after log transformation. Replace any -Inf with NA, then replace NA with 0
+Y_25Gen <- as.factor((transMetabData %>% filter(., day == "42") %>% filter(., treatment == "25C"))$treatment_presenceT) #Assign treatment data to the Y dataframe
+```
+
+```{r}
+nzv_indices <- nearZeroVar(X_5Gen) #Check to see if any variables have near-zero variance.
+nzv_indices$Position #There aren't any columns with near-zero variance!
+```
+
+#### Tune PLS-DA model
+
+```{r}
+presenceT25.known.plsda <- plsda(X_25Gen, Y_25Gen, ncomp = 10) #Initially set a higher number for the number of components since we will be testing this
+plotIndiv(presenceT25.known.plsda) #Preliminary PLS-DA
+```
+
+```{r}
+perf.presenceT25.known.plsda <- perf(presenceT25.known.plsda, validation = "Mfold", folds = 4,  
+                                      progressBar = TRUE, nrepeat = 50) 
+
+plot(perf.presenceT25.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 2 components. All distances offers similarly low overall and balanced error rates (BER) when using 2 components
+perf.presenceT25.known.plsda$choice.ncomp #Confirm information from plot.
+```
+
+#### Run PLS-DA
+
+```{r}
+presenceT25.known.plsda.tuned <- plsda(X_25Gen, Y_25Gen, ncomp = 2) #Run PLS-DA with the appropriate number of components to include based on tuning above.
+plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA. I only have 4 TT crabs for this timepoint (not a mistake)
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-PLSDA-25presenceT-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue2", plotColors[3]),
+          pch = as.factor(c(1, 2)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE,
+          title = "PLS-DA by T Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 16% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Do not include a legend. Specify the plot title and text label sizes. Use ggplot style.
+#dev.off()
+```
+
+#### Validate PLS-DA
+
+```{r}
+tune.splsda.25presenceT.known <- tune.splsda(X_25Gen, Y_25Gen, ncomp = 2, 
+                                 validation = 'Mfold', folds = 4,
+                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+plot(tune.splsda.25presenceT.known) #Plot results
+```
+
+```{r}
+error <- tune.splsda.25presenceT.known$error.rate #Save error rate
+ncomp <- tune.splsda.25presenceT.known$choice.ncomp$ncomp #Optimal number of components based on t-tests on the error rate
+ncomp #1 component is the optimal number according to this analysis. However, looking at the error rate plot, error rate does go down as more features are added when using 2 components. I also need at least 2 components for this analysis.
+
+select.keepX <- tune.splsda.25presenceT.known$choice.keepX #Optimal number of variables to select (e.g., number of metabolite features)
+select.keepX #sPLSDA should be run with this many features per component.
+```
+
+```{r}
+final.splsda.25presenceT.known <- splsda(X_25Gen, Y_25Gen, ncomp = 2, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
+plotIndiv(final.splsda.25presenceT.known, comp = c(1,2))
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-sPLSDA-25presenceT-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(final.splsda.25presenceT.known, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue2", plotColors[3]),
+          pch = as.factor(rep(c(1, 2), times = 1)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          title = "sPLS-DA by T Allele Presence", X.label = "Component 1: 10% Explained Variance", size.xlabel = 15, Y.label = "Component 26: 11% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2")
+#dev.off()
+```
+
+
+
+
+
+
 
 # DON'T LOOK BELOW HERE IT'S EMBARASSING #
 
