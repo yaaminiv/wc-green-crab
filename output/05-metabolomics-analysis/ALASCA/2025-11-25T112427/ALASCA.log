@@ -1,0 +1,70 @@
+INFO  [2025-11-25 11:24:27] Initializing ALASCA (v1.0.17, 2024-09-13)
+WARN  [2025-11-25 11:24:27] Guessing effects: `treatment+treatment:final.genotype+final.genotype`
+INFO  [2025-11-25 11:24:27] Will use linear mixed models!
+INFO  [2025-11-25 11:24:27] Will use Rfast!
+WARN  [2025-11-25 11:24:27] Converting IDs to integer values
+WARN  [2025-11-25 11:24:27] The `treatment` column is used for stratification
+INFO  [2025-11-25 11:24:27] Scaling data with sdall ...
+INFO  [2025-11-25 11:24:27] Calculating LMM coefficients
+INFO  [2025-11-25 11:24:27] Reducing the number of dimensions with PCA
+INFO  [2025-11-25 11:24:27] Keeping 24 components from initial PCA, explaining 95.33 % of variation. The limit can be changed with `reduce_dimensions.limit`
+INFO  [2025-11-25 11:24:27] -> Finished the reduction of dimensions!
+WARN  [2025-11-25 11:24:27] Keeping 20 of 24 components. Change `max_PC` if necessary.
+INFO  [2025-11-25 11:24:27] Starting validation: bootstrap
+INFO  [2025-11-25 11:24:27] - Run 1 of 100
+INFO  [2025-11-25 11:24:27] --- Used 0.13 seconds. Est. time remaining: 12.91 seconds
+INFO  [2025-11-25 11:24:27] - Run 2 of 100
+INFO  [2025-11-25 11:24:27] --- Used 0.11 seconds. Est. time remaining: 12.01 seconds
+INFO  [2025-11-25 11:24:27] - Run 3 of 100
+INFO  [2025-11-25 11:24:27] --- Used 0.13 seconds. Est. time remaining: 12.06 seconds
+INFO  [2025-11-25 11:24:27] - Run 4 of 100
+INFO  [2025-11-25 11:24:29] --- Used 1.17 seconds. Est. time remaining: 36.98 seconds
+INFO  [2025-11-25 11:24:29] - Run 5 of 100
+INFO  [2025-11-25 11:24:29] --- Used 0.1 seconds. Est. time remaining: 31.19 seconds
+INFO  [2025-11-25 11:24:29] - Run 6 of 100
+INFO  [2025-11-25 11:24:29] --- Used 0.15 seconds. Est. time remaining: 28 seconds
+INFO  [2025-11-25 11:24:29] - Run 7 of 100
+INFO  [2025-11-25 11:24:29] --- Used 0.47 seconds. Est. time remaining: 29.98 seconds
+INFO  [2025-11-25 11:24:29] - Run 8 of 100
+INFO  [2025-11-25 11:24:29] --- Used 0.12 seconds. Est. time remaining: 27.31 seconds
+INFO  [2025-11-25 11:24:29] - Run 9 of 100
+INFO  [2025-11-25 11:24:29] --- Used 0.12 seconds. Est. time remaining: 25.18 seconds
+INFO  [2025-11-25 11:24:29] - Run 10 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.1 seconds. Est. time remaining: 23.29 seconds
+INFO  [2025-11-25 11:24:30] - Run 11 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.1 seconds. Est. time remaining: 21.78 seconds
+INFO  [2025-11-25 11:24:30] - Run 12 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.15 seconds. Est. time remaining: 20.82 seconds
+INFO  [2025-11-25 11:24:30] - Run 13 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.37 seconds. Est. time remaining: 21.46 seconds
+INFO  [2025-11-25 11:24:30] - Run 14 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.09 seconds. Est. time remaining: 20.23 seconds
+INFO  [2025-11-25 11:24:30] - Run 15 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.1 seconds. Est. time remaining: 19.23 seconds
+INFO  [2025-11-25 11:24:30] - Run 16 of 100
+INFO  [2025-11-25 11:24:30] --- Used 0.12 seconds. Est. time remaining: 18.44 seconds
+INFO  [2025-11-25 11:24:30] - Run 17 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.09 seconds. Est. time remaining: 17.58 seconds
+INFO  [2025-11-25 11:24:31] - Run 18 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.09 seconds. Est. time remaining: 16.82 seconds
+INFO  [2025-11-25 11:24:31] - Run 19 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.07 seconds. Est. time remaining: 16.05 seconds
+INFO  [2025-11-25 11:24:31] - Run 20 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.43 seconds. Est. time remaining: 16.79 seconds
+INFO  [2025-11-25 11:24:31] - Run 21 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.11 seconds. Est. time remaining: 16.19 seconds
+INFO  [2025-11-25 11:24:31] - Run 22 of 100
+INFO  [2025-11-25 11:24:31] --- Used 0.11 seconds. Est. time remaining: 15.64 seconds
+INFO  [2025-11-25 11:24:31] - Run 23 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.12 seconds. Est. time remaining: 15.16 seconds
+INFO  [2025-11-25 11:24:32] - Run 24 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.09 seconds. Est. time remaining: 14.62 seconds
+INFO  [2025-11-25 11:24:32] - Run 25 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.09 seconds. Est. time remaining: 14.11 seconds
+INFO  [2025-11-25 11:24:32] - Run 26 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.08 seconds. Est. time remaining: 13.62 seconds
+INFO  [2025-11-25 11:24:32] - Run 27 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.5 seconds. Est. time remaining: 14.29 seconds
+INFO  [2025-11-25 11:24:32] - Run 28 of 100
+INFO  [2025-11-25 11:24:32] --- Used 0.1 seconds. Est. time remaining: 13.84 seconds
+INFO  [2025-11-25 11:24:32] - Run 29 of 100
