@@ -523,6 +523,33 @@ rbind(broom::tidy(anova(disp.TT.id.temp)) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureDay.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
 
+
+## ASCA
+
+I will use an ASCA to decompose the trends I observed in the PERMANOVA into groups of metabolites with similar abundance patterns. In conjunction with a PLS-DA, I can use the information to determine the best pairwise comparisons to use to pull out metabolites of interest.
+
+```{bash}
+mkdir ASCA
+mkdir ASCA/figures
+```
+
+## Format data
+
+```{r}
+metabolomics.ASCA <- rowwiseMetabData %>%
+  log(.) %>%
+  rownames_to_column(., var = "crab.ID") %>%
+  pivot_longer(., cols = !crab.ID, names_to = "variable", values_to = "value") %>%
+  left_join(metabolomicsMetadata, ., by = "crab.ID") %>%
+  dplyr::select(-treatment_day) %>%
+  mutate(., day = str_trim(day, side = "both")) %>%
+  mutate(day = case_when(day == "3" ~ "04",
+                         day != "3" ~ day)) %>%
+  mutate(day = as.factor(day)) #Log-transform data. Pivot data longer for ASCA. Compound information should be "variable." Add metadata to dataframe with all compound information. Update metadata for day and reconvert day to a factor
+head(metabolomics.ASCA) #Confirm changes
+```
+
+
 ## PLS-DA
 
 I am going to use a PLS-DA to investigate significant effects identified with the PERMANOVA (temperature, time, and their interaction) using the `mixOmics` package. This is a more robust way to analyze differences between treatments and is common in many metabolomics studies. I am going to look at effects that were significant in identified metabolites, not all metabolites detected.
@@ -1485,6 +1512,106 @@ rbind(
   mutate(., p.adj = p.adjust(p.value, method = "bonferroni")) %>%
   write.csv("PCA/known-metabolites-PERMDISP-temperatureGenotype.csv", quote = FALSE, row.names = FALSE) #Combine PERMDISP output for each variable and add specifics for which variable was tested. Save output
 ```
+
+## PLS-DA: Temperature x full gneotype
+
+#### Format data
+
+```{r}
+X_tempGen <- transMetabData %>% 
+  filter(., day == "42") %>%
+  dplyr::select(c(14:198)) %>%
+  log(.) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) #Assign known metabolite data to the X dataframe after log transformation. Replace any -Inf with NA, then replace NA with 0
+Y_tempGen <- as.factor((transMetabData %>% filter(., day == "42"))$treatment_genotype) #Assign treatment data to the Y dataframe
+```
+
+```{r}
+nzv_indices <- nearZeroVar(X_tempGen) #Check to see if any variables have near-zero variance.
+nzv_indices$Position #There aren't any columns with near-zero variance!
+```
+
+#### Tune PLS-DA model
+
+```{r}
+tempGen.known.plsda <- plsda(X_tempGen, Y_tempGen, ncomp = 10) #Initially set a higher number for the number of components since we will be testing this
+plotIndiv(tempGen.known.plsda) #Preliminary PLS-DA
+```
+
+```{r}
+perf.tempGen.known.plsda <- perf(tempGen.known.plsda, validation = "Mfold", folds = 4,  
+                                      progressBar = TRUE, nrepeat = 50) 
+
+plot(perf.tempGen.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. Lowest error rates are for 4 components
+perf.tempGen.known.plsda$choice.ncomp #Confirm information from plot.
+```
+
+#### Run PLS-DA
+
+```{r}
+tempGen.known.plsda.tuned <- plsda(X_tempGen, Y_tempGen, ncomp = 4) #Run PLS-DA with the appropriate number of components to include based on tuning above.
+plotIndiv(tempGen.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA.
+plotIndiv(tempGen.known.plsda.tuned, comp = c(1,3)) #Preliminary PLS-DA.
+plotIndiv(tempGen.known.plsda.tuned, comp = c(1,4)) #Preliminary PLS-DA.
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-PLSDA-tempGenotype-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(tempGen.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue2", "steelblue1", plotColors[3],
+                  "salmon2", "firebrick1", plotColors[1]),
+          pch = as.factor(c(rep(1, 2, 0), times = 2)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE,
+          title = "PLS-DA by Temperature and Genotype", X.label = "Component 1: 15% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 7% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2") #Visualize first two components of PLS-DA with no individual sample names. Alter point size, color, shape, and line width. Include 95% confidence ellipses and use star format to visualize sample distance from centroids. Do not include a legend. Specify the plot title and text label sizes. Use ggplot style.
+#dev.off()
+```
+#### Validate PLS-DA
+
+```{r}
+tune.splsda.tempGen.known <- tune.splsda(X_tempGen, Y_tempGen, ncomp = 4, 
+                                 validation = 'Mfold', folds = 4,
+                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+plot(tune.splsda.tempGen.known) #Plot results
+```
+
+```{r}
+error <- tune.splsda.tempGen.known$error.rate #Save error rate
+ncomp <- tune.splsda.tempGen.known$choice.ncomp$ncomp #Optimal number of components based on t-tests on the error rate
+ncomp #2 component is the optimal number according to this analysis. However, looking at the error rate plot, error rate is much lower when using 4 components.
+
+select.keepX <- tune.splsda.tempGen.known$choice.keepX #Optimal number of variables to select (e.g., number of metabolite features)
+select.keepX #sPLSDA should be run with this many features per component.
+```
+
+```{r}
+
+```
+
+
+```{r}
+final.splsda.tempGen.known <- splsda(X_tempGen, Y_tempGen, ncomp = 4, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
+plotIndiv(final.splsda.tempGen.known, comp = c(1,2))
+plotIndiv(final.splsda.tempGen.known, comp = c(1,3))
+plotIndiv(final.splsda.tempGen.known, comp = c(1,4))
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-sPLSDA-tempGen-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(final.splsda.tempGen.known, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue2", "steelblue1", plotColors[3],
+                  "salmon2", "firebrick1", plotColors[1]),
+          pch = as.factor(rep(c(1, 2, 0), times = 2)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          legend = TRUE,
+          title = "sPLS-DA by Temperature and Genotype", X.label = "Component 1: 12% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 9% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2")
+#dev.off()
+```
+
+## ASCA
 
 # Impact of genotype within each temperature
 
