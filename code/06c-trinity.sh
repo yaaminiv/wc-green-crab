@@ -20,7 +20,7 @@
 set -e
 
 #Program paths
-TRINITY=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/Trinity
+TRINITY=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/
 CUTADAPT=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/cutadapt
 FASTQC=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/fastqc
 python=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python
