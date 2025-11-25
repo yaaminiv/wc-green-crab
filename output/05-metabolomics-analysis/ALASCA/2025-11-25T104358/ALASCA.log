@@ -1,0 +1,10 @@
+INFO  [2025-11-25 10:43:58] Initializing ALASCA (v1.0.17, 2024-09-13)
+WARN  [2025-11-25 10:43:58] Guessing effects: `day+day:treatment+treatment`
+INFO  [2025-11-25 10:43:58] Will use linear mixed models!
+INFO  [2025-11-25 10:43:58] Will use Rfast!
+WARN  [2025-11-25 10:43:58] Converting IDs to integer values
+WARN  [2025-11-25 10:43:58] The `day` column is used for stratification
+INFO  [2025-11-25 10:43:58] Scaling data with sdall ...
+INFO  [2025-11-25 10:43:58] Calculating LMM coefficients
+INFO  [2025-11-25 10:43:58] Reducing the number of dimensions with PCA
+INFO  [2025-11-25 10:43:58] Keeping 1 components from initial PCA, explaining 100 % of variation. The limit can be changed with `reduce_dimensions.limit`

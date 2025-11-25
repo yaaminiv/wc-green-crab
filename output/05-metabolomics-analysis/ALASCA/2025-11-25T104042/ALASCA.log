@@ -1,0 +1,4 @@
+INFO  [2025-11-25 10:40:42] Initializing ALASCA (v1.0.17, 2024-09-13)
+WARN  [2025-11-25 10:40:42] Guessing effects: `day+day:treatment+treatment`
+INFO  [2025-11-25 10:40:42] Will use linear mixed models!
+ERROR [2025-11-25 10:40:42] Cannot use Rfast in this case. Use lme4 with `use_Rfast = FALSE` instead!

@@ -528,30 +528,163 @@ rbind(broom::tidy(anova(disp.TT.id.temp)) %>%
 I will use an ASCA to decompose the trends I observed in the PERMANOVA into groups of metabolites with similar abundance patterns. In conjunction with a PLS-DA, I can use the information to determine the best pairwise comparisons to use to pull out metabolites of interest.
 
 ```{bash}
-pwd
-```
-
-```{bash}
 mkdir ASCA
 mkdir ASCA/figures
 ```
 
-## Format data
+### Format data
 
 ```{r}
-metabolomics.ASCA <- rowwiseMetabData %>%
-  log(.) %>%
-  rownames_to_column(., var = "crab.ID") %>%
+tempTime.ASCA <- transMetabData[c(1:198)] %>%
+  filter(., day != "0") %>%
+  dplyr::select(-c(treatment:treatment_het)) %>%
   pivot_longer(., cols = !crab.ID, names_to = "variable", values_to = "value") %>%
-  left_join(metabolomicsMetadata, ., by = "crab.ID") %>%
-  dplyr::select(-treatment_day) %>%
-  mutate(., day = str_trim(day, side = "both")) %>%
-  mutate(day = case_when(day == "3" ~ "04",
-                         day != "3" ~ day)) %>%
-  mutate(day = as.factor(day)) #Log-transform data. Pivot data longer for ASCA. Compound information should be "variable." Add metadata to dataframe with all compound information. Update metadata for day and reconvert day to a factor
-head(metabolomics.ASCA) #Confirm changes
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  left_join(., metabolomicsMetadata, by = "crab.ID") %>%
+  left_join(., genotypeData, by = "crab.ID") %>%
+  dplyr::rename(treatment = treatment.x,
+                original.treatment = treatment.y) %>%
+  dplyr::select(., c(crab.ID:day, final.genotype)) %>%
+  mutate(., treatment = as.factor(treatment),
+         day = as.factor(day))
+#Take known metabolomics data and filter day 0 information. Rmeove extraneous columns. Pivot data longer for ASCA. Compound information should be "variable." Add metadata to dataframe with all compound information and retain only useful columns (treatment, day, and final genotype). Convert variables to factors.
+head(tempTime.ASCA) #Confirm changes
 ```
 
+### Run model
+
+```{r}
+tempTime.ASCAmodel <- ALASCA(df = tempTime.ASCA,
+                             formula = value ~ day*treatment + (1|crab.ID),
+                             n_validation_runs = 100,
+                             validate = TRUE,
+                             reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab and genotype as random effects
+```
+
+### Interpret ASCA
+
+```{r}
+# pdf("ASCA/figures/tempTime-scree-plot.pdf")
+plot(tempTime.ASCAmodel, component = 1:10, type = "scree") #Scree plot of variance explained by each PC. There were 7 components identified, with the eigth-tenth components explaining very little variance. There's a pretty steep drop-off between components 2 and 3.
+# dev.off()
+```
+
+
+### Component 1
+
+This component shows metabolites with consistently higher abundance at 25ºC that reduce in abundance over time.
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 1, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-effect-plot-PC1.pdf", height = 11, width = 8.5)
+```
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 1, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-prediction-plot-PC1.pdf", height = 11, width = 8.5)
+```
+
+```{r}
+tempTime.loadingsPC1 <- get_loadings(tempTime.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+head(tempTime.loadingsPC1)
+```
+
+```{r}
+tempTime.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = "covars") %>%
+  write.csv("ASCA/tempTime-loadings-PC1.csv", quote = FALSE, row.names = FALSE) #Save loading information
+```
+
+### Component 2
+
+This component shows metabolites with consistently higher abundance at 25ºC that increase in abundance over time.
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 2, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-effect-plot-PC2.pdf", height = 11, width = 8.5)
+```
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 2, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-prediction-plot-PC2.pdf", height = 11, width = 8.5)
+```
+
+```{r}
+tempTime.loadingsPC2 <- get_loadings(tempTime.ASCAmodel, component = 2, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+head(tempTime.loadingsPC2)
+```
+
+```{r}
+tempTime.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = "covars") %>%
+  write.csv("ASCA/tempTime-loadings-PC2.csv", quote = FALSE, row.names = FALSE) #Save loading information
+```
+
+### Component 3
+
+This component shows metabolites that have higher abundance at one temperature earlier on in the experiment, but then have higher abundance at the other temperature later in the experiment.
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 3, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-effect-plot-PC3.pdf", height = 11, width = 8.5)
+```
+
+```{r}
+plot(tempTime.ASCAmodel, effect = 1, component = 3, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTime-prediction-plot-PC3.pdf", height = 11, width = 8.5)
+```
+
+Component 3 explains < 10% of the variance in this dataset. I will use a cutoff of 10% to select components for downstream analysis. This also matches up with the scree plot, where after 2 components adding an extra component doesn't substantially increase the total amount of variation explained.
 
 ## PLS-DA
 
@@ -609,7 +742,7 @@ plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,3)) #Preliminary PLS-DA
 #pdf("PLSDA/figures/known-metabolites-PLSDA-treatmentDay-comp12.pdf", height = 8.5, width = 11)
 plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
           col = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
-                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                  "salmon4", "salmon2", "firebrick1", plotColors[1]),
           pch = as.factor(rep(c(1, 2, 0, 4), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
           legend = FALSE,
@@ -622,7 +755,7 @@ plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
 #pdf("PLSDA/figures/known-metabolites-PLSDA-treatmentDay-comp13.pdf", height = 8.5, width = 11)
 plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,3), ind.names = FALSE,
           col = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
-                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
+                  "salmon4", "salmon2", "firebrick1", plotColors[1]),
           pch = as.factor(rep(c(1, 2, 0, 4), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
           legend = FALSE,
@@ -647,8 +780,8 @@ list.keepX <- c(5:10,  seq(20, 300, 10)) #list.keepX # to output the grid of val
 
 ```{r}
 tune.splsda.treatmentDay.known <- tune.splsda(X_tempTime, Y_tempTime, ncomp = 3, 
-                                 validation = 'Mfold', folds = 5,
-                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+                                              validation = 'Mfold', folds = 5,
+                                              measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.treatmentDay.known) #Plot results
 ```
 
@@ -1544,7 +1677,7 @@ plotIndiv(tempGen.known.plsda) #Preliminary PLS-DA
 
 ```{r}
 perf.tempGen.known.plsda <- perf(tempGen.known.plsda, validation = "Mfold", folds = 4,  
-                                      progressBar = TRUE, nrepeat = 50) 
+                                 progressBar = TRUE, nrepeat = 50) 
 
 plot(perf.tempGen.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. Lowest error rates are for 4 components
 perf.tempGen.known.plsda$choice.ncomp #Confirm information from plot.
@@ -1575,8 +1708,8 @@ plotIndiv(tempGen.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
 
 ```{r}
 tune.splsda.tempGen.known <- tune.splsda(X_tempGen, Y_tempGen, ncomp = 4, 
-                                 validation = 'Mfold', folds = 4,
-                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+                                         validation = 'Mfold', folds = 4,
+                                         measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.tempGen.known) #Plot results
 ```
 
@@ -1591,8 +1724,12 @@ select.keepX #sPLSDA should be run with this many features per component.
 
 
 ```{r}
-final.splsda.tempGen.known <- splsda(X_tempGen, Y_tempGen, ncomp = 2, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
+final.splsda.tempGen.known <- splsda(X_tempGen, Y_tempGen, ncomp = 4, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
 plotIndiv(final.splsda.tempGen.known, comp = c(1,2))
+plotIndiv(final.splsda.tempGen.known, comp = c(1,3))
+plotIndiv(final.splsda.tempGen.known, comp = c(1,4))
+
+#The % variance explained by PCs 3 and 4 is higher than PC 2. This could be because the sPLS identified 2 as the lowest error rate, but I still made my sPLSDA with 4 components. I'll only consider the first two components.
 ```
 
 ```{r}
@@ -2089,7 +2226,7 @@ plotIndiv(presenceC5.known.plsda) #Preliminary PLS-DA
 
 ```{r}
 perf.presenceC5.known.plsda <- perf(presenceC5.known.plsda, validation = "Mfold", folds = 4,  
-                                      progressBar = TRUE, nrepeat = 50) 
+                                    progressBar = TRUE, nrepeat = 50) 
 
 plot(perf.presenceC5.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 2 components. All distances offers similarly low overall and balanced error rates (BER) when using 2 components
 perf.presenceC5.known.plsda$choice.ncomp #Confirm information from plot.
@@ -2118,8 +2255,8 @@ plotIndiv(presenceC5.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
 
 ```{r}
 tune.splsda.5presenceC.known <- tune.splsda(X_5Gen, Y_5Gen, ncomp = 2, 
-                                 validation = 'Mfold', folds = 4,
-                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+                                            validation = 'Mfold', folds = 4,
+                                            measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.5presenceC.known) #Plot results
 ```
 
@@ -2495,7 +2632,7 @@ plotIndiv(presenceT25.known.plsda) #Preliminary PLS-DA
 
 ```{r}
 perf.presenceT25.known.plsda <- perf(presenceT25.known.plsda, validation = "Mfold", folds = 4,  
-                                      progressBar = TRUE, nrepeat = 50) 
+                                     progressBar = TRUE, nrepeat = 50) 
 
 plot(perf.presenceT25.known.plsda, sd = TRUE) #The lowest error rate is actually achieved at 1 component, but I need 2 components to do the analysis.
 perf.presenceT25.known.plsda$choice.ncomp #Confirm information from plot.
@@ -2524,8 +2661,8 @@ plotIndiv(presenceT25.known.plsda.tuned, comp = c(1,2), ind.names = FALSE,
 
 ```{r}
 tune.splsda.25presenceT.known <- tune.splsda(X_25Gen, Y_25Gen, ncomp = 2, 
-                                 validation = 'Mfold', folds = 4,
-                                 measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+                                             validation = 'Mfold', folds = 4,
+                                             measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.25presenceT.known) #Plot results
 ```
 
