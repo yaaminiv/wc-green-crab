@@ -7,7 +7,7 @@
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
 #SBATCH --mem=100gb                                                 								          # Job memory request
-#SBATCH --time=24:00:00            								   															     	    	# Time limit hrs:min:sec
+#SBATCH --time=240:00:00            								   															     	    	# Time limit hrs:min:sec
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
 
@@ -19,14 +19,18 @@
 #Exit script if any command fails
 set -e
 
+#Load module and environment
+module load mambaforge
+conda activate trinity_env
+
 #Program paths
-TRINITY=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/
-CUTADAPT=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/cutadapt
-FASTQC=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/fastqc
-python=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/python
-JELLYFISH=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/jellyfish
-SALMON=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/salmon
-SAMTOOLS=/vortexfs1/home/yaamini.venkataraman/miniconda3/bin/samtools
+TRINITY=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/
+CUTADAPT=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/cutadapt
+FASTQC=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/fastqc
+python=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/python
+JELLYFISH=//vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/jellyfish
+SALMON=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/salmon
+SAMTOOLS=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/samtools
 
 #Directory and file paths
 DATA_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/trim-illumina-polyA
