@@ -7,7 +7,7 @@
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
 #SBATCH --mem=100gb                                                 								          # Job memory request
-#SBATCH --time=240:00:00            								   															     	    	# Time limit hrs:min:sec
+#SBATCH --qos=unlim            								   															     	    	# Unlimited time
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
 
@@ -19,8 +19,9 @@
 #Exit script if any command fails
 set -e
 
-#Load module and environment
+#Load module, activate the shell hook, and load environment
 module load mambaforge
+eval "$(conda shell.bash hook)"
 conda activate trinity_env
 
 #Program paths
