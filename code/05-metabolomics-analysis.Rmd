@@ -1293,6 +1293,12 @@ t.test_5v25_early
 
 ```{r}
 t.test_5v25_early %>%
+  filter(., p.adj < 0.05) %>%
+  write.csv(., "PLSDA/known-metabolites-significantVIP-5v25-early.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+```
+
+```{r}
+t.test_5v25_early %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>%
   nrow(.) #69 significantly different metabolites
@@ -1327,8 +1333,91 @@ t.test_5v25_early %>%
 ggsave("PLSDA/figures/significant-VIP-5v25-early.pdf", height = 8.5, width = 11)
 ```
 
-
 #### Late 5ºC vs. Late 25ºC
+
+```{r}
+list <- c("05C_late", "25C_late") #Assign treatments to examine
+```
+
+```{r}
+X <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_timepoint %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts
+Y <- as.factor(X$treatment_timepoint) #Treatments for Y
+X <- X[, 14:198] #Retain data only
+```
+
+```{r}
+known.plsda_5v25_late <- plsda(X, Y, ncomp = 3) #Run PLSDA for desired contrast
+VIP_5v25_late <- as.data.frame(PLSDA.VIP(known.plsda_5v25_late)[["tab"]]) %>%
+  rownames_to_column(., var = "metabolite") %>%
+  filter(., VIP >= 1) #Extract VIP list and filter for VIP > 1
+VIP_5v25_late
+```
+
+```{r}
+clean_5v25_late <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_timepoint %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts.
+VIP_select_5v25_late <- cbind(clean_5v25_late[, c(1:2, 199:200)], 
+                              log(clean_5v25_late[, names(clean_5v25_late) %in% VIP_5v25_late$metabolite])) %>%
+  pivot_longer(., cols = 5:65, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
+VIP_select_5v25_late #Confirm changes
+```
+
+```{r}
+t.test_5v25_late <-do(VIP_select_5v25_late, tidy(t.test(.$log_norm_counts ~ .$treatment_timepoint,
+                                                        alternative = "two.sided",
+                                                        mu = 0,
+                                                        var.equal = FALSE,
+                                                        conf.level = 0.95
+))) #Looped t-test for all metabolites with VIP > 1
+t.test_5v25_late$p.adj <- p.adjust(t.test_5v25_late$p.value, method = c("fdr"), n = length(VIP_5v25_late$metabolite)) #Adjust p value for the number of comparisons
+t.test_5v25_late
+```
+
+```{r}
+t.test_5v25_early %>%
+  filter(., p.adj < 0.05) %>%
+  write.csv(., "PLSDA/known-metabolites-significantVIP-5v25-early.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+```
+
+```{r}
+t.test_5v25_late %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  nrow(.) #59 significantly different metabolites
+t.test_5v25_late %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
+  nrow(.) #13 metabolites higher in 5ºC
+t.test_5v25_late %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
+  nrow(.) #46 metabolites higher in 25ºC
+```
+
+```{r}
+t.test_5v25_late %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., VIP_5v25_late, by = "metabolite") %>%
+  mutate(., direction = case_when(estimate > 0 ~ "5",
+                                  estimate < 0 ~ "25")) %>%
+  mutate(., score = case_when(estimate > 0 ~ VIP,
+                              estimate < 0 ~ -VIP)) %>%
+  arrange(score) %>%
+  ggplot(aes(x = score, y = reorder(metabolite, score, sum))) +
+  geom_bar(aes(fill = direction), stat = 'identity') +
+  xlab("VIP Score") + ylab("Metabolite") +
+  scale_fill_manual(values = c(plotColors[3], plotColors[1]), 
+                    name = "Temperature (ºC)",
+                    breaks = c("5", "25"),
+                    labels = c("5", "25")) +
+  theme_classic(base_size = 15) + theme() #Take t-test results and filter out significant metabolites. Create two new columns using estimate values: one for the direction of increase, and another for positive or negative VIP. Arrange by metabolite name and reorder by cumulative VIP score. Plot bars and change x and y axis labels. Add scale information.
+ggsave("PLSDA/figures/significant-VIP-5v25-late.pdf", height = 8.5, width = 11)
+```
 
 #### Early 5ºC vs. Late 5ºC
 
