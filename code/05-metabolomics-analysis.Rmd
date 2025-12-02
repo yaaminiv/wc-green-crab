@@ -1159,6 +1159,54 @@ plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,3), ind.names = FALSE
 #dev.off()
 ```
 
+### Validate PLS-DA
+
+```{r}
+tune.splsda.treatmentTimepoint.known <- tune.splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 3, 
+                                              validation = 'Mfold', folds = 5,
+                                              measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+plot(tune.splsda.treatmentTimepoint.known) #Plot results
+```
+
+```{r}
+error <- tune.splsda.treatmentTimepoint.known$error.rate #Save error rate
+ncomp <- tune.splsda.treatmentTimepoint.known$choice.ncomp$ncomp #Optimal number of components based on t-tests on the error rate
+ncomp #3 components! That's in-line with the perf analysis and what I ended up using.
+
+select.keepX <- tune.splsda.treatmentTimepoint.known$choice.keepX #Optimal number of variables to select (e.g., number of metabolite features)
+select.keepX #sPLSDA should be run with this many features per component.
+```
+
+```{r}
+final.splsda.treatmentTimepoint.known <- splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = ncomp, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
+plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,2)) #PC1: 18, PC2: 12
+plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,3)) #PC3: 7%
+```
+
+```{r}
+#pdf("PLSDA/figures/known-metabolites-sPLSDA-treatmentTimepoint-comp12.pdf", height = 8.5, width = 11)
+plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,2), ind.names = FALSE,
+          col = c("lightblue2", plotColors[3],
+                  "salmon2", plotColors[1]),
+          pch = as.factor(rep(c(1, 2), times = 2)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2")
+#dev.off()
+```
+
+```{r}
+# pdf("PLSDA/figures/known-metabolites-sPLSDA-treatmentTimepoint-comp13.pdf", height = 8.5, width = 11)
+plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,3), ind.names = FALSE,
+          col = c("lightblue2", plotColors[3],
+                  "salmon2", plotColors[1]),
+          pch = as.factor(rep(c(1, 2), times = 2)), cex = 3, point.lwd = 0.7,
+          ellipse = TRUE, star = TRUE, centroid = FALSE, 
+          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 7% Explained Variance", size.ylabel = 15, size.axis = 13,
+          style = "ggplot2")
+# dev.off()
+```
+
 # Impact of temperature and genotype on metabolomes
 
 The third question I have is understanding if different supergene genotypes employed different metabolomic pathways to withstand chronic temperature stress. I will look at data from day 0 and day 42 since I have balanced genotype information for those timepoints. Additionally, day 0 (15ºC) will highlight if there were any differences in genotype-specific metabolomes prior to heat stress.
