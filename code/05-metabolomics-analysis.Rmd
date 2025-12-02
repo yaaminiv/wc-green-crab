@@ -979,7 +979,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 1, type = 'effect',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-effect-plot-PC1.pdf", height = 8.5, width = 11)
 ```
@@ -992,7 +992,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 1, type = 'prediction',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC1.pdf", height = 8.5, width = 11)
 ```
@@ -1020,7 +1020,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 2, type = 'effect',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-effect-plot-PC2.pdf", height = 8.5, width = 11)
 ```
@@ -1033,7 +1033,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 2, type = 'prediction',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC2.pdf", height = 8.5, width = 11)
 ```
@@ -1061,7 +1061,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 3, type = 'effect',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-effect-plot-PC3.pdf", height = 8.5, width = 11)
 ```
@@ -1074,7 +1074,7 @@ plot(tempTimepoint.ASCAmodel, effect = 1, component = 3, type = 'prediction',
      flip_axis = TRUE,
      palette = c(plotColors[3], plotColors[1]),
      my_theme = theme_classic(),
-     x_label = "Day",
+     x_label = "Timepoint",
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC3.pdf", height = 8.5, width = 11)
 ```
