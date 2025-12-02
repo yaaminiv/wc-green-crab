@@ -571,8 +571,7 @@ plot(tempTime.ASCAmodel, component = 1:10, type = "scree") #Scree plot of varian
 # dev.off()
 ```
 
-
-### Component 1
+#### Component 1
 
 This component shows metabolites with consistently higher abundance at 25ºC that reduce in abundance over time.
 
@@ -613,7 +612,7 @@ tempTime.loadingsPC1[[1]] %>%
   write.csv("ASCA/tempTime-loadings-PC1.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
 
-### Component 2
+#### Component 2
 
 This component shows metabolites with consistently higher abundance at 25ºC that increase in abundance over time.
 
@@ -654,7 +653,7 @@ tempTime.loadingsPC2[[1]] %>%
   write.csv("ASCA/tempTime-loadings-PC2.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
 
-### Component 3
+#### Component 3
 
 This component shows metabolites that have higher abundance at one temperature earlier on in the experiment, but then have higher abundance at the other temperature later in the experiment.
 
@@ -927,6 +926,169 @@ rbind(broom::tidy(anova(disp.TTP.id.temp)) %>%
 ```
 
 ## ASCA
+
+### Format data
+
+```{r}
+tempTimepoint.ASCA <- transMetabData_knownTimepoint %>%
+  dplyr::select(-c(treatment:treatment_het, timepoint:treatment_timepoint)) %>%
+  pivot_longer(., cols = !crab.ID, names_to = "variable", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  left_join(., metabolomicsMetadata, by = "crab.ID") %>%
+  left_join(., genotypeData, by = "crab.ID") %>%
+  dplyr::rename(treatment = treatment.x,
+                original.treatment = treatment.y) %>%
+  mutate(., timepoint = case_when(day == "01" | day == "07" ~ "early",
+                                  day == "26" | day == "42" ~ "late")) %>%
+  dplyr::select(., c(crab.ID:treatment, timepoint)) %>%
+  mutate(., treatment = as.factor(treatment),
+         timepoint = as.factor(timepoint))
+#Take known metabolomics data and filter day 0 information. Rmeove extraneous columns. Pivot data longer for ASCA. Compound information should be "variable." Add metadata to dataframe with all compound information and retain only useful columns (treatment, day, and final genotype). Convert variables to factors.
+head(tempTimepoint.ASCA) #Confirm changes
+```
+
+### Run model
+
+```{r}
+tempTimepoint.ASCAmodel <- ALASCA(df = tempTimepoint.ASCA,
+                             formula = value ~ timepoint*treatment + (1|crab.ID),
+                             n_validation_runs = 100,
+                             validate = TRUE,
+                             reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab and genotype as random effects
+```
+
+### Interpret ASCA
+
+```{r}
+# pdf("ASCA/figures/tempTimepoint-scree-plot.pdf")
+plot(tempTimepoint.ASCAmodel, component = 1:10, type = "scree") #Scree plot of variance explained by each PC. There's a pretty steep drop-off between components 2 and 3. Component 3 may or may not explain more than 50% of the variance.
+# dev.off()
+```
+
+#### Component 1
+
+This component shows metabolites with consistently higher abundance at 25ºC that decrease in abundance over time.
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 1, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-effect-plot-PC1.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 1, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC1.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+tempTimepoint.loadingsPC1 <- get_loadings(tempTimepoint.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+head(tempTimepoint.loadingsPC1)
+```
+
+```{r}
+tempTimepoint.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = "covars") %>%
+  write.csv("ASCA/tempTimepoint-loadings-PC1.csv", quote = FALSE, row.names = FALSE) #Save loading information
+```
+
+#### Component 2
+
+This component shows metabolites with consistently higher abundance at 25ºC that increase in abundance over time.
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 2, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-effect-plot-PC2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 2, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC2.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+tempTimepoint.loadingsPC2 <- get_loadings(tempTimepoint.ASCAmodel, component = 2, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+head(tempTimepoint.loadingsPC2)
+```
+
+```{r}
+tempTimepoint.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = "covars") %>%
+  write.csv("ASCA/tempTimepoint-loadings-PC2.csv", quote = FALSE, row.names = FALSE) #Save loading information
+```
+
+#### Component 3
+
+This component shows metabolites that decrease in abundance over time at 25ºC but increase in abundance over time at 5ºC
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 3, type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-effect-plot-PC3.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = 3, type = 'prediction', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Day",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC3.pdf", height = 8.5, width = 11)
+```
+
+```{r}
+tempTimepoint.loadingsPC3 <- get_loadings(tempTimepoint.ASCAmodel, component = 3, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+head(tempTimepoint.loadingsPC3)
+```
+
+```{r}
+tempTimepoint.loadingsPC3[[1]] %>%
+  dplyr::rename(metabolite = "covars") %>%
+  write.csv("ASCA/tempTimepoint-loadings-PC3.csv", quote = FALSE, row.names = FALSE) #Save loading information
+```
 
 ## PLS-DA
 
@@ -1798,7 +1960,7 @@ plot(tempGen.ASCAmodel, component = 1:6, type = "scree") #Scree plot of variance
 # dev.off()
 ```
 
-### Component 1
+#### Component 1
 
 This component shows metabolites with consistently higher abundance at 25ºC with slightly higher abundance in TT crabs.
 
@@ -1839,7 +2001,7 @@ tempGen.loadingsPC1[[1]] %>%
   write.csv("ASCA/tempGen-loadings-PC1.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
 
-### Component 2
+#### Component 2
 
 This component shows metabolites with higher abundance in CC crabs at 5ºC and lower abundance in CC crabs at 25ºC.
 
@@ -1880,7 +2042,7 @@ tempGen.loadingsPC2[[1]] %>%
   write.csv("ASCA/tempGen-loadings-PC2.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
 
-### Component 3
+#### Component 3
 
 This component shows metabolites with higher abundance in TT crabs at 5ºC and higher abundance in CT crabs at 25ºC.
 
