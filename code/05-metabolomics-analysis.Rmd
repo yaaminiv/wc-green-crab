@@ -824,6 +824,67 @@ plotIndiv(final.splsda.treatmentDay.known, comp = c(1,3), ind.names = FALSE,
 #dev.off()
 ```
 
+# Early vs. late comparisons
+
+Based on the PCA, ASCA, and PLS-DAs above, it seems like there is a clear separation between early (days 1 and 7) and late (days 26 and 42) timepoints. I'm going to repeat my analyses using these larger time classifications for the known metabolites.
+
+## Format data
+
+```{r}
+transMetabData_knownTimepoint <- transMetabData[c(1:198)] %>%
+  filter(., day != "0") %>%
+  mutate(., timepoint = case_when(day == "01" | day == "07" ~ "early",
+                                  day == "26" | day == "42" ~ "late")) %>%
+  mutate(., treatment_timepoint = paste(treatment, timepoint, sep = "_")) #Take known metabolites and remove day 0 samples. Create columns for timepoint (early vs late) and a column with combined treatment and timepoint information
+head(transMetabData_knownTimepoint) #Confirm dataframe creation. Columns 14:198 would still be the metabolite data.
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  group_by(., treatment, timepoint, final.genotype) %>%
+  summarize(count = n())
+```
+
+I don't have enough crabs between all the genotypes to look at the impact of genotype along with temperature and timepoint, so I'll stick to analyzing genotype and temperature separately.
+
+## PCA
+
+```{r}
+scaled.pca.TTP.id <- prcomp((transMetabData_knownTimepoint)[c(14:198)], scale = TRUE, center = TRUE) #Use prcomp to perform a centered and scaled PCA calculation
+summary(scaled.pca.TTP.id) #Standard deviations for each PC
+```
+
+```{r}
+pcaPlot34 <- autoplot(scaled.pca.TTP.id, data = (transMetabData_knownTimepoint), x = 1, y = 2,
+                     size = 4, alpha = 0.8, colour = "treatment_timepoint", shape = "treatment_timepoint", 
+                     frame = TRUE, frame.colour = "treatment_timepoint", loadings = FALSE) +
+  scale_color_manual(values = c("lightblue2", plotColors[3], 
+                                "salmon2", plotColors[1]),
+                     labels = c("Early 5ºC", "Late 5ºC",
+                                "Early 25ºC", "Late 25ºC"),
+                     name = "Treatment") +
+  scale_fill_manual(values = c("lightblue2", plotColors[3], 
+                                "salmon2", plotColors[1]),
+                     labels = c("Early 5ºC", "Late 5ºC",
+                                "Early 25ºC", "Late 25ºC"),
+                    name = "Treatment") +
+  scale_shape_manual(values = c(1, 2, 1, 2),
+                     labels = c("Early 5ºC", "Late 5ºC",
+                                "Early 25ºC", "Late 25ºC"),
+                     name = "Treatment") +
+  theme_classic(base_size = 15) + theme(legend.position = "right",
+                                        plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
+pcaPlot34
+ggsave("PCA/figures/known-metabolites-PCA-temperatureTimepoint.pdf", height = 8.5, width = 11)
+```
+
+
+## Conduct PERMANOVA
+
+## ASCA
+
+## PLS-DA
+
 # Impact of temperature and genotype on metabolomes
 
 The third question I have is understanding if different supergene genotypes employed different metabolomic pathways to withstand chronic temperature stress. I will look at data from day 0 and day 42 since I have balanced genotype information for those timepoints. Additionally, day 0 (15ºC) will highlight if there were any differences in genotype-specific metabolomes prior to heat stress.
