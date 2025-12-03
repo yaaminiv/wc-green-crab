@@ -1275,7 +1275,14 @@ t.test_5v25_early %>%
 ```{r}
 t.test_5v25_early %>%
   filter(., p.adj < 0.05) %>%
-  write.csv(., "PLSDA/known-metabolites-significantVIP-5v25-early.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "05C_early",
+                                          estimate1 < estimate2 ~ "25C_early")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-early_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
 ```
 
 ```{r}
@@ -1346,7 +1353,14 @@ t.test_5v25_late
 ```{r}
 t.test_5v25_late %>%
   filter(., p.adj < 0.05) %>%
-  write.csv(., "PLSDA/known-metabolites-significantVIP-5v25-late.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "05C_late",
+                                          estimate1 < estimate2 ~ "25C_late")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-late_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
 ```
 
 ```{r}
@@ -1432,7 +1446,14 @@ t.test_5_earlyvlate
 ```{r}
 t.test_5_earlyvlate %>%
   filter(., p.adj < 0.05) %>%
-  write.csv(., "PLSDA/known-metabolites-significantVIP-5-earlyvlate.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "05C_early",
+                                          estimate1 < estimate2 ~ "05C_late")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5-earlyvlate_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
 ```
 
 ```{r}
@@ -1518,7 +1539,14 @@ t.test_25_earlyvlate
 ```{r}
 t.test_25_earlyvlate %>%
   filter(., p.adj < 0.05) %>%
-  write.csv(., "PLSDA/known-metabolites-significantVIP-25-earlyvlate.csv", row.names = FALSE, quote = FALSE) #Save t-test output for significant VIP
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_early",
+                                          estimate1 < estimate2 ~ "25C_late")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/25-earlyvlate_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
 ```
 
 ```{r}

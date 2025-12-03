@@ -1,0 +1,48 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+UDP-N-acetylglucosamine	445675	C00043	25C_early
+cyanoalanine	18647689		25C_early
+cytidine-5-monophosphate	6131	C00055	25C_early
+cytosine	597	C00380	25C_early
+erythronic acid lactone	5325915	C02341	25C_early
+ethanol phosphate 	74190		25C_early
+fructose	439709	C02336	25C_early
+fructose-1-phosphate	439394	C01094	25C_early
+fructose-6-phosphate	440641	C05345	25C_early
+fumaric acid	444972	C00122	25C_early
+galactose-6-phosphate	439404	C01113	25C_early
+gluconic acid	6857417	C00800	25C_early
+glucose-1-phosphate	65533	C00103	25C_early
+glucose-6-phosphate	5958	C00092	25C_early
+glutamic acid	33032	C00025	25C_early
+glycerol	753	C00116	25C_early
+glycerol-alpha-phosphate	754	C03189	25C_early
+histidine	6274	C00135	25C_early
+hypotaurine	107812	C00519	25C_early
+hypoxanthine	790	C00262	25C_early
+inosine	6021	C00294	25C_early
+isomaltose	439193	C00252	25C_early
+lactose 	440995	C00243	25C_late
+levoglucosan	2724705	C22350	25C_early
+lysine	5962	C00047	25C_early
+maleimide	10935	C07272	25C_early
+maltose	439186	C00208	25C_early
+melezitose	92817	C08243	25C_early
+ononitol	230881		25C_late
+ornithine	6262	C00077	25C_early
+palmitoleic acid	445638	C08362	25C_early
+parabanic acid 	67126	C00802	25C_early
+phenol 	NA		25C_early
+phenylalanine	6140	C00079	25C_late
+phenylethylamine	1001	C05332	25C_early
+phosphate	1004	C00009	25C_early
+pinitol	164619		25C_late
+propylamine	7852		25C_early
+pyrophosphate	1023	C00013	25C_early
+raffinose	439242	C00492	25C_early
+ribitol	6912	C00474	25C_early
+saccharic acid	33037	C00818	25C_early
+taurine	1123	C00245	25C_early
+threonic acid	5460407	C01620	25C_early
+tocopherol gamma-	92729	C02483	25C_early
+uric acid	1175	C00366	25C_early
+xanthine	1188	C00385	25C_early

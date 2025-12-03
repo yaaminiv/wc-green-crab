@@ -1,0 +1,60 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+1,5-anhydroglucitol	64960	C07326	25C_late
+1-monopalmitin	14900		25C_late
+2,3-dihydroxypyridine	28115		25C_late
+2,5-dihydroxypyrazine 	23368901		25C_late
+2-hydroxyglutaric acid	43	C02630	25C_late
+2-ketoisocaproic acid	70	C00233	25C_late
+2-picolinic acid	1018	C10164	25C_late
+3-Amino-2-piperidone 	5200225		05C_late
+4-hydroxymandelic acid	328	C11527	25C_late
+5-hydroxynorvaline 	95562		05C_late
+6-deoxygalactofuranose 	11953811	C02431	05C_late
+N-methyl-UMP	44602426		25C_late
+UDP-N-acetylglucosamine	445675	C00043	25C_late
+alanine	5950	C00041	05C_late
+aminomalonic acid	100714	C00872	05C_late
+butyrolactam 	12025		25C_late
+cadaverine	273		25C_late
+ciliatine	339	C03557	05C_late
+citrulline	9750	C00327	05C_late
+conduritol-beta-epoxide	9989541		25C_late
+creatinine	588	C00791	25C_late
+cytidine-5-monophosphate	6131	C00055	25C_late
+dehydroascorbic acid	440667	C05422	25C_late
+diphenoxyethane	7713		25C_late
+ethanolamine	700	C00189	05C_late
+gluconic acid lactone	7027	C00198	25C_late
+glucose	64689	C00221	25C_late
+glucose-1-phosphate	65533	C00103	25C_late
+glutathione	124886	C00051	25C_late
+glycerol-alpha-phosphate	754	C03189	05C_late
+glycine	750	C00037	05C_late
+homoserine	12647	C00263	25C_late
+inosine	6021	C00294	25C_late
+inositol-4-monophosphate	440043	C03546	25C_late
+ketoisoleucine 	47	C03465	25C_late
+lactic acid	612	C01432	25C_late
+lactose 	440995	C00243	25C_late
+levoglucosan	2724705	C22350	25C_late
+maltose	439186	C00208	25C_late
+maltotriose	439586	C01835	25C_late
+melezitose	92817	C08243	25C_late
+methionine	6137	C00073	05C_late
+methionine sulfone 	445282		25C_late
+methionine sulfoxide	158980	C02989	25C_late
+n-epsilon-trimethyllysine	440121		25C_late
+ononitol	230881		25C_late
+ornithine	6262	C00077	05C_late
+oxoproline	7405	C01879	25C_late
+panose 	94448		25C_late
+pentitol	827	D00061	25C_late
+phenol 	NA		25C_late
+phosphogluconic acid	91493	C00345	25C_late
+pinitol	164619		25C_late
+proline	145742	C00148	25C_late
+pyrophosphate	1023	C00013	25C_late
+sorbitol	5780	C00794	25C_late
+trehalose-6-phosphate	122336	C00689	25C_late
+uridine	6029	C00299	25C_late
+xanthine	1188	C00385	05C_late

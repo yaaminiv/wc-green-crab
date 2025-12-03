@@ -1,0 +1,45 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+2,5-dihydroxypyrazine 	23368901		05C_early
+2-hydroxyglutaric acid	43	C02630	05C_early
+3-phosphoglycerate	724	C00597	05C_early
+6-deoxygalactofuranose 	11953811	C02431	05C_early
+UDP-N-acetylglucosamine	445675	C00043	05C_early
+adenine	190	C00147	05C_early
+adenosine	60961	C00212	05C_early
+adenosine-5-monophosphate	6083	C00020	05C_early
+alpha-ketoglutarate	51	C00026	05C_early
+aminomalonic acid	100714	C00872	05C_late
+ciliatine	339	C03557	05C_early
+citrulline	9750	C00327	05C_early
+cysteine	5862	C00097	05C_early
+cytidine-5-monophosphate	6131	C00055	05C_early
+cytosine	597	C00380	05C_early
+dehydroascorbic acid	440667	C05422	05C_early
+ethanolamine	700	C00189	05C_late
+fructose	439709	C02336	05C_early
+fructose-1-phosphate	439394	C01094	05C_early
+fructose-6-phosphate	440641	C05345	05C_early
+galactose-6-phosphate	439404	C01113	05C_early
+glucose-1-phosphate	65533	C00103	05C_early
+glucose-6-phosphate	5958	C00092	05C_early
+glutathione	124886	C00051	05C_early
+glycerol	753	C00116	05C_early
+glycine	750	C00037	05C_late
+histidine	6274	C00135	05C_early
+hypotaurine	107812	C00519	05C_early
+ketoisoleucine 	47	C03465	05C_early
+lactose 	440995	C00243	05C_late
+levoglucosan	2724705	C22350	05C_early
+lysine	5962	C00047	05C_early
+methanolphosphate	13130		05C_late
+nicotinamide	936	C00153	05C_early
+ornithine	6262	C00077	05C_early
+oxamic acid	974	C01444	05C_late
+phosphate	1004	C00009	05C_early
+pyrophosphate	1023	C00013	05C_early
+saccharic acid	33037	C00818	05C_early
+salicylic acid	338	C00805	05C_early
+taurine	1123	C00245	05C_early
+terephthalic acid	22416364	C06337	05C_early
+trehalose-6-phosphate	122336	C00689	05C_early
+uric acid	1175	C00366	05C_early

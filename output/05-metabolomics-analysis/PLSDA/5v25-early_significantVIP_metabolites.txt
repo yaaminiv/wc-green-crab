@@ -1,0 +1,70 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+(5E)-isovitamin D3	5314031		25C_early
+1-monopalmitin	14900		25C_early
+1-monostearin	24699	D01947	25C_early
+2,3-dihydroxypyridine	28115		25C_early
+2,4-diaminobutyric acid	134490	C03283	25C_early
+2,5-dihydroxypyrazine 	23368901		25C_early
+2-hydroxyglutaric acid	43	C02630	25C_early
+N-acetylmannosamine	11096158		25C_early
+UDP-N-acetylglucosamine	445675	C00043	25C_early
+adenine	190	C00147	25C_early
+agmatine	199	C00179	25C_early
+alanine	5950	C00041	05C_early
+arachidonic acid	444899	C00219	25C_early
+behenic acid	8215	C08281	25C_early
+beta-alanine	239	C00099	25C_early
+butyrolactam 	12025		25C_early
+capric acid	2969	C01571	25C_early
+cholesterol	5997	C00187	25C_early
+citrulline	9750	C00327	25C_early
+cytidine-5-monophosphate	6131	C00055	25C_early
+cytosine	597	C00380	25C_early
+diphenoxyethane	7713		25C_early
+erythritol	222285	C00503	25C_early
+fumaric acid	444972	C00122	25C_early
+galactinol	11727586	C01235	25C_early
+gluconic acid lactone	7027	C00198	25C_early
+glutathione	124886	C00051	25C_early
+glycerol	753	C00116	25C_early
+glycerol-3-galactoside	16048618	C05401	25C_early
+glycerol-alpha-phosphate	754	C03189	25C_early
+glycolic acid	757	C00160	25C_early
+heptadecanoic acid	10465		25C_early
+hexadecylglycerol 	72733	C13859	25C_early
+homoserine	12647	C00263	25C_early
+hypoxanthine	790	C00262	25C_early
+inosine	6021	C00294	25C_early
+lactic acid	612	C01432	25C_early
+lactose 	440995	C00243	25C_early
+lauric acid	3893	C02679	25C_early
+maleimide	10935	C07272	25C_early
+maltose	439186	C00208	25C_early
+maltotriose	439586	C01835	25C_early
+melezitose	92817	C08243	25C_early
+methanolphosphate	13130		25C_early
+methylmaleic acid	643798	C02226	25C_early
+n-epsilon-trimethyllysine	440121		25C_early
+nicotinamide	936	C00153	25C_early
+octadecanol	8221		25C_early
+oleic acid	445639	C00712	25C_early
+ononitol	230881		25C_early
+ornithine	6262	C00077	25C_early
+oxoproline	7405	C01879	25C_early
+panose 	94448		25C_early
+parabanic acid 	67126	C00802	25C_early
+phenol 	NA		25C_early
+phenylethylamine	1001	C05332	25C_early
+phosphate	1004	C00009	25C_early
+phosphogluconic acid	91493	C00345	25C_early
+phosphoglycolic acid	529	C00988	25C_early
+propylamine	7852		25C_early
+raffinose	439242	C00492	25C_early
+ribitol	6912	C00474	25C_early
+sorbitol	5780	C00794	25C_early
+succinic acid	1110	C00042	25C_early
+taurine	1123	C00245	25C_early
+tocopherol alpha-	14985	C02477	25C_early
+tocopherol gamma-	92729	C02483	25C_early
+urea	1176	C00086	25C_early
+uridine	6029	C00299	25C_early
