@@ -2915,6 +2915,119 @@ tempGen.loadingsPC3[[1]] %>%
   write.csv("ASCA/tempGen-loadings-PC3.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
 
+### Metaboanalyst
+
+#### Component 1
+
+```{r}
+tempTimepoint.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
+```
+
+```{r}
+tempTimepoint.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
+
+#### Component 2
+
+```{r}
+tempTimepoint.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
+```
+
+```{r}
+tempTimepoint.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
+
+#### Component 3
+
+```{r}
+tempTimepoint.loadingsPC3[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
+```
+
+```{r}
+tempTimepoint.loadingsPC3[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
+
+
+
+
 ## PLS-DA: Temperature x full gneotype
 
 ### Format data

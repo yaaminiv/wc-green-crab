@@ -240,3 +240,6 @@ INFO  [2025-11-25 11:31:40] Effect plot. Selected effect (nr 1): `final.genotype
 WARN  [2025-11-25 11:31:40] Showing 20 of 185 variables. Adjust the number with `n_limit`
 INFO  [2025-12-02 15:25:44] Prediction plot. Selected effect (nr 1): `final.genotype+final.genotype:treatment+treatment`. Component: 3.
 INFO  [2025-12-02 15:25:44] Selecting the 5 variables with highest/lowest loading on `final.genotype+final.genotype:treatment+treatment` (PC3). Use `variable` to specify variables to plot
+INFO  [2025-12-03 11:38:13] Loadings for effect number 1 and principal component(s) 1
+INFO  [2025-12-03 11:38:20] Loadings for effect number 1 and principal component(s) 2
+INFO  [2025-12-03 11:38:27] Loadings for effect number 1 and principal component(s) 3
