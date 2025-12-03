@@ -1747,13 +1747,13 @@ ggsave("metaboanalyst/figures/5v25_early-pathwaySignificance.pdf", heigh = 8.5, 
 ```{r}
 top_early_5v25_pathwayResults <- early_5v25_pathwayResults %>%
   arrange(desc(enrichmentRatio)) %>%
-  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 metabolites
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 pathways
 head(top_early_5v25_pathwayResults) #Confirm formatting
 ```
 
 ```{r}
 top_early_5v25_pathwayResults %>%
-  mutate(., order = rev(1:12)) %>%
+  mutate(., order = rev(1:25)) %>%
   ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
   geom_bar(stat = "identity") +
   labs(x = "Enrichment Ratio") +
@@ -1803,7 +1803,7 @@ head(top_late_5v25_pathwayResults) #Confirm formatting
 
 ```{r}
 top_late_5v25_pathwayResults %>%
-  mutate(., order = rev(1:12)) %>%
+  mutate(., order = rev(1:25)) %>%
   ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
   geom_bar(stat = "identity") +
   labs(x = "Enrichment Ratio") +
@@ -1819,7 +1819,7 @@ ggsave("metaboanalyst/figures/5v25_late-enrichmentRatio.pdf", heigh = 8.5, width
 ##### Early 5ºC vs. Late 5ºC
 
 ```{r}
-earlyvlate_5_pathwayResults <- read.csv("metaboanalyst/5_earlyvlate-metaboanalyst-results/pathway_results.csv") %>%
+earlyvlate_5_pathwayResults <- read.csv("metaboanalyst/5-earlyvlate_metaboanalyst-results/pathway_results.csv") %>%
   dplyr::rename(metabolite = "X") %>%
   mutate(., Observed = Hits/Total) %>%
   mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
@@ -1853,7 +1853,7 @@ head(top_earlyvlate_5_pathwayResults) #Confirm formatting
 
 ```{r}
 top_earlyvlate_5_pathwayResults %>%
-  mutate(., order = rev(1:12)) %>%
+  mutate(., order = rev(1:25)) %>%
   ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
   geom_bar(stat = "identity") +
   labs(x = "Enrichment Ratio") +
@@ -1869,7 +1869,7 @@ ggsave("metaboanalyst/figures/5_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, wi
 ##### Early 25ºC vs. Late 25ºC
 
 ```{r}
-earlyvlate_25_pathwayResults <- read.csv("metaboanalyst/25_earlyvlate-metaboanalyst-results/pathway_results.csv") %>%
+earlyvlate_25_pathwayResults <- read.csv("metaboanalyst/25-earlyvlate_metaboanalyst-results/pathway_results.csv") %>%
   dplyr::rename(metabolite = "X") %>%
   mutate(., Observed = Hits/Total) %>%
   mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
@@ -1903,7 +1903,7 @@ head(top_earlyvlate_25_pathwayResults) #Confirm formatting
 
 ```{r}
 top_earlyvlate_25_pathwayResults %>%
-  mutate(., order = rev(1:12)) %>%
+  mutate(., order = rev(1:25)) %>%
   ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
   geom_bar(stat = "identity") +
   labs(x = "Enrichment Ratio") +
