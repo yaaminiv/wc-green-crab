@@ -1,0 +1,17 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Nicotinate and nicotinamide metabolism",9,0.10169,2,0.0040352,2.3941,0.31071,0.31071,0.0566
+"Pyruvate metabolism",23,0.25989,2,0.025964,1.5856,1,0.66641,0.03571
+"One carbon pool by folate",23,0.25989,2,0.025964,1.5856,1,0.66641,0.1161
+"Taurine and hypotaurine metabolism",7,0.079096,1,0.076674,1.1154,1,1,0.4
+"beta-Alanine metabolism",14,0.15819,1,0.14792,0.82996,1,1,0
+"Starch and sucrose metabolism",14,0.15819,1,0.14792,0.82996,1,1,0.05062
+"Pantothenate and CoA biosynthesis",20,0.22599,1,0.20495,0.68836,1,1,0
+"Citrate cycle (TCA cycle)",20,0.22599,1,0.20495,0.68836,1,1,0.04412
+"Pentose phosphate pathway",22,0.24859,1,0.22316,0.65138,1,1,0
+"Glyoxylate and dicarboxylate metabolism",24,0.27119,1,0.24099,0.61799,1,1,0
+"Glycolysis or Gluconeogenesis",26,0.29379,1,0.25845,0.58762,1,1,0
+"Glycine, serine and threonine metabolism",29,0.32768,1,0.28395,0.54677,1,1,0
+"Cysteine and methionine metabolism",32,0.36158,1,0.30863,0.51056,1,1,0.13996
+"Tyrosine metabolism",33,0.37288,1,0.31669,0.49937,1,1,0.08677
+"Pyrimidine metabolism",40,0.45198,1,0.37071,0.43097,1,1,0.08516
+"Purine metabolism",68,0.76836,1,0.54993,0.25969,1,1,0.0121

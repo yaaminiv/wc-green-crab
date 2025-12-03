@@ -1,0 +1,19 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Starch and sucrose metabolism",14,0.14501,2,0.0082988,2.081,0.639,0.36657,0.24527
+"Galactose metabolism",15,0.15537,2,0.0095213,2.0213,0.72362,0.36657,0.18
+"Glyoxylate and dicarboxylate metabolism",24,0.24859,2,0.023781,1.6238,1,0.61039,0.09132
+"Phenylalanine metabolism",7,0.072505,1,0.070483,1.1519,1,1,0.27586
+"Arachidonic acid metabolism",9,0.09322,1,0.089775,1.0468,1,1,0
+"Arginine biosynthesis",13,0.13465,1,0.12727,0.89528,1,1,0
+"Butanoate metabolism",14,0.14501,1,0.13642,0.86512,1,1,0
+"Propanoate metabolism",20,0.20716,1,0.18952,0.72234,1,1,0
+"Citrate cycle (TCA cycle)",20,0.20716,1,0.18952,0.72234,1,1,0.03273
+"Pentose phosphate pathway",22,0.22787,1,0.20655,0.68497,1,1,0
+"Alanine, aspartate and glutamate metabolism",23,0.23823,1,0.21494,0.66767,1,1,0
+"One carbon pool by folate",23,0.23823,1,0.21494,0.66767,1,1,0.12705
+"Porphyrin metabolism",24,0.24859,1,0.22326,0.6512,1,1,0
+"Glutathione metabolism",26,0.2693,1,0.23964,0.62044,1,1,0.09226
+"Lipoic acid metabolism",27,0.27966,1,0.24771,0.60605,1,1,0.00189
+"Arginine and proline metabolism",29,0.30038,1,0.26363,0.57901,1,1,0.04889
+"Glycine, serine and threonine metabolism",29,0.30038,1,0.26363,0.57901,1,1,0.31258
+"Glycerophospholipid metabolism",32,0.33145,1,0.28692,0.54223,1,1,0.01653

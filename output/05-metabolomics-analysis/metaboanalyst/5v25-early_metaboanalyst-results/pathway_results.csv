@@ -1,0 +1,28 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Arginine biosynthesis",13,0.35499,4,0.00027138,3.5664,0.020896,0.020896,0.14634
+"Alanine, aspartate and glutamate metabolism",23,0.62806,3,0.02246,1.6486,1,0.801,0.00338
+"Glutathione metabolism",26,0.70998,3,0.031208,1.5057,1,0.801,0.33894
+"Pyrimidine metabolism",40,1.0923,3,0.09187,1.0368,1,1,0.08565
+"Propanoate metabolism",20,0.54614,2,0.101,0.99566,1,1,0
+"Citrate cycle (TCA cycle)",20,0.54614,2,0.101,0.99566,1,1,0.06254
+"Steroid biosynthesis",4,0.10923,1,0.10498,0.97891,1,1,0
+"Pentose phosphate pathway",22,0.60075,2,0.11878,0.92524,1,1,0.04453
+"Pyruvate metabolism",23,0.62806,2,0.12796,0.89293,1,1,0
+"Taurine and hypotaurine metabolism",7,0.19115,1,0.17664,0.75291,1,1,0.2
+"Phenylalanine metabolism",7,0.19115,1,0.17664,0.75291,1,1,0.27586
+"Arachidonic acid metabolism",9,0.24576,1,0.22131,0.65501,1,1,0
+"Nicotinate and nicotinamide metabolism",9,0.24576,1,0.22131,0.65501,1,1,0.0566
+"Purine metabolism",68,1.8569,3,0.28243,0.54909,1,1,0.05738
+"Glycerolipid metabolism",12,0.32768,1,0.28395,0.54677,1,1,0.22545
+"Amino sugar and nucleotide sugar metabolism",39,1.065,2,0.28866,0.53961,1,1,0.00091
+"Butanoate metabolism",14,0.3823,1,0.32297,0.49084,1,1,0
+"Starch and sucrose metabolism",14,0.3823,1,0.32297,0.49084,1,1,0.15858
+"beta-Alanine metabolism",14,0.3823,1,0.32297,0.49084,1,1,0.277
+"Galactose metabolism",15,0.4096,1,0.34171,0.46635,1,1,0.18
+"Fructose and mannose metabolism",16,0.43691,1,0.35994,0.44377,1,1,0.0459
+"Pantothenate and CoA biosynthesis",20,0.54614,1,0.42812,0.36844,1,1,0.04459
+"Insect hormone biosynthesis",21,0.57345,1,0.44403,0.35258,1,1,0
+"Glyoxylate and dicarboxylate metabolism",24,0.65537,1,0.48926,0.31046,1,1,0
+"Glycolysis or Gluconeogenesis",26,0.70998,1,0.51741,0.28616,1,1,0
+"Arginine and proline metabolism",29,0.7919,1,0.55685,0.25426,1,1,0.20889
+"Tyrosine metabolism",33,0.90113,1,0.60462,0.21852,1,1,0.04121

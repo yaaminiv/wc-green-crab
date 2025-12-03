@@ -1,0 +1,25 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Starch and sucrose metabolism",14,0.22411,4,4.0946e-05,4.3878,0.0031528,0.0031528,0.31454
+"Fructose and mannose metabolism",16,0.25612,3,0.0016804,2.7746,0.12771,0.064696,0.44262
+"Amino sugar and nucleotide sugar metabolism",39,0.62429,4,0.0026231,2.5812,0.19673,0.067326,0.2699
+"Galactose metabolism",15,0.24011,2,0.022416,1.6494,1,0.43152,0.18667
+"Citrate cycle (TCA cycle)",20,0.32015,2,0.0387,1.4123,1,0.59598,0.14894
+"Glycolysis or Gluconeogenesis",26,0.4162,2,0.062577,1.2036,1,0.68855,0.06075
+"Phenylalanine, tyrosine and tryptophan biosynthesis",4,0.06403,1,0.062595,1.2035,1,0.68855,0.5
+"Phenylalanine metabolism",7,0.11205,1,0.1071,0.9702,1,1,0.37931
+"Ascorbate and aldarate metabolism",8,0.12806,1,0.12149,0.91546,1,1,0
+"Nicotinate and nicotinamide metabolism",9,0.14407,1,0.13566,0.86755,1,1,0.0566
+"Glycerolipid metabolism",12,0.19209,1,0.17689,0.7523,1,1,0.22545
+"Arginine biosynthesis",13,0.2081,1,0.19021,0.72076,1,1,0
+"Butanoate metabolism",14,0.22411,1,0.20334,0.69178,1,1,0
+"Pentose and glucuronate interconversions",17,0.27213,1,0.24152,0.61705,1,1,0
+"Purine metabolism",68,1.0885,2,0.2978,0.52608,1,1,0.0234
+"Pentose phosphate pathway",22,0.35217,1,0.30135,0.52093,1,1,0.12366
+"One carbon pool by folate",23,0.36817,1,0.31277,0.50478,1,1,0
+"Alanine, aspartate and glutamate metabolism",23,0.36817,1,0.31277,0.50478,1,1,0.06757
+"Glyoxylate and dicarboxylate metabolism",24,0.38418,1,0.32401,0.48944,1,1,0.10959
+"Glutathione metabolism",26,0.4162,1,0.34598,0.46094,1,1,0.32134
+"Lipoic acid metabolism",27,0.4322,1,0.35672,0.44768,1,1,0
+"Inositol phosphate metabolism",28,0.44821,1,0.36728,0.435,1,1,0
+"Glycerophospholipid metabolism",32,0.51224,1,0.40793,0.38941,1,1,0.01653
+"Pyrimidine metabolism",40,0.6403,1,0.48198,0.31697,1,1,0.01446
