@@ -3052,6 +3052,54 @@ tempGen.loadingsPC1[[1]] %>%
   write.table("PLSDA/tempGen-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
+```{r}
+tempGen_PC1_pathwayResults <- read.csv("metaboanalyst/tempGen-loadings-PC1_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempGen_PC1_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempGen_PC1_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempGen_PC1-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_tempGen_PC1_pathwayResults <- tempGen_PC1_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 pathways
+head(top_tempGen_PC1_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_tempGen_PC1_pathwayResults %>%
+  mutate(., order = rev(1:14)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_tempGen_PC1_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempGen_PC1-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
 #### Component 2
 
 ```{r}
@@ -3086,6 +3134,54 @@ tempGen.loadingsPC2[[1]] %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
   write.table("PLSDA/tempGen-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
+
+```{r}
+tempGen_PC2_pathwayResults <- read.csv("metaboanalyst/tempGen-loadings-PC2_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempGen_PC2_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempGen_PC2_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempGen_PC2-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_tempGen_PC2_pathwayResults <- tempGen_PC2_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 pathways
+head(top_tempGen_PC2_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_tempGen_PC2_pathwayResults %>%
+  mutate(., order = rev(1:24)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_tempGen_PC2_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempGen_PC2-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
 #### Component 3
@@ -3123,6 +3219,34 @@ tempGen.loadingsPC3[[1]] %>%
   unique(.) %>%
   write.table("PLSDA/tempGen-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
+
+```{r}
+tempGen_PC3_pathwayResults <- read.csv("metaboanalyst/tempGen-loadings-PC3_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempGen_PC3_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempGen_PC3_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempGen_PC3-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not be proceeding with further visualization.
 
 ## PLS-DA: Temperature x full gneotype
 
