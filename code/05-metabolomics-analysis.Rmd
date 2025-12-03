@@ -1585,6 +1585,221 @@ t.test_25_earlyvlate %>%
 ggsave("PLSDA/figures/significant-VIP-25-earlyvlate.pdf", height = 8.5, width = 11)
 ```
 
+#### Metaboanalyst enrichment
+
+Within MetaboAnalyst, I did the following:
+
+- Uploaded each list of metabolite compound names for significant VIP in the Pathway Analysis module
+- Matched to KEGG pathways from *Drosophila melanogaster*
+
+##### Early 5ºC vs. Early 25ºC
+
+```{r}
+early_5v25_pathwayResults <- read.csv("metaboanalyst/5v25-early_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(early_5v25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+early_5v25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5v25_early-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_early_5v25_pathwayResults <- early_5v25_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 metabolites
+head(top_early_5v25_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_early_5v25_pathwayResults %>%
+  mutate(., order = rev(1:12)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_early_5v25_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5v25_early-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+##### Late 5ºC vs. Late 25ºC
+
+```{r}
+late_5v25_pathwayResults <- read.csv("metaboanalyst/5v25-late_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(late_5v25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+late_5v25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5v25_late-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_late_5v25_pathwayResults <- late_5v25_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 metabolites
+head(top_late_5v25_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_late_5v25_pathwayResults %>%
+  mutate(., order = rev(1:12)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_late_5v25_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5v25_late-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+##### Early 5ºC vs. Late 5ºC
+
+```{r}
+earlyvlate_5_pathwayResults <- read.csv("metaboanalyst/5_earlyvlate-metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(earlyvlate_5_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+earlyvlate_5_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5_earlyvlate-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_earlyvlate_5_pathwayResults <- earlyvlate_5_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 metabolites
+head(top_earlyvlate_5_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_earlyvlate_5_pathwayResults %>%
+  mutate(., order = rev(1:12)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_earlyvlate_5_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/5_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+##### Early 25ºC vs. Late 25ºC
+
+```{r}
+earlyvlate_25_pathwayResults <- read.csv("metaboanalyst/25_earlyvlate-metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(earlyvlate_5_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+earlyvlate_25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/25_earlyvlate-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_earlyvlate_25_pathwayResults <- earlyvlate_25_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 225 metabolites
+head(top_earlyvlate_25_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_earlyvlate_25_pathwayResults %>%
+  mutate(., order = rev(1:12)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_earlyvlate_25_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/25_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+
+
+
+
+
+
+
+
 # Impact of temperature and genotype on metabolomes
 
 The third question I have is understanding if different supergene genotypes employed different metabolomic pathways to withstand chronic temperature stress. I will look at data from day 0 and day 42 since I have balanced genotype information for those timepoints. Additionally, day 0 (15ºC) will highlight if there were any differences in genotype-specific metabolomes prior to heat stress.
