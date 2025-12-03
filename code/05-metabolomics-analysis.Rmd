@@ -2823,7 +2823,7 @@ ggsave("ASCA/figures/tempGen-prediction-plot-PC1.pdf", height = 11, width = 8.5)
 ```
 
 ```{r}
-tempGen.loadingsPC1 <- get_loadings(tempGen.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempGen.loadingsPC1 <- get_loadings(tempGen.ASCAmodel, component = 1, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempGen.loadingsPC1)
 ```
 
@@ -2864,7 +2864,7 @@ ggsave("ASCA/figures/tempGen-prediction-plot-PC2.pdf", height = 11, width = 8.5)
 ```
 
 ```{r}
-tempGen.loadingsPC2 <- get_loadings(tempGen.ASCAmodel, component = 2, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempGen.loadingsPC2 <- get_loadings(tempGen.ASCAmodel, component = 2, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempGen.loadingsPC2)
 ```
 
@@ -2905,7 +2905,7 @@ ggsave("ASCA/figures/tempGen-prediction-plot-PC3.pdf", height = 11, width = 8.5)
 ```
 
 ```{r}
-tempGen.loadingsPC3 <- get_loadings(tempGen.ASCAmodel, component = 3, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempGen.loadingsPC3 <- get_loadings(tempGen.ASCAmodel, component = 3, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempGen.loadingsPC3)
 ```
 
@@ -2920,7 +2920,7 @@ tempGen.loadingsPC3[[1]] %>%
 #### Component 1
 
 ```{r}
-tempTimepoint.loadingsPC1[[1]] %>%
+tempGen.loadingsPC1[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -2936,7 +2936,7 @@ tempTimepoint.loadingsPC1[[1]] %>%
 ```
 
 ```{r}
-tempTimepoint.loadingsPC1[[1]] %>%
+tempGen.loadingsPC1[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -2950,13 +2950,13 @@ tempTimepoint.loadingsPC1[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("PLSDA/tempGen-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 #### Component 2
 
 ```{r}
-tempTimepoint.loadingsPC2[[1]] %>%
+tempGen.loadingsPC2[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -2972,7 +2972,7 @@ tempTimepoint.loadingsPC2[[1]] %>%
 ```
 
 ```{r}
-tempTimepoint.loadingsPC2[[1]] %>%
+tempGen.loadingsPC2[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -2986,13 +2986,13 @@ tempTimepoint.loadingsPC2[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("PLSDA/tempGen-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 #### Component 3
 
 ```{r}
-tempTimepoint.loadingsPC3[[1]] %>%
+tempGen.loadingsPC3[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -3008,7 +3008,7 @@ tempTimepoint.loadingsPC3[[1]] %>%
 ```
 
 ```{r}
-tempTimepoint.loadingsPC3[[1]] %>%
+tempGen.loadingsPC3[[1]] %>%
   dplyr::rename(metabolite = covars) %>%
   mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
@@ -3022,11 +3022,8 @@ tempTimepoint.loadingsPC3[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("PLSDA/tempGen-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
-
-
-
 
 ## PLS-DA: Temperature x full gneotype
 
