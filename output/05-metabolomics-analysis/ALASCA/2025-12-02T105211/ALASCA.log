@@ -244,3 +244,6 @@ INFO  [2025-12-02 12:18:17] Effect plot. Selected effect (nr 1): `timepoint+time
 WARN  [2025-12-02 12:18:17] Showing 20 of 185 variables. Adjust the number with `n_limit`
 INFO  [2025-12-02 12:18:26] Prediction plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 3.
 INFO  [2025-12-02 12:18:26] Selecting the 5 variables with highest/lowest loading on `timepoint+timepoint:treatment+treatment` (PC3). Use `variable` to specify variables to plot
+INFO  [2025-12-03 11:03:25] Loadings for effect number 1 and principal component(s) 1
+INFO  [2025-12-03 11:03:32] Loadings for effect number 1 and principal component(s) 2
+INFO  [2025-12-03 11:03:39] Loadings for effect number 1 and principal component(s) 3

@@ -998,7 +998,7 @@ ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC1.pdf", height = 8.5, width
 ```
 
 ```{r}
-tempTimepoint.loadingsPC1 <- get_loadings(tempTimepoint.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempTimepoint.loadingsPC1 <- get_loadings(tempTimepoint.ASCAmodel, component = 1, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempTimepoint.loadingsPC1)
 ```
 
@@ -1089,6 +1089,151 @@ tempTimepoint.loadingsPC3[[1]] %>%
   dplyr::rename(metabolite = "covars") %>%
   write.csv("ASCA/tempTimepoint-loadings-PC3.csv", quote = FALSE, row.names = FALSE) #Save loading information
 ```
+
+### Metaboanalyst
+
+I will use Metaboanalyst to identify enriched pathways in for metabolites of interest. These metabolites of interest will come from ASCA components as well as significant VIP (identified later after doing a PLS-DA). To identify metabolites of interest for the ASCA, I will select metabolites that explain a certain amount of cumulative variance.
+
+Once I have a list of metabolites, I will do the following within MetaboAnalyst:
+
+- Uploaded each list of metabolite compound names for each ASCA component in the Pathway Analysis module
+  - Match compound names between the sequencer and Metaboanalyst as needed, based on HMDB and KEGG identifiers
+- Matched to KEGG pathways from *Drosophila melanogaster*
+- Review pathway analysis output and download for further review and visualization
+
+```{bash}
+mkdir metaboanalyst
+mkdir metaboanalyst/figures
+```
+
+#### Component 1
+
+```{r}
+tempTimepoint.loadingsPC1 <- get_loadings(tempTimepoint.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+```
+
+
+```{r}
+# 1. Extract all loadings for PC1 (effect 1 = temperature * parent)
+pc1_raw <- get_loadings(res_all, effect = 1, component = 1)
+
+# ALASCA usually returns a list; first element holds the data
+if (is.list(pc1_raw) && !inherits(pc1_raw, "data.frame")) {
+  pc1_df <- as.data.frame(pc1_raw[[1]])
+} else {
+  pc1_df <- as.data.frame(pc1_raw)
+}
+
+# Identify gene column and numeric loading column
+# (You can change "covars" if your object uses a different name)
+if (!"covars" %in% names(pc1_df)) {
+  stop("Could not find 'covars' column in PC1 loadings; check the structure of pc1_df.")
+}
+
+gene_vec <- pc1_df$covars
+
+num_cols <- names(pc1_df)[sapply(pc1_df, is.numeric)]
+
+if (length(num_cols) == 0) {
+  stop("No numeric loading column found in PC1 loadings.")
+}
+loading_col <- num_cols[2]  # typically the PC1 loading column
+
+pc1_load <- pc1_df %>%
+  transmute(
+    gene    = gene_vec,
+    loading = .data[[loading_col]]
+  ) %>%
+  mutate(
+    abs_loading = abs(loading)
+  ) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(
+    rank           = row_number(),
+    cum_abs        = cumsum(abs_loading),
+    cum_abs_prop   = cum_abs / sum(abs_loading),
+    var_contrib    = loading^2,
+    cum_var        = cumsum(var_contrib) / sum(var_contrib)
+  )
+
+# 2. Find "elbow" on normalized abs(loadings) curve (Kneedle-style)
+n <- nrow(pc1_load)
+x <- (pc1_load$rank - 1) / (n - 1 + 1e-9)  # normalized rank
+y <- (pc1_load$abs_loading - min(pc1_load$abs_loading)) /
+     (max(pc1_load$abs_loading) - min(pc1_load$abs_loading) + 1e-9)
+
+#elbow is selected at the rank of the maximum deviation between the loading curve and diagonal reference
+diff_xy <- x - y
+elbow_idx  <- which.max(diff_xy)
+elbow_rank <- pc1_load$rank[elbow_idx]
+elbow_gene <- pc1_load$gene[elbow_idx]
+
+# 3. 80% cumulative variance threshold as a comparison
+idx_80_var <- which(pc1_load$cum_var >= 0.25)[1]
+
+pc1_load <- pc1_load %>%
+  mutate(
+    selected_elbow  = rank <= elbow_rank,
+    selected_80_var = rank <= idx_80_var
+  )
+
+cat("PC1 important genes by elbow selection: ",
+    sum(pc1_load$selected_elbow), "\n")
+cat("PC1 important genes by 80% variance selection: ",
+    sum(pc1_load$selected_80_var), "\n")
+
+# 5. Diagnostic plots ------------------------------------------
+
+# (a) Absolute loadings vs rank, with elbow + 80% var lines
+pdf("figures/lipids/asca/PC1_abs_loadings_rank.pdf", width = 7, height = 5)
+ggplot(pc1_load, aes(x = rank, y = abs_loading)) +
+  geom_line() +
+  geom_point(size = 0.7) +
+  geom_vline(xintercept = idx_80_var, linetype = "dashed") +
+  annotate("text",
+           x = idx_80_var,
+           y = max(pc1_load$abs_loading) * 0.9,
+           label = paste0("25% var (", idx_80_var, " lipids)"),
+           hjust = -0.1, vjust = 1) +
+  labs(
+    x = "Rank (sorted by |loading|)",
+    y = "|PC1 loading|",
+    title = "PC1 absolute loadings and selection thresholds"
+  ) +
+  theme_classic()
+dev.off()
+
+# Cumulative proportion of variance (squared loadings)
+pdf("figures/lipids/asca/PC1_cumulative_variance.pdf", width = 7, height = 5)
+ggplot(pc1_load, aes(x = rank, y = cum_var)) +
+  geom_line() +
+  geom_vline(xintercept = idx_80_var, linetype = "dashed") +
+   annotate("text",
+           x = idx_80_var,
+           y = max(pc1_load$abs_loading) * 0.9,
+           label = paste0("25% var (", idx_80_var, " lipids)"),
+           hjust = -0.1, vjust = 1) +
+  labs(
+    x = "Rank",
+    y = "Cumulative proportion of variance (loading^2)",
+    title = "PC1 cumulative variance contribution"
+  ) +
+  theme_classic()
+dev.off()
+
+#export a list of genes contributing 80% of variance to PC1
+pc1_important_80 <- pc1_load %>%
+  filter(rank <= idx_80_var)
+
+write.csv(pc1_important_80,
+          "output/lipids_metabolites/lipids/asca/PC1_important_lipids_25pct_variance.csv",
+          row.names = FALSE)
+
+```
+
+#### Component 2
+
+#### Component 3
 
 ## PLS-DA
 
