@@ -1142,6 +1142,54 @@ tempTimepoint.loadingsPC1[[1]] %>%
   write.table("PLSDA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
+```{r}
+tempTime_PC1_pathwayResults <- read.csv("metaboanalyst/tempTime-loadings-PC1_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempTime_PC1_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempTime_PC1_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempTime_PC1-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+```{r}
+top_tempTime_PC1_pathwayResults <- tempTime_PC1_pathwayResults %>%
+  arrange(desc(enrichmentRatio)) %>%
+  slice(., 1:25) #Arrange results by enrichment ratio and take the top 25 pathways
+head(top_tempTime_PC1_pathwayResults) #Confirm formatting
+```
+
+```{r}
+top_tempTime_PC1_pathwayResults %>%
+  mutate(., order = rev(1:24)) %>%
+  ggplot(., aes(x = enrichmentRatio, y = as.factor(order), fill = Significant)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Enrichment Ratio") +
+  scale_y_discrete(name = "",
+                   labels = rev(top_tempTime_PC1_pathwayResults$metabolite)) +
+  scale_fill_manual(name = "FDR",
+                    values = c("grey20", "springgreen4"),
+                    labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempTime_PC1-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
 #### Component 2
 
 ```{r}
@@ -1178,6 +1226,34 @@ tempTimepoint.loadingsPC2[[1]] %>%
   write.table("PLSDA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
+```{r}
+tempTime_PC2_pathwayResults <- read.csv("metaboanalyst/tempTime-loadings-PC2_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempTime_PC2_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempTime_PC2_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempTime_PC2-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not proceed with further visualization.
+
 #### Component 3
 
 ```{r}
@@ -1213,6 +1289,34 @@ tempTimepoint.loadingsPC3[[1]] %>%
   unique(.) %>%
   write.table("PLSDA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
+
+```{r}
+tempTime_PC3_pathwayResults <- read.csv("metaboanalyst/tempTime-loadings-PC3_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(tempTime_PC3_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+tempTime_PC3_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/tempTime_PC3-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not proceed with further visualization.
 
 ## PLS-DA
 
@@ -1710,11 +1814,6 @@ ggsave("PLSDA/figures/significant-VIP-25-earlyvlate.pdf", height = 8.5, width = 
 ```
 
 #### Metaboanalyst enrichment
-
-Within MetaboAnalyst, I did the following:
-
-- Uploaded each list of metabolite compound names for significant VIP in the Pathway Analysis module
-- Matched to KEGG pathways from *Drosophila melanogaster*
 
 ##### Early 5ºC vs. Early 25ºC
 
