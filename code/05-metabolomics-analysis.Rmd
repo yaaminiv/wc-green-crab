@@ -855,17 +855,17 @@ summary(scaled.pca.TTP.id) #Standard deviations for each PC
 
 ```{r}
 pcaPlot34 <- autoplot(scaled.pca.TTP.id, data = (transMetabData_knownTimepoint), x = 1, y = 2,
-                     size = 4, alpha = 0.8, colour = "treatment_timepoint", shape = "treatment_timepoint", 
-                     frame = TRUE, frame.colour = "treatment_timepoint", loadings = FALSE) +
+                      size = 4, alpha = 0.8, colour = "treatment_timepoint", shape = "treatment_timepoint", 
+                      frame = TRUE, frame.colour = "treatment_timepoint", loadings = FALSE) +
   scale_color_manual(values = c("lightblue2", plotColors[3], 
                                 "salmon2", plotColors[1]),
                      labels = c("Early 5ºC", "Late 5ºC",
                                 "Early 25ºC", "Late 25ºC"),
                      name = "Treatment") +
   scale_fill_manual(values = c("lightblue2", plotColors[3], 
-                                "salmon2", plotColors[1]),
-                     labels = c("Early 5ºC", "Late 5ºC",
-                                "Early 25ºC", "Late 25ºC"),
+                               "salmon2", plotColors[1]),
+                    labels = c("Early 5ºC", "Late 5ºC",
+                               "Early 25ºC", "Late 25ºC"),
                     name = "Treatment") +
   scale_shape_manual(values = c(1, 2, 1, 2),
                      labels = c("Early 5ºC", "Late 5ºC",
@@ -953,10 +953,10 @@ head(tempTimepoint.ASCA) #Confirm changes
 
 ```{r}
 tempTimepoint.ASCAmodel <- ALASCA(df = tempTimepoint.ASCA,
-                             formula = value ~ timepoint*treatment + (1|crab.ID),
-                             n_validation_runs = 100,
-                             validate = TRUE,
-                             reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab and genotype as random effects
+                                  formula = value ~ timepoint*treatment + (1|crab.ID),
+                                  n_validation_runs = 100,
+                                  validate = TRUE,
+                                  reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab and genotype as random effects
 ```
 
 ### Interpret ASCA
@@ -1039,7 +1039,7 @@ ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC2.pdf", height = 8.5, width
 ```
 
 ```{r}
-tempTimepoint.loadingsPC2 <- get_loadings(tempTimepoint.ASCAmodel, component = 2, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempTimepoint.loadingsPC2 <- get_loadings(tempTimepoint.ASCAmodel, component = 2, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempTimepoint.loadingsPC2)
 ```
 
@@ -1080,7 +1080,7 @@ ggsave("ASCA/figures/tempTimepoint-prediction-plot-PC3.pdf", height = 8.5, width
 ```
 
 ```{r}
-tempTimepoint.loadingsPC3 <- get_loadings(tempTimepoint.ASCAmodel, component = 3, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempTimepoint.loadingsPC3 <- get_loadings(tempTimepoint.ASCAmodel, component = 3, effect = 1) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
 head(tempTimepoint.loadingsPC3)
 ```
 
@@ -1097,7 +1097,7 @@ I will use Metaboanalyst to identify enriched pathways in for metabolites of int
 Once I have a list of metabolites, I will do the following within MetaboAnalyst:
 
 - Uploaded each list of metabolite compound names for each ASCA component in the Pathway Analysis module
-  - Match compound names between the sequencer and Metaboanalyst as needed, based on HMDB and KEGG identifiers
+- Match compound names between the sequencer and Metaboanalyst as needed, based on HMDB and KEGG identifiers
 - Matched to KEGG pathways from *Drosophila melanogaster*
 - Review pathway analysis output and download for further review and visualization
 
@@ -1109,131 +1109,110 @@ mkdir metaboanalyst/figures
 #### Component 1
 
 ```{r}
-tempTimepoint.loadingsPC1 <- get_loadings(tempTimepoint.ASCAmodel, component = 1, effect = 1, n_limit = 10) #Get loadings for the top 10 positively and negatively loaded compounds on the PC
+tempTimepoint.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
 ```
 
-
 ```{r}
-# 1. Extract all loadings for PC1 (effect 1 = temperature * parent)
-pc1_raw <- get_loadings(res_all, effect = 1, component = 1)
-
-# ALASCA usually returns a list; first element holds the data
-if (is.list(pc1_raw) && !inherits(pc1_raw, "data.frame")) {
-  pc1_df <- as.data.frame(pc1_raw[[1]])
-} else {
-  pc1_df <- as.data.frame(pc1_raw)
-}
-
-# Identify gene column and numeric loading column
-# (You can change "covars" if your object uses a different name)
-if (!"covars" %in% names(pc1_df)) {
-  stop("Could not find 'covars' column in PC1 loadings; check the structure of pc1_df.")
-}
-
-gene_vec <- pc1_df$covars
-
-num_cols <- names(pc1_df)[sapply(pc1_df, is.numeric)]
-
-if (length(num_cols) == 0) {
-  stop("No numeric loading column found in PC1 loadings.")
-}
-loading_col <- num_cols[2]  # typically the PC1 loading column
-
-pc1_load <- pc1_df %>%
-  transmute(
-    gene    = gene_vec,
-    loading = .data[[loading_col]]
-  ) %>%
-  mutate(
-    abs_loading = abs(loading)
-  ) %>%
+tempTimepoint.loadingsPC1[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
   arrange(desc(abs_loading)) %>%
-  mutate(
-    rank           = row_number(),
-    cum_abs        = cumsum(abs_loading),
-    cum_abs_prop   = cum_abs / sum(abs_loading),
-    var_contrib    = loading^2,
-    cum_var        = cumsum(var_contrib) / sum(var_contrib)
-  )
-
-# 2. Find "elbow" on normalized abs(loadings) curve (Kneedle-style)
-n <- nrow(pc1_load)
-x <- (pc1_load$rank - 1) / (n - 1 + 1e-9)  # normalized rank
-y <- (pc1_load$abs_loading - min(pc1_load$abs_loading)) /
-     (max(pc1_load$abs_loading) - min(pc1_load$abs_loading) + 1e-9)
-
-#elbow is selected at the rank of the maximum deviation between the loading curve and diagonal reference
-diff_xy <- x - y
-elbow_idx  <- which.max(diff_xy)
-elbow_rank <- pc1_load$rank[elbow_idx]
-elbow_gene <- pc1_load$gene[elbow_idx]
-
-# 3. 80% cumulative variance threshold as a comparison
-idx_80_var <- which(pc1_load$cum_var >= 0.25)[1]
-
-pc1_load <- pc1_load %>%
-  mutate(
-    selected_elbow  = rank <= elbow_rank,
-    selected_80_var = rank <= idx_80_var
-  )
-
-cat("PC1 important genes by elbow selection: ",
-    sum(pc1_load$selected_elbow), "\n")
-cat("PC1 important genes by 80% variance selection: ",
-    sum(pc1_load$selected_80_var), "\n")
-
-# 5. Diagnostic plots ------------------------------------------
-
-# (a) Absolute loadings vs rank, with elbow + 80% var lines
-pdf("figures/lipids/asca/PC1_abs_loadings_rank.pdf", width = 7, height = 5)
-ggplot(pc1_load, aes(x = rank, y = abs_loading)) +
-  geom_line() +
-  geom_point(size = 0.7) +
-  geom_vline(xintercept = idx_80_var, linetype = "dashed") +
-  annotate("text",
-           x = idx_80_var,
-           y = max(pc1_load$abs_loading) * 0.9,
-           label = paste0("25% var (", idx_80_var, " lipids)"),
-           hjust = -0.1, vjust = 1) +
-  labs(
-    x = "Rank (sorted by |loading|)",
-    y = "|PC1 loading|",
-    title = "PC1 absolute loadings and selection thresholds"
-  ) +
-  theme_classic()
-dev.off()
-
-# Cumulative proportion of variance (squared loadings)
-pdf("figures/lipids/asca/PC1_cumulative_variance.pdf", width = 7, height = 5)
-ggplot(pc1_load, aes(x = rank, y = cum_var)) +
-  geom_line() +
-  geom_vline(xintercept = idx_80_var, linetype = "dashed") +
-   annotate("text",
-           x = idx_80_var,
-           y = max(pc1_load$abs_loading) * 0.9,
-           label = paste0("25% var (", idx_80_var, " lipids)"),
-           hjust = -0.1, vjust = 1) +
-  labs(
-    x = "Rank",
-    y = "Cumulative proportion of variance (loading^2)",
-    title = "PC1 cumulative variance contribution"
-  ) +
-  theme_classic()
-dev.off()
-
-#export a list of genes contributing 80% of variance to PC1
-pc1_important_80 <- pc1_load %>%
-  filter(rank <= idx_80_var)
-
-write.csv(pc1_important_80,
-          "output/lipids_metabolites/lipids/asca/PC1_important_lipids_25pct_variance.csv",
-          row.names = FALSE)
-
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 #### Component 2
 
+```{r}
+tempTimepoint.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
+```
+
+```{r}
+tempTimepoint.loadingsPC2[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
+
 #### Component 3
+
+```{r}
+tempTimepoint.loadingsPC3[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  ggplot(., aes(x = rank, y = cum_var)) +
+  geom_point(size = 0.7) +
+  geom_hline(yintercept = 0.50, linetype = "dashed") + 
+  labs(x = "Rank (|Loading|)", y = "Cumulative Proportion of Variance") +
+  theme_classic() + theme(base_size = 15) #Take loading information and get statistics of interest (absolute value of loadings, rank, variance contributed, cumulative variance contributed). Plot graph showing where 50% cutoff is
+```
+
+```{r}
+tempTimepoint.loadingsPC3[[1]] %>%
+  dplyr::rename(metabolite = covars) %>%
+  mutate(abs_loading = abs(loading)) %>%
+  arrange(desc(abs_loading)) %>%
+  mutate(rank = 1:nrow(.),
+         cum_abs = cumsum(abs_loading),
+         var_contrib = loading^2,
+         cum_var = cumsum(var_contrib) / sum(var_contrib)) %>%
+  filter(., cum_var <= 0.50) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
+  unique(.) %>%
+  write.table("PLSDA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+```
 
 ## PLS-DA
 
@@ -1264,7 +1243,7 @@ plotIndiv(treatmentTimepoint.known.plsda) #Preliminary PLS-DAxa
 
 ```{r}
 perf.treatmentTimepoint.known.plsda <- perf(treatmentTimepoint.known.plsda, validation = "Mfold", folds = 5,  
-                                      progressBar = TRUE, nrepeat = 50) 
+                                            progressBar = TRUE, nrepeat = 50) 
 
 plot(perf.treatmentTimepoint.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 3 components. Centroid distance offers the lowest overall and balanced error rates (BER) when using 3 components
 perf.treatmentTimepoint.known.plsda$choice.ncomp #Confirm information from plot.
@@ -1308,8 +1287,8 @@ plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,3), ind.names = FALSE
 
 ```{r}
 tune.splsda.treatmentTimepoint.known <- tune.splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 3, 
-                                              validation = 'Mfold', folds = 5,
-                                              measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
+                                                    validation = 'Mfold', folds = 5,
+                                                    measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.treatmentTimepoint.known) #Plot results
 ```
 
@@ -1385,7 +1364,7 @@ clean_5v25_early <- transMetabData_knownTimepoint %>%
   dplyr::filter(., treatment_timepoint %in% list) %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_5v25_early <- cbind(clean_5v25_early[, c(1:2, 199:200)], 
-                              log(clean_5v25_early[, names(clean_5v25_early) %in% VIP_5v25_early$metabolite])) %>%
+                               log(clean_5v25_early[, names(clean_5v25_early) %in% VIP_5v25_early$metabolite])) %>%
   pivot_longer(., cols = 5:87, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_5v25_early #Confirm changes
@@ -1393,10 +1372,10 @@ VIP_select_5v25_early #Confirm changes
 
 ```{r}
 t.test_5v25_early <-do(VIP_select_5v25_early, tidy(t.test(.$log_norm_counts ~ .$treatment_timepoint,
-                                                        alternative = "two.sided",
-                                                        mu = 0,
-                                                        var.equal = FALSE,
-                                                        conf.level = 0.95
+                                                          alternative = "two.sided",
+                                                          mu = 0,
+                                                          var.equal = FALSE,
+                                                          conf.level = 0.95
 ))) #Looped t-test for all metabolites with VIP > 1
 t.test_5v25_early$p.adj <- p.adjust(t.test_5v25_early$p.value, method = c("fdr"), n = length(VIP_5v25_early$metabolite)) #Adjust p value for the number of comparisons
 t.test_5v25_early
@@ -1571,7 +1550,7 @@ clean_5_earlyvlate <- transMetabData_knownTimepoint %>%
   dplyr::filter(., treatment_timepoint %in% list) %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_5_earlyvlate <- cbind(clean_5_earlyvlate[, c(1:2, 199:200)], 
-                              log(clean_5_earlyvlate[, names(clean_5_earlyvlate) %in% VIP_5_earlyvlate$metabolite])) %>%
+                                 log(clean_5_earlyvlate[, names(clean_5_earlyvlate) %in% VIP_5_earlyvlate$metabolite])) %>%
   pivot_longer(., cols = 5:54, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_5_earlyvlate #Confirm changes
@@ -1579,10 +1558,10 @@ VIP_select_5_earlyvlate #Confirm changes
 
 ```{r}
 t.test_5_earlyvlate <-do(VIP_select_5_earlyvlate, tidy(t.test(.$log_norm_counts ~ .$treatment_timepoint,
-                                                        alternative = "two.sided",
-                                                        mu = 0,
-                                                        var.equal = FALSE,
-                                                        conf.level = 0.95
+                                                              alternative = "two.sided",
+                                                              mu = 0,
+                                                              var.equal = FALSE,
+                                                              conf.level = 0.95
 ))) #Looped t-test for all metabolites with VIP > 1
 t.test_5_earlyvlate$p.adj <- p.adjust(t.test_5_earlyvlate$p.value, method = c("fdr"), n = length(VIP_5_earlyvlate$metabolite)) #Adjust p value for the number of comparisons
 t.test_5_earlyvlate
@@ -1664,7 +1643,7 @@ clean_25_earlyvlate <- transMetabData_knownTimepoint %>%
   dplyr::filter(., treatment_timepoint %in% list) %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_25_earlyvlate <- cbind(clean_25_earlyvlate[, c(1:2, 199:200)], 
-                              log(clean_25_earlyvlate[, names(clean_25_earlyvlate) %in% VIP_25_earlyvlate$metabolite])) %>%
+                                  log(clean_25_earlyvlate[, names(clean_25_earlyvlate) %in% VIP_25_earlyvlate$metabolite])) %>%
   pivot_longer(., cols = 5:54, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_25_earlyvlate #Confirm changes
@@ -1672,10 +1651,10 @@ VIP_select_25_earlyvlate #Confirm changes
 
 ```{r}
 t.test_25_earlyvlate <-do(VIP_select_25_earlyvlate, tidy(t.test(.$log_norm_counts ~ .$treatment_timepoint,
-                                                        alternative = "two.sided",
-                                                        mu = 0,
-                                                        var.equal = FALSE,
-                                                        conf.level = 0.95
+                                                                alternative = "two.sided",
+                                                                mu = 0,
+                                                                var.equal = FALSE,
+                                                                conf.level = 0.95
 ))) #Looped t-test for all metabolites with VIP > 1
 t.test_25_earlyvlate$p.adj <- p.adjust(t.test_25_earlyvlate$p.value, method = c("fdr"), n = length(VIP_25_earlyvlate$metabolite)) #Adjust p value for the number of comparisons
 t.test_25_earlyvlate
@@ -2799,10 +2778,10 @@ head(tempGen.ASCA) #Confirm changes
 
 ```{r}
 tempGen.ASCAmodel <- ALASCA(df = tempGen.ASCA,
-                             formula = value ~ final.genotype*treatment + (1|crab.ID),
-                             n_validation_runs = 100,
-                             validate = TRUE,
-                             reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab as a random effect
+                            formula = value ~ final.genotype*treatment + (1|crab.ID),
+                            n_validation_runs = 100,
+                            validate = TRUE,
+                            reduce_dimensions = TRUE) #Run ASCA to identify day and temperature effects on compound abundance. Include individual crab as a random effect
 ```
 
 ### Interpret ASCA
