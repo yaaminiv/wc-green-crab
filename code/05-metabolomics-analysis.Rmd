@@ -1241,7 +1241,7 @@ transMetabData_knownTimepoint %>%
                                         legend.position = "bottom", 
                                         legend.text = element_text(color = "black", size = 12), 
                                         strip.text.x = element_text(size = 10, color = "black", face="bold"))
-ggsave("metaboanalyst/figures/starch-surcose-metabolism-plot.pdf", height = 8.5, width = 11)
+ggsave("metaboanalyst/figures/tempTime-PC1_starch-surcose-metabolism-plot.pdf", height = 8.5, width = 11)
 ```
 
 #### Component 2
@@ -1919,6 +1919,10 @@ top_early_5v25_pathwayResults %>%
 ggsave("metaboanalyst/figures/5v25_early-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
+Arginine biosynthesis is significantly enriched pathway associated with metabolites that differentiate 5ºC and 25ºC at the earlier timepoint. The compounds in this pathway are:
+
+
+
 ##### Late 5ºC vs. Late 25ºC
 
 ```{r}
@@ -1968,6 +1972,8 @@ top_late_5v25_pathwayResults %>%
   theme_classic(base_size = 15)
 ggsave("metaboanalyst/figures/5v25_late-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
+
+Starch and surcose metabolism and glutathione metabolism are significantly enriched between these comparisons. I've already plotted starch and sucrose metabolism above
 
 ##### Early 5ºC vs. Late 5ºC
 
