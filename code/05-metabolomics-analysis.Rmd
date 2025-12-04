@@ -70,7 +70,8 @@ sessionInfo()
 
 ```{r}
 rawMetabolomicsData <- read.csv("../../data/raw-metabolomics-data-2023.csv", header = TRUE) %>% 
-  dplyr::rename_with(~stringr::str_replace_all(., "X", "")) #Import data. Remove the "X" prefix for crab IDs
+  dplyr::rename_with(~stringr::str_replace_all(., "X", "")) %>%
+  mutate(BinBase.name = str_trim(BinBase.name, "both")) #Import data. Remove the "X" prefix for crab IDs. Remove white space from both sides of name
 head(rawMetabolomicsData) #Confirm import. Crab IDs have "." instead of "-"
 ```
 
@@ -1188,6 +1189,59 @@ top_tempTime_PC1_pathwayResults %>%
                     labels = c(expression("">=0.05), expression(""<0.05))) +
   theme_classic(base_size = 15)
 ggsave("metaboanalyst/figures/tempTime_PC1-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+Starch and sucrose metabolism was significant for metabolites with higher abundance at 25ºC that increase over time. I will need to look at abundance of compounds in this pathway across temperature and timepoint.
+
+Compounds in this pathway:
+
+C00103: glucose-1-phosphate
+C00092: glucose-6-phosphate
+C00095: fructose
+C00085: fructose-6-phosphate
+
+```{r}
+starchSucrose_facets <- c("1" = "glucose-1-phosphate",
+                          "2" = "glucose-6-phosphate",
+                          "3" = "fructose",
+                          "4" = "fructose-6-phosphate") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `glucose-1-phosphate`, `glucose-6-phosphate`, fructose, `fructose-6-phosphate`)) %>%
+  pivot_longer(., cols = c(3:6), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "glucose-1-phosphate" ~ 1,
+                              metabolite == "glucose-6-phosphate" ~ 2,
+                              metabolite == "fructose" ~ 3,
+                              metabolite == "fructose-6-phosphate" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = starchSucrose_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", plotColors[3], 
+                               "salmon2", plotColors[1]),
+                    labels = c("Early 5ºC", "Late 5ºC", 
+                               "Early 25ºC", "Late 25ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", plotColors[3], 
+                               "salmon2", plotColors[1]),
+                    labels = c("Early 5ºC", "Late 5ºC", 
+                               "Early 25ºC", "Late 25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Starch and Sucrose Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/starch-surcose-metabolism-plot.pdf", height = 8.5, width = 11)
 ```
 
 #### Component 2
