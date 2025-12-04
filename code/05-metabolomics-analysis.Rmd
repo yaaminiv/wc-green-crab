@@ -2121,7 +2121,7 @@ transMetabData_knownTimepoint %>%
                     labels = c("Late 5ºC", 
                                "Late 25ºC")) +
   xlab("") + #Axis titles
-  ggtitle("Starch and Sucrose Metabolism") +
+  ggtitle("Glutathione Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
                                         axis.ticks.x = element_blank(),
                                         legend.position = "bottom", 
@@ -2180,6 +2180,110 @@ top_earlyvlate_5_pathwayResults %>%
 ggsave("metaboanalyst/figures/5_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
+Taurine and hypotaurine metabolism:
+
+C00245: taurine
+C00097: cysteine
+C00519: hypotaurine
+
+```{r}
+earlyvlate_5_taurineMetabolism_facets <- c("1" = "taurine",
+                          "2" = "cysteine",
+                          "3" = "hypotaurine") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `taurine`, `cysteine`, `hypotaurine`)) %>%
+  filter(., treatment_timepoint == "05C_early" | treatment_timepoint == "05C_late") %>%
+  pivot_longer(., cols = c(3:5), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "taurine" ~ 1,
+                              metabolite == "cysteine" ~ 2,
+                              metabolite == "hypotaurine" ~ 3)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = earlyvlate_5_taurineMetabolism_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", 
+                               plotColors[3]),
+                    labels = c("Early 5ºC", 
+                               "Late 5ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", 
+                                plotColors[3]),
+                    labels = c("Early 5ºC", 
+                               "Late 5ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Taurine and Hypotaurine Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/earlyvlate-5_taurine-hypotaurine-metabolism-plot.pdf", height = 8.5, width = 11)
+```
+
+Starch and sucrose metabolism:
+
+C00103: glucose-1-phosphate
+C00092: glucose-6-phosphate
+C00689: trehalose-6-phosphate
+C00095: fructose
+C00085: fructose-6-phosphate
+
+```{r}
+earlyvlate_5_starchAndSucrose_facets <- c("1" = "glucose-1-phosphate",
+                          "2" = "glucose-6-phosphate",
+                          "3" = "trehalose-6-phosphate",
+                          "4" = "fructose",
+                          "5" = "fructose-6-phosphate") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `glucose-1-phosphate`, `glucose-6-phosphate`, `trehalose-6-phosphate`, fructose, `fructose-6-phosphate`)) %>%
+  filter(., treatment_timepoint == "05C_early" | treatment_timepoint == "05C_late") %>%
+  pivot_longer(., cols = c(3:7), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "glucose-1-phosphate" ~ 1,
+                              metabolite == "glucose-6-phosphate" ~ 2,
+                              metabolite == "trehalose-6-phosphate" ~ 3,
+                              metabolite == "fructose" ~ 4,
+                              metabolite == "fructose-6-phosphate" ~ 5)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = earlyvlate_5_starchAndSucrose_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", 
+                               plotColors[3]),
+                    labels = c("Early 5ºC", 
+                               "Late 5ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", 
+                                plotColors[3]),
+                    labels = c("Early 5ºC", 
+                               "Late 5ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Starch and Sucrose Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/earlyvlate-5_starch-sucrose-metabolism-plot.pdf", height = 8.5, width = 11)
+```
+
 ##### Early 25ºC vs. Late 25ºC
 
 ```{r}
@@ -2230,7 +2334,62 @@ top_earlyvlate_25_pathwayResults %>%
 ggsave("metaboanalyst/figures/25_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
+Starch and sucrose metabolism:
 
+Starch and sucrose metabolism:
+
+C00103: glucose-1-phosphate
+C00092: glucose-6-phosphate
+C00689: trehalose-6-phosphate
+C00095: fructose
+C00208: maltose
+
+```{r}
+earlyvlate_25_starchAndSucrose_facets <- c("1" = "glucose-1-phosphate",
+                          "2" = "glucose-6-phosphate",
+                          "3" = "trehalose-6-phosphate",
+                          "4" = "fructose",
+                          "5" = "maltose") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `glucose-1-phosphate`, `glucose-6-phosphate`, `trehalose-6-phosphate`, fructose, maltose)) %>%
+  filter(., treatment_timepoint == "25C_early" | treatment_timepoint == "25C_late") %>%
+  pivot_longer(., cols = c(3:7), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "glucose-1-phosphate" ~ 1,
+                              metabolite == "glucose-6-phosphate" ~ 2,
+                              metabolite == "trehalose-6-phosphate" ~ 3,
+                              metabolite == "fructose" ~ 4,
+                              metabolite == "maltose" ~ 5)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = earlyvlate_25_starchAndSucrose_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("salmon2", 
+                               plotColors[1]),
+                    labels = c("Early 25ºC", 
+                               "Late 25ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("salmon2", 
+                                plotColors[1]),
+                    labels = c("Early 25ºC", 
+                               "Late 25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Starch and Sucrose Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/earlyvlate-25_starch-sucrose-metabolism-plot.pdf", height = 8.5, width = 11)
+```
 
 
 
