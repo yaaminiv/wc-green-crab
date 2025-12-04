@@ -1201,7 +1201,7 @@ C00095: fructose
 C00085: fructose-6-phosphate
 
 ```{r}
-starchSucrose_facets <- c("1" = "glucose-1-phosphate",
+tempTimePC1_starchSucrose_facets <- c("1" = "glucose-1-phosphate",
                           "2" = "glucose-6-phosphate",
                           "3" = "fructose",
                           "4" = "fructose-6-phosphate") #Assign labels for facets
@@ -1220,7 +1220,7 @@ transMetabData_knownTimepoint %>%
                               metabolite == "fructose" ~ 3,
                               metabolite == "fructose-6-phosphate" ~ 4)) %>%
   ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
-  facet_wrap(~order, scales = "free_y", labeller = labeller(order = starchSucrose_facets)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = tempTimePC1_starchSucrose_facets)) +
   ylab("Log-Transformed Abundance") +
   geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
   geom_point(pch = 21, position = position_dodge(width = 0.5)) +
@@ -1921,7 +1921,55 @@ ggsave("metaboanalyst/figures/5v25_early-enrichmentRatio.pdf", heigh = 8.5, widt
 
 Arginine biosynthesis is significantly enriched pathway associated with metabolites that differentiate 5ºC and 25ºC at the earlier timepoint. The compounds in this pathway are:
 
+C00077: ornithine
+C00327: citrulline
+C00086: urea
+C00122: fumaric acid
 
+```{r}
+early_5v25_arginineBiosynthesis_facets <- c("1" = "ornithine",
+                          "2" = "citrulline",
+                          "3" = "urea",
+                          "4" = "fumaric acid") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `ornithine`, `citrulline`, urea, `fumaric acid`)) %>%
+  filter(., treatment_timepoint == "05C_early" | treatment_timepoint == "25C_early") %>%
+  pivot_longer(., cols = c(3:6), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "ornithine" ~ 1,
+                              metabolite == "citrulline" ~ 2,
+                              metabolite == "urea" ~ 3,
+                              metabolite == "fumaric acid" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = early_5v25_arginineBiosynthesis_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", plotColors[3], 
+                               "salmon2", plotColors[1]),
+                    labels = c("Early 5ºC", "Late 5ºC", 
+                               "Early 25ºC", "Late 25ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("lightblue2", plotColors[3], 
+                               "salmon2", plotColors[1]),
+                    labels = c("Early 5ºC", "Late 5ºC", 
+                               "Early 25ºC", "Late 25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Arginine Biosynthesis") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/5v25-early_arginine-biosynthesis-plot.pdf", height = 8.5, width = 11)
+```
 
 ##### Late 5ºC vs. Late 25ºC
 
