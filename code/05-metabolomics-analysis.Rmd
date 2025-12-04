@@ -3474,6 +3474,58 @@ top_tempGen_PC1_pathwayResults %>%
 ggsave("metaboanalyst/figures/tempGen_PC1-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
+Glutathione metabolism:
+
+C01672: cadaverine
+C00037: glycine
+C00051: glutathione
+C01879: oxoproline
+
+```{r}
+tempGen_PC1_glutathioneMetabolism_facets <- c("1" = "cadaverine",
+                          "2" = "glycine",
+                          "3" = "glutathione",
+                          "4" = "oxoproline") #Assign labels for facets
+```
+
+```{r}
+transMetabData %>%
+  filter(., treatment != "15C") %>%
+  dplyr::select(., c(crab.ID, treatment_genotype, 
+                     cadaverine, glycine, glutathione, oxoproline)) %>%
+  pivot_longer(., cols = c(3:6), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "cadaverine" ~ 1,
+                              metabolite == "glycine" ~ 2,
+                              metabolite == "glutathione" ~ 3,
+                              metabolite == "oxoproline" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment_genotype, y = value, color = treatment_genotype)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = tempGen_PC1_glutathioneMetabolism_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Genotype", 
+                    values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+  scale_colour_manual(name = "Temperature (ºC) x Genotype", 
+                    values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+  xlab("") + #Axis titles
+  ggtitle("Glutathione Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/tempGen-PC1_glutathione-metabolism-plot.pdf", height = 8.5, width = 11)
+```
+
 #### Component 2
 
 ```{r}
@@ -3556,6 +3608,58 @@ top_tempGen_PC2_pathwayResults %>%
                     labels = c(expression("">=0.05), expression(""<0.05))) +
   theme_classic(base_size = 15)
 ggsave("metaboanalyst/figures/tempGen_PC2-enrichmentRatio.pdf", heigh = 8.5, width = 11)
+```
+
+Arginine biosynthesis:
+
+C00077: ornithine
+C00327: citrulline
+C00026: alpha-ketoglutarate
+C00064: glutamine
+
+```{r}
+tempGen_PC2_arginineBiosynthesis_facets <- c("1" = "ornithine",
+                          "2" = "citrulline",
+                          "3" = "alpha-ketoglutarate",
+                          "4" = "glutamine") #Assign labels for facets
+```
+
+```{r}
+transMetabData %>%
+  filter(., treatment != "15C") %>%
+  dplyr::select(., c(crab.ID, treatment_genotype, 
+                     ornithine, citrulline, `alpha-ketoglutarate`, glutamine)) %>%
+  pivot_longer(., cols = c(3:6), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "ornithine" ~ 1,
+                              metabolite == "citrulline" ~ 2,
+                              metabolite == "alpha-ketoglutarate" ~ 3,
+                              metabolite == "glutamine" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment_genotype, y = value, color = treatment_genotype)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = tempGen_PC2_arginineBiosynthesis_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Genotype", 
+                    values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+  scale_colour_manual(name = "Temperature (ºC) x Genotype", 
+                    values = c("lightblue2", "steelblue1", plotColors[3],
+                               "salmon2", "firebrick1", plotColors[1]),
+                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+  xlab("") + #Axis titles
+  ggtitle("Arginine Biosynthesis") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/tempGen-PC2_arginine-biosynthesis-plot.pdf", height = 8.5, width = 11)
 ```
 
 #### Component 3
