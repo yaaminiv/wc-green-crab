@@ -6,7 +6,7 @@
 #SBATCH --mail-user=yaamini.venkataraman@whoi.edu    				    									    		    # Where to send mail
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
-#SBATCH --mem=100gb                                                 								          # Job memory request
+#SBATCH --mem=180gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
@@ -44,7 +44,7 @@ ${TRINITY}/Trinity \
 --seqType fq \
 --max_memory 100G \
 --samples_file ${trinity_file_list} \
---SS_lib_type FR \
+--SS_lib_type RF \
 --min_contig_length 200 \
 --full_cleanup \
 --CPU 28
