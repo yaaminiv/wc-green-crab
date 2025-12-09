@@ -1,6 +1,6 @@
-# PID of current job: 811503
+# PID of current job: 2100264
 mSet<-InitDataObjects("conc", "pathora", FALSE, 150)
-cmpd.vec<-c("ononitol","conduritol-beta-epoxide","ciliatine","pinitol","6-deoxygalactofuranose","lactose","2-hydroxyglutaric acid","1,5-anhydroglucitol","sorbitol","cadaverine","homoserine","alanine","glycine","glucose-6-phosphate","fructose-6-phosphate","n-epsilon-trimethyllysine","campesterol","uridine","glucosamine","gluconic acid lactone","citrulline","N-acetylmannosamine","creatinine","ornithine")
+cmpd.vec<-c("ononitol","conduritol-beta-epoxide","pinitol","ciliatine","6-deoxygalactofuranose","lactose","2-hydroxyglutaric acid","cadaverine","1,5-anhydroglucitol","sorbitol","homoserine","alanine","glycine","glucose-6-phosphate","fructose-6-phosphate","campesterol","n-epsilon-trimethyllysine","uridine","gluconic acid lactone","glucosamine","N-acetylmannosamine","citrulline","creatinine","behenic acid")
 mSet<-Setup.MapData(mSet, cmpd.vec);
 mSet<-CrossReferencing(mSet, "name");
 mSet<-CreateMappingResultTable(mSet)
