@@ -112,6 +112,8 @@ head(genotypeData) #Confirm genotype dataframe creation
 
 Before analyzing the data, I will transform the data and match with treatment metadata. The West Coast Metabolomics Center has already normalized data using the average mTIC (sum of all peak heights for *identified* metabolites) of the samples. 
 
+REMOVE CRAB 5-064 SINCE IT DOESN'T HAVE AN RNA-SEQ PAIR.
+
 ```{r}
 transMetabData <- metabolomicsMetadata %>%
   left_join(x = ., y = genotypeData, by = "crab.ID") %>%
@@ -129,9 +131,11 @@ transMetabData <- metabolomicsMetadata %>%
               t(.) %>% as.data.frame(.) %>%
               rownames_to_column(., var = "crab.ID") %>% 
               mutate(crab.ID = gsub(x = crab.ID, pattern = "\\.", replacement = "-")),
-            by = "crab.ID") #Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this.
+            by = "crab.ID") %>%
+  filter(., crab.ID != "5-064")
+  #Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this. Remove sample 5-064 since it doesn't have an RNA-Seq pair.
 head(transMetabData) #Confirm changes
-nrow(transMetabData) #88 samples, which is how many were sequenced
+nrow(transMetabData) #87 samples, which is how many were sequenced that have a RNA-Seq pair.
 ```
 
 ```{r}
@@ -458,7 +462,7 @@ anova(disp.TT.day) #Variance is similar between groups. Day significance is due 
 disp.TT.tempDay <- betadisper(dissim.TT, group = as.factor((transMetabData %>% filter(., day != "0"))$treatment_day), type = 'centroid') #Run a beta dispersion model to assess if significant differences are due to differences in group centroid or variance
 plot(disp.TT.tempDay) #Dispersion differences exist
 boxplot(disp.TT.tempDay) #Show distance to group centroids, can clearly see dispersion differences between 30 and the other two
-anova(disp.TT.tempDay) #Variance is different between groups. Interaction significance is due to centroid and dispersion differences
+anova(disp.TT.tempDay) #Variance is not different between groups. Interaction significance is due to centroid differences only
 ```
 
 ```{r}
@@ -764,12 +768,6 @@ plotIndiv(treatmentDay.known.plsda.tuned, comp = c(1,3), ind.names = FALSE,
 #dev.off()
 ```
 
-```{r}
-pdf("PLSDA/figures/known-metabolites-cimPlot-treatmentDay.pdf", height = 8.5, width = 11)
-cim(treatmentDay.known.plsda.tuned, mapping = "Y", row.names = (transMetabData %>% filter(., day != 0))$treatment_day, xlab = "Metabolites", ylab = "Temperature (ºC) x Day", margins = c(8, 5), row.cex = 0.5) #Create CIM plot with metabolites on the x-axis and treatment x day on the y-axis. 
-dev.off()
-```
-
 ### Validate PLS-DA
 
 The last step is to know how many variables (metabolites) make sense to include with the optimal number of components. I can then run this reduced PLSDA to ensure the trends remain consistent.
@@ -964,7 +962,7 @@ tempTimepoint.ASCAmodel <- ALASCA(df = tempTimepoint.ASCA,
 
 ```{r}
 # pdf("ASCA/figures/tempTimepoint-scree-plot.pdf")
-plot(tempTimepoint.ASCAmodel, component = 1:10, type = "scree") #Scree plot of variance explained by each PC. There's a pretty steep drop-off between components 2 and 3. Component 3 may or may not explain more than 50% of the variance.
+plot(tempTimepoint.ASCAmodel, component = 1:10, type = "scree") #Scree plot of variance explained by each PC. There's a pretty steep drop-off between components 2 and 3. Component 3 may or may not explain more than 10% of the variance.
 # dev.off()
 ```
 
