@@ -133,7 +133,7 @@ transMetabData <- metabolomicsMetadata %>%
               mutate(crab.ID = gsub(x = crab.ID, pattern = "\\.", replacement = "-")),
             by = "crab.ID") %>%
   filter(., crab.ID != "5-064")
-  #Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this. Remove sample 5-064 since it doesn't have an RNA-Seq pair.
+#Remove columns with MS information, convert BinBase.name to rownames, and transform dataframe. Convert rownames to crab.ID column. Replace . with - in IDs. Join with genotype data and metadata. Since some samples were taken from 25 and 5 treatments before temperatures were changed (day 0), the "treatment" information used for metabolomics is slightly different than the original treatment assignment. Modify different treatment column names to reflect this. Remove sample 5-064 since it doesn't have an RNA-Seq pair.
 head(transMetabData) #Confirm changes
 nrow(transMetabData) #87 samples, which is how many were sequenced that have a RNA-Seq pair.
 ```
@@ -1200,9 +1200,9 @@ C00085: fructose-6-phosphate
 
 ```{r}
 tempTimePC1_starchSucrose_facets <- c("1" = "glucose-1-phosphate",
-                          "2" = "glucose-6-phosphate",
-                          "3" = "fructose",
-                          "4" = "fructose-6-phosphate") #Assign labels for facets
+                                      "2" = "glucose-6-phosphate",
+                                      "3" = "fructose",
+                                      "4" = "fructose-6-phosphate") #Assign labels for facets
 ```
 
 ```{r}
@@ -1228,10 +1228,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Early 5ºC", "Late 5ºC", 
                                "Early 25ºC", "Late 25ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c("lightblue2", plotColors[3], 
-                               "salmon2", plotColors[1]),
-                    labels = c("Early 5ºC", "Late 5ºC", 
-                               "Early 25ºC", "Late 25ºC")) +
+                      values = c("lightblue2", plotColors[3], 
+                                 "salmon2", plotColors[1]),
+                      labels = c("Early 5ºC", "Late 5ºC", 
+                                 "Early 25ºC", "Late 25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Starch and Sucrose Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -1932,9 +1932,9 @@ C00122: fumaric acid
 
 ```{r}
 early_5v25_arginineBiosynthesis_facets <- c("1" = "ornithine",
-                          "2" = "citrulline",
-                          "3" = "urea",
-                          "4" = "fumaric acid") #Assign labels for facets
+                                            "2" = "citrulline",
+                                            "3" = "urea",
+                                            "4" = "fumaric acid") #Assign labels for facets
 ```
 
 ```{r}
@@ -1961,10 +1961,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Early 5ºC", 
                                "Early 25ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c("lightblue2", 
-                               "salmon2"),
-                    labels = c("Early 5ºC", 
-                               "Early 25ºC")) +
+                      values = c("lightblue2", 
+                                 "salmon2"),
+                      labels = c("Early 5ºC", 
+                                 "Early 25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Arginine Biosynthesis") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2036,9 +2036,9 @@ C00031: glucose
 
 ```{r}
 late_5v25_starchAndSucrose_facets <- c("1" = "maltose",
-                          "2" = "glucose-1-phosphate",
-                          "3" = "trehalose-6-phosphate",
-                          "4" = "glucose") #Assign labels for facets
+                                       "2" = "glucose-1-phosphate",
+                                       "3" = "trehalose-6-phosphate",
+                                       "4" = "glucose") #Assign labels for facets
 ```
 
 ```{r}
@@ -2065,10 +2065,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Late 5ºC", 
                                "Late 25ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c(plotColors[3], 
-                                plotColors[1]),
-                    labels = c("Late 5ºC", 
-                               "Late 25ºC")) +
+                      values = c(plotColors[3], 
+                                 plotColors[1]),
+                      labels = c("Late 5ºC", 
+                                 "Late 25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Starch and Sucrose Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2089,10 +2089,10 @@ C01879: oxoproline
 
 ```{r}
 late_5v25_glutathioneMetabolism_facets <- c("1" = "ornithine",
-                          "2" = "cadaverine",
-                          "3" = "glycine",
-                          "4" = "glutathione",
-                          "5" = "oxoproline") #Assign labels for facets
+                                            "2" = "cadaverine",
+                                            "3" = "glycine",
+                                            "4" = "glutathione",
+                                            "5" = "oxoproline") #Assign labels for facets
 ```
 
 ```{r}
@@ -2120,10 +2120,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Late 5ºC", 
                                "Late 25ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c(plotColors[3], 
-                                plotColors[1]),
-                    labels = c("Late 5ºC", 
-                               "Late 25ºC")) +
+                      values = c(plotColors[3], 
+                                 plotColors[1]),
+                      labels = c("Late 5ºC", 
+                                 "Late 25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Glutathione Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2192,8 +2192,8 @@ C00519: hypotaurine
 
 ```{r}
 earlyvlate_5_taurineMetabolism_facets <- c("1" = "taurine",
-                          "2" = "cysteine",
-                          "3" = "hypotaurine") #Assign labels for facets
+                                           "2" = "cysteine",
+                                           "3" = "hypotaurine") #Assign labels for facets
 ```
 
 ```{r}
@@ -2219,10 +2219,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Early 5ºC", 
                                "Late 5ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c("lightblue2", 
-                                plotColors[3]),
-                    labels = c("Early 5ºC", 
-                               "Late 5ºC")) +
+                      values = c("lightblue2", 
+                                 plotColors[3]),
+                      labels = c("Early 5ºC", 
+                                 "Late 5ºC")) +
   xlab("") + #Axis titles
   ggtitle("Taurine and Hypotaurine Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2243,10 +2243,10 @@ C00085: fructose-6-phosphate
 
 ```{r}
 earlyvlate_5_starchAndSucrose_facets <- c("1" = "glucose-1-phosphate",
-                          "2" = "glucose-6-phosphate",
-                          "3" = "trehalose-6-phosphate",
-                          "4" = "fructose",
-                          "5" = "fructose-6-phosphate") #Assign labels for facets
+                                          "2" = "glucose-6-phosphate",
+                                          "3" = "trehalose-6-phosphate",
+                                          "4" = "fructose",
+                                          "5" = "fructose-6-phosphate") #Assign labels for facets
 ```
 
 ```{r}
@@ -2274,10 +2274,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Early 5ºC", 
                                "Late 5ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c("lightblue2", 
-                                plotColors[3]),
-                    labels = c("Early 5ºC", 
-                               "Late 5ºC")) +
+                      values = c("lightblue2", 
+                                 plotColors[3]),
+                      labels = c("Early 5ºC", 
+                                 "Late 5ºC")) +
   xlab("") + #Axis titles
   ggtitle("Starch and Sucrose Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2338,7 +2338,63 @@ top_earlyvlate_25_pathwayResults %>%
 ggsave("metaboanalyst/figures/25_earlyvlate-enrichmentRatio.pdf", heigh = 8.5, width = 11)
 ```
 
-Starch and sucrose metabolism:
+Arginine biosynthesis:
+
+C00026: alpha-ketoglutarate
+C00025: glutamic acid
+C00077: ornithine
+C00327: citrulline
+C00049: aspartic acid
+C00122: fumaric acid
+
+```{r}
+earlyvlate_25_arginineBiosynthesis_facets <- c("1" = "alpha-ketoglutarate",
+                                               "2" = "glutamic acid",
+                                               "3" = "ornithine",
+                                               "4" = "citrulline",
+                                               "5" = "aspartic acid",
+                                               "6" = "fumaric acid") #Assign labels for facets
+```
+
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `alpha-ketoglutarate`, `glutamic acid`, `ornithine`, `citrulline`, `aspartic acid`, `fumaric acid`)) %>%
+  filter(., treatment_timepoint == "25C_early" | treatment_timepoint == "25C_late") %>%
+  pivot_longer(., cols = c(3:8), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "alpha-ketoglutarate" ~ 1,
+                              metabolite == "glutamic acid" ~ 2,
+                              metabolite == "ornithine" ~ 3,
+                              metabolite == "citrulline" ~ 4,
+                              metabolite == "aspartic acid" ~ 3,
+                              metabolite == "fumaric acid" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = earlyvlate_25_arginineBiosynthesis_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("salmon2", 
+                               plotColors[1]),
+                    labels = c("Early 25ºC", 
+                               "Late 25ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                      values = c("salmon2", 
+                                 plotColors[1]),
+                      labels = c("Early 25ºC", 
+                                 "Late 25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Arginine Biosynthesis") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/25-earlyvlate_arginine-biosynthesis-plot.pdf", height = 8.5, width = 11)
+```
 
 Starch and sucrose metabolism:
 
@@ -2350,10 +2406,10 @@ C00208: maltose
 
 ```{r}
 earlyvlate_25_starchAndSucrose_facets <- c("1" = "glucose-1-phosphate",
-                          "2" = "glucose-6-phosphate",
-                          "3" = "trehalose-6-phosphate",
-                          "4" = "fructose",
-                          "5" = "maltose") #Assign labels for facets
+                                           "2" = "glucose-6-phosphate",
+                                           "3" = "trehalose-6-phosphate",
+                                           "4" = "fructose",
+                                           "5" = "maltose") #Assign labels for facets
 ```
 
 ```{r}
@@ -2381,10 +2437,10 @@ transMetabData_knownTimepoint %>%
                     labels = c("Early 25ºC", 
                                "Late 25ºC")) +
   scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
-                    values = c("salmon2", 
-                                plotColors[1]),
-                    labels = c("Early 25ºC", 
-                               "Late 25ºC")) +
+                      values = c("salmon2", 
+                                 plotColors[1]),
+                      labels = c("Early 25ºC", 
+                                 "Late 25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Starch and Sucrose Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -2395,9 +2451,60 @@ transMetabData_knownTimepoint %>%
 ggsave("metaboanalyst/figures/earlyvlate-25_starch-sucrose-metabolism-plot.pdf", height = 8.5, width = 11)
 ```
 
+Alanine, aspartate, and glutmate metabolism:
 
+C00049: aspartic acid
+C00152: asparagine
+C00122: fumaric acid
+C00026: alpha-ketoglutarate
+C00025: glutamic acid
 
+```{r}
+earlyvlate_25_alanineMetabolism_facets <- c("1" = "aspartic acid",
+                                           "2" = "asparagine",
+                                           "3" = "fumaric acid",
+                                           "4" = "alpha-ketoglutarate",
+                                           "5" = "glutamic acid") #Assign labels for facets
+```
 
+```{r}
+transMetabData_knownTimepoint %>%
+  dplyr::select(., c(crab.ID, treatment_timepoint, 
+                     `aspartic acid`, asparagine, `fumaric acid`, `alpha-ketoglutarate`, `glutamic acid`)) %>%
+  filter(., treatment_timepoint == "25C_early" | treatment_timepoint == "25C_late") %>%
+  pivot_longer(., cols = c(3:7), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "aspartic acid" ~ 1,
+                              metabolite == "asparagine" ~ 2,
+                              metabolite == "fumaric acid" ~ 3,
+                              metabolite == "alpha-ketoglutarate" ~ 4,
+                              metabolite == "glutamic acid" ~ 5)) %>%
+  ggplot(., mapping = aes(x = treatment_timepoint, y = value, color = treatment_timepoint)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = earlyvlate_25_alanineMetabolism_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_fill_manual(name = "Temperature (ºC) x Timepoint", 
+                    values = c("salmon2", 
+                               plotColors[1]),
+                    labels = c("Early 25ºC", 
+                               "Late 25ºC")) +
+  scale_colour_manual(name = "Temperature (ºC) x Timepoint", 
+                      values = c("salmon2", 
+                                 plotColors[1]),
+                      labels = c("Early 25ºC", 
+                                 "Late 25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Alanine, Aspartate, and Glutamate Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/earlyvlate-25_alanine-metabolism-plot.pdf", height = 8.5, width = 11)
+```
 
 
 
@@ -3487,9 +3594,9 @@ C01879: oxoproline
 
 ```{r}
 tempGen_PC1_glutathioneMetabolism_facets <- c("1" = "cadaverine",
-                          "2" = "glycine",
-                          "3" = "glutathione",
-                          "4" = "oxoproline") #Assign labels for facets
+                                              "2" = "glycine",
+                                              "3" = "glutathione",
+                                              "4" = "oxoproline") #Assign labels for facets
 ```
 
 ```{r}
@@ -3516,10 +3623,10 @@ transMetabData %>%
                     labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
                                "25ºC CC", "25ºC CT", "25ºC TT")) +
   scale_colour_manual(name = "Temperature (ºC) x Genotype", 
-                    values = c("lightblue2", "steelblue1", plotColors[3],
-                               "salmon2", "firebrick1", plotColors[1]),
-                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
-                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+                      values = c("lightblue2", "steelblue1", plotColors[3],
+                                 "salmon2", "firebrick1", plotColors[1]),
+                      labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                                 "25ºC CC", "25ºC CT", "25ºC TT")) +
   xlab("") + #Axis titles
   ggtitle("Glutathione Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
@@ -3623,9 +3730,9 @@ C00064: glutamine
 
 ```{r}
 tempGen_PC2_arginineBiosynthesis_facets <- c("1" = "ornithine",
-                          "2" = "citrulline",
-                          "3" = "alpha-ketoglutarate",
-                          "4" = "glutamine") #Assign labels for facets
+                                             "2" = "citrulline",
+                                             "3" = "alpha-ketoglutarate",
+                                             "4" = "glutamine") #Assign labels for facets
 ```
 
 ```{r}
@@ -3652,10 +3759,10 @@ transMetabData %>%
                     labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
                                "25ºC CC", "25ºC CT", "25ºC TT")) +
   scale_colour_manual(name = "Temperature (ºC) x Genotype", 
-                    values = c("lightblue2", "steelblue1", plotColors[3],
-                               "salmon2", "firebrick1", plotColors[1]),
-                    labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
-                               "25ºC CC", "25ºC CT", "25ºC TT")) +
+                      values = c("lightblue2", "steelblue1", plotColors[3],
+                                 "salmon2", "firebrick1", plotColors[1]),
+                      labels = c("5ºC CC", "5ºC CT", "5ºC TT", 
+                                 "25ºC CC", "25ºC CT", "25ºC TT")) +
   xlab("") + #Axis titles
   ggtitle("Arginine Biosynthesis") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
