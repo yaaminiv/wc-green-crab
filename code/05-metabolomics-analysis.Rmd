@@ -1401,16 +1401,20 @@ plotIndiv(treatmentTimepoint.known.plsda) #Preliminary PLS-DAxa
 perf.treatmentTimepoint.known.plsda <- perf(treatmentTimepoint.known.plsda, validation = "Mfold", folds = 5,  
                                             progressBar = TRUE, nrepeat = 50) 
 
-plot(perf.treatmentTimepoint.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 3 components. Centroid distance offers the lowest overall and balanced error rates (BER) when using 3 components
+plot(perf.treatmentTimepoint.known.plsda, sd = TRUE) #Overall, increasing the number of components decreases the error rate. There doesn't seem to be an exponential reduction of error rate after 5 components.
 perf.treatmentTimepoint.known.plsda$choice.ncomp #Confirm information from plot.
 ```
 
 ### Run PLS-DA
 
 ```{r}
-treatmentTimepoint.known.plsda.tuned <- plsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 3) #Run PLS-DA with the appropriate number of components to include based on tuning above.
+treatmentTimepoint.known.plsda.tuned <- plsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 5) #Run PLS-DA with the appropriate number of components to include based on tuning above.
 plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,2)) #Preliminary PLS-DA: PC 1 = 19, PC 2 = 11
 plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,3)) #Preliminary PLS-DA: PC 3 = 9
+plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,4)) #Preliminary PLS-DA: PC 4 = 4
+plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,5)) #Preliminary PLS-DA: PC 5 = 5
+
+#PCs 4 and 5 don't explain a lot of variation, so I'll stick to looking at components 1-3.
 ```
 
 ```{r}
@@ -1442,7 +1446,7 @@ plotIndiv(treatmentTimepoint.known.plsda.tuned, comp = c(1,3), ind.names = FALSE
 ### Validate PLS-DA
 
 ```{r}
-tune.splsda.treatmentTimepoint.known <- tune.splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 3, 
+tune.splsda.treatmentTimepoint.known <- tune.splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = 5, 
                                                     validation = 'Mfold', folds = 5,
                                                     measure = "BER", test.keepX = list.keepX, nrepeat = 50) #More extensive classification performance
 plot(tune.splsda.treatmentTimepoint.known) #Plot results
@@ -1451,7 +1455,7 @@ plot(tune.splsda.treatmentTimepoint.known) #Plot results
 ```{r}
 error <- tune.splsda.treatmentTimepoint.known$error.rate #Save error rate
 ncomp <- tune.splsda.treatmentTimepoint.known$choice.ncomp$ncomp #Optimal number of components based on t-tests on the error rate
-ncomp #3 components! That's in-line with the perf analysis and what I ended up using.
+ncomp #3 components! That's in-line with what I observed.
 
 select.keepX <- tune.splsda.treatmentTimepoint.known$choice.keepX #Optimal number of variables to select (e.g., number of metabolite features)
 select.keepX #sPLSDA should be run with this many features per component.
@@ -1459,7 +1463,7 @@ select.keepX #sPLSDA should be run with this many features per component.
 
 ```{r}
 final.splsda.treatmentTimepoint.known <- splsda(X_tempTimepoint, Y_tempTimepoint, ncomp = ncomp, keepX = select.keepX) #Use the number of components and metabolites to keep based on optimization from above
-plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,2)) #PC1: 18, PC2: 12
+plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,2)) #PC1: 17, PC2: 12
 plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,3)) #PC3: 7%
 ```
 
@@ -1470,7 +1474,7 @@ plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,2), ind.names = FALS
                   "salmon2", plotColors[1]),
           pch = as.factor(rep(c(1, 2), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 17% Explained Variance", size.xlabel = 15, Y.label = "Component 2: 12% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 #dev.off()
 ```
@@ -1482,7 +1486,7 @@ plotIndiv(final.splsda.treatmentTimepoint.known, comp = c(1,3), ind.names = FALS
                   "salmon2", plotColors[1]),
           pch = as.factor(rep(c(1, 2), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 7% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by Temperature and Timepoint", X.label = "Component 1: 17% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 7% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 # dev.off()
 ```
