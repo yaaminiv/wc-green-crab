@@ -7,7 +7,8 @@
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
 #SBATCH --mem=180gb                                                 								          # Job memory request
-#SBATCH --qos=unlim            								   															     	    	# Unlimited time
+#SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
+#SBATCH --time=10-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
 
