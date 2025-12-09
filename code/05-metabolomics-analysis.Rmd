@@ -817,7 +817,7 @@ plotIndiv(final.splsda.treatmentDay.known, comp = c(1,3), ind.names = FALSE,
                   "salmon4", "salmon2", "firebrick1", plotColors[1]),
           pch = as.factor(rep(c(1, 2, 0, 4), times = 2)), cex = 3, point.lwd = 0.7,
           ellipse = TRUE, star = TRUE, centroid = FALSE, 
-          title = "sPLS-DA by Temperature and Day", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 9% Explained Variance", size.ylabel = 15, size.axis = 13,
+          title = "sPLS-DA by Temperature and Day", X.label = "Component 1: 18% Explained Variance", size.xlabel = 15, Y.label = "Component 3: 7% Explained Variance", size.ylabel = 15, size.axis = 13,
           style = "ggplot2")
 #dev.off()
 ```
@@ -1618,7 +1618,7 @@ clean_5v25_late <- transMetabData_knownTimepoint %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_5v25_late <- cbind(clean_5v25_late[, c(1:2, 199:200)], 
                               log(clean_5v25_late[, names(clean_5v25_late) %in% VIP_5v25_late$metabolite])) %>%
-  pivot_longer(., cols = 5:65, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  pivot_longer(., cols = 5:66, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_5v25_late #Confirm changes
 ```
@@ -1651,11 +1651,11 @@ t.test_5v25_late %>%
 t.test_5v25_late %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>%
-  nrow(.) #59 significantly different metabolites
+  nrow(.) #60 significantly different metabolites
 t.test_5v25_late %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
-  nrow(.) #13 metabolites higher in 5ºC
+  nrow(.) #14 metabolites higher in 5ºC
 t.test_5v25_late %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
@@ -1711,7 +1711,7 @@ clean_5_earlyvlate <- transMetabData_knownTimepoint %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_5_earlyvlate <- cbind(clean_5_earlyvlate[, c(1:2, 199:200)], 
                                  log(clean_5_earlyvlate[, names(clean_5_earlyvlate) %in% VIP_5_earlyvlate$metabolite])) %>%
-  pivot_longer(., cols = 5:54, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  pivot_longer(., cols = 5:56, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_5_earlyvlate #Confirm changes
 ```
@@ -1744,15 +1744,15 @@ t.test_5_earlyvlate %>%
 t.test_5_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>%
-  nrow(.) #44 significantly different metabolites
+  nrow(.) #42 significantly different metabolites
 t.test_5_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
-  nrow(.) #38 metabolites higher earlier
+  nrow(.) #37 metabolites higher earlier
 t.test_5_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
-  nrow(.) #6 metabolites higher later
+  nrow(.) #5 metabolites higher later
 ```
 
 ```{r}
@@ -1804,7 +1804,7 @@ clean_25_earlyvlate <- transMetabData_knownTimepoint %>%
   droplevels() #Filter transMetabData for desired contrasts.
 VIP_select_25_earlyvlate <- cbind(clean_25_earlyvlate[, c(1:2, 199:200)], 
                                   log(clean_25_earlyvlate[, names(clean_25_earlyvlate) %in% VIP_25_earlyvlate$metabolite])) %>%
-  pivot_longer(., cols = 5:54, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  pivot_longer(., cols = 5:75, values_to = "log_norm_counts", names_to = "metabolite") %>%
   group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
 VIP_select_25_earlyvlate #Confirm changes
 ```
@@ -1837,15 +1837,15 @@ t.test_25_earlyvlate %>%
 t.test_25_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>%
-  nrow(.) #47 significantly different metabolites
+  nrow(.) #69 significantly different metabolites
 t.test_25_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
-  nrow(.) #43 metabolites higher earlier
+  nrow(.) #63 metabolites higher earlier
 t.test_25_earlyvlate %>%
   ungroup(.) %>%
   filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
-  nrow(.) #4 metabolites higher later
+  nrow(.) #6 metabolites higher later
 ```
 
 ```{r}

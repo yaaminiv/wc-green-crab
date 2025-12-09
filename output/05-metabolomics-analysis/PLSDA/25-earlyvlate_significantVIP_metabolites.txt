@@ -1,5 +1,26 @@
 metabolite	PubChem	KEGG	higherAbundanceIn
+1,5-anhydroglucitol	64960	C07326	25C_late
+2,3-dihydroxypyridine	28115		25C_early
+2,5-dihydroxypyrazine 	23368901		25C_early
+2-hydroxyglutaric acid	43	C02630	25C_early
+2-ketoisocaproic acid	70	C00233	25C_early
+3-Amino-2-piperidone 	5200225		25C_early
+5-hydroxynorvaline 	95562		25C_early
+6-Oxopiperidine-2-carboxylic acid 	3014237		25C_early
+6-deoxygalactofuranose 	11953811	C02431	25C_early
 UDP-N-acetylglucosamine	445675	C00043	25C_early
+adenine	190	C00147	25C_early
+adenosine	60961	C00212	25C_early
+alpha-ketoglutarate	51	C00026	25C_early
+arachidonic acid	444899	C00219	25C_early
+asparagine	6267	C00152	25C_early
+aspartic acid	5960	C00049	25C_early
+beta-glycerolphosphate	2526	C02979	25C_early
+butyrolactam 	12025		25C_early
+capric acid	2969	C01571	25C_early
+ciliatine	339	C03557	25C_early
+citrulline	9750	C00327	25C_early
+conduritol-beta-epoxide	9989541		25C_late
 cyanoalanine	18647689		25C_early
 cytidine-5-monophosphate	6131	C00055	25C_early
 cytosine	597	C00380	25C_early
@@ -27,6 +48,7 @@ lysine	5962	C00047	25C_early
 maleimide	10935	C07272	25C_early
 maltose	439186	C00208	25C_early
 melezitose	92817	C08243	25C_early
+methylmaleic acid	643798	C02226	25C_early
 ononitol	230881		25C_late
 ornithine	6262	C00077	25C_early
 palmitoleic acid	445638	C08362	25C_early

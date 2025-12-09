@@ -23,6 +23,7 @@ creatinine	588	C00791	25C_late
 cytidine-5-monophosphate	6131	C00055	25C_late
 dehydroascorbic acid	440667	C05422	25C_late
 diphenoxyethane	7713		25C_late
+erythronic acid lactone	5325915	C02341	05C_late
 ethanolamine	700	C00189	05C_late
 gluconic acid lactone	7027	C00198	25C_late
 glucose	64689	C00221	25C_late

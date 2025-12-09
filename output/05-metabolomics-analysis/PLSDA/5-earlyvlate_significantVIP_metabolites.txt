@@ -34,11 +34,9 @@ lysine	5962	C00047	05C_early
 methanolphosphate	13130		05C_late
 nicotinamide	936	C00153	05C_early
 ornithine	6262	C00077	05C_early
-oxamic acid	974	C01444	05C_late
 phosphate	1004	C00009	05C_early
 pyrophosphate	1023	C00013	05C_early
 saccharic acid	33037	C00818	05C_early
-salicylic acid	338	C00805	05C_early
 taurine	1123	C00245	05C_early
 terephthalic acid	22416364	C06337	05C_early
 trehalose-6-phosphate	122336	C00689	05C_early
