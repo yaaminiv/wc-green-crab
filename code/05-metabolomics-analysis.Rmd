@@ -1138,7 +1138,7 @@ tempTimepoint.loadingsPC1[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("ASCA/tempTimepoint-PC1_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 ```{r}
@@ -1275,7 +1275,7 @@ tempTimepoint.loadingsPC2[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("ASCA/tempTimepoint-PC2_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 ```{r}
@@ -1339,7 +1339,7 @@ tempTimepoint.loadingsPC3[[1]] %>%
             by = "metabolite") %>%
   dplyr::select(., PC, metabolite, loading, cum_var, PubChem, KEGG) %>%
   unique(.) %>%
-  write.table("PLSDA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
+  write.table("ASCA/tempTimepoint-PC3_cumvar50_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Save list of metabolites to use with Metaboanalyst
 ```
 
 ```{r}
