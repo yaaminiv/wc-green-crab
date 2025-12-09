@@ -112,8 +112,6 @@ head(genotypeData) #Confirm genotype dataframe creation
 
 Before analyzing the data, I will transform the data and match with treatment metadata. The West Coast Metabolomics Center has already normalized data using the average mTIC (sum of all peak heights for *identified* metabolites) of the samples. 
 
-REMOVE CRAB 5-064 SINCE IT DOESN'T HAVE AN RNA-SEQ PAIR.
-
 ```{r}
 transMetabData <- metabolomicsMetadata %>%
   left_join(x = ., y = genotypeData, by = "crab.ID") %>%
