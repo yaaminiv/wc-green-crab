@@ -1,17 +1,19 @@
-# PID of current job: 834071
+# PID of current job: 2121611
 mSet<-InitDataObjects("conc", "pathora", FALSE, 150)
-cmpd.vec<-c("glycerol-alpha-phosphate","urea","ethanolamine","proline","5-hydroxynorvaline","phosphoglycolic acid","aminomalonic acid","methanolphosphate","6-Oxopiperidine-2-carboxylic acid","glycine","maleimide","succinic acid","3-phosphoglycerate","methionine sulfoxide","tocopherol alpha","trehalose-6-phosphate","raffinose","oxamic acid","arachidonic acid","lactose","capric acid","phenol","dehydroascorbic acid","1,5-anhydroglucitol","glycolic acid","glucose","terephthalic acid","galactinol","phenylethylamine")
+cmpd.vec<-c("glycerol-alpha-phosphate","urea","proline","ethanolamine","aminomalonic acid","5-hydroxynorvaline","6-Oxopiperidine-2-carboxylic acid","tocopherol alpha","succinic acid","methanolphosphate","3-phosphoglycerate","phosphoglycolic acid","glycine","trehalose-6-phosphate","capric acid","maleimide","methylmaleic acid","oxamic acid","methionine sulfoxide","raffinose","terephthalic acid","arachidonic acid","ethanol phosphate","1,5-anhydroglucitol","dehydroascorbic acid","lactose","glycolic acid","citric acid","phenol")
 mSet<-Setup.MapData(mSet, cmpd.vec);
 mSet<-CrossReferencing(mSet, "name");
 mSet<-CreateMappingResultTable(mSet)
 mSet<-PerformDetailMatch(mSet, "glycerol-alpha-phosphate");
 mSet<-GetCandidateList(mSet);
 mSet<-SetCandidate(mSet, "glycerol-alpha-phosphate", "Glycerophosphoric acid");
-mSet<-PerformDetailMatch(mSet, "methanolphosphate");
-mSet<-GetCandidateList(mSet);
 mSet<-PerformDetailMatch(mSet, "tocopherol alpha");
 mSet<-GetCandidateList(mSet);
+mSet<-PerformDetailMatch(mSet, "methanolphosphate");
+mSet<-GetCandidateList(mSet);
 mSet<-PerformDetailMatch(mSet, "oxamic acid");
+mSet<-GetCandidateList(mSet);
+mSet<-PerformDetailMatch(mSet, "ethanol phosphate");
 mSet<-GetCandidateList(mSet);
 mSet<-SetKEGG.PathLib(mSet, "dme", "current")
 mSet<-SetMetabolomeFilter(mSet, F);
