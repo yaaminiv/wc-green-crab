@@ -1871,6 +1871,8 @@ ggsave("PLSDA/figures/significant-VIP-25-earlyvlate.pdf", height = 8.5, width = 
 
 #### Metaboanalyst enrichment
 
+I put the VIP lists from each contrast and put them into the Pathway Analysis module in Metaboanalyst, following specifications listed above.
+
 ##### Early 5ºC vs. Early 25ºC
 
 ```{r}
