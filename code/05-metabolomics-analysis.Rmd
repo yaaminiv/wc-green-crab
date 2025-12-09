@@ -81,7 +81,7 @@ metabolomicsMetadata <- read.csv("../../metadata/metabolomics-sample-list.csv", 
   mutate(., day = case_when(date == "6/28/23" ~ "0",
                             date == "6/29/23" ~ "01",
                             date == "7/5/23" ~ "07",
-                            date == "7/24/23" ~ "26",
+                            date == "7/19/23" ~ "21",
                             date == "8/9/23" ~ "42") %>%
            as.character(.)) %>%
   dplyr::select(-date) %>%
@@ -325,13 +325,13 @@ pcaPlot3 <- autoplot(scaled.pca.TT, data = (transMetabData %>% filter(., day != 
                      size = 5, alpha = 0.8, colour = "day", shape = "day",
                      frame = TRUE, frame.colour = "day", loadings = FALSE) +
   scale_color_manual(values = rainbow(4),
-                     labels = c("1", "7", "26", "42"),
+                     labels = c("1", "7", "21", "42"),
                      name = "Day") +
   scale_fill_manual(values = rainbow(4),
-                    labels = c("1", "7", "26", "42"),
+                    labels = c("1", "7", "21", "42"),
                     name = "Day") +
   scale_shape_manual(values = c(1, 2, 0, 4),
-                     labels = c("1", "7", "26", "42"),
+                     labels = c("1", "7", "21", "42"),
                      name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Same as above but color by day and not treatment
@@ -345,17 +345,17 @@ pcaPlot4 <- autoplot(scaled.pca.TT, data = (transMetabData %>% filter(., day != 
                      frame = TRUE, frame.colour = "treatment_day", loadings = FALSE) +
   scale_color_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
                                 "salmon4", "salmon2", "firebrick1", plotColors[1]),
-                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                      name = "Treatment") +
   scale_fill_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
-                    labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                               "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                    labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                               "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                     name = "Treatment") +
   scale_shape_manual(values = c(1, 2, 0, 4, 1, 2, 0, 4),
-                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                      name = "Treatment") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
@@ -380,13 +380,13 @@ pcaPlot5 <- autoplot(scaled.pca.TT.id, data = (transMetabData %>% filter(., day 
                      size = 5, alpha = 0.8, colour = "day", shape = "day",
                      frame = TRUE, frame.colour = "day", loadings = FALSE) +
   scale_color_manual(values = rainbow(4),
-                     labels = c("1", "7", "26", "42"),
+                     labels = c("1", "7", "21", "42"),
                      name = "Day") +
   scale_fill_manual(values = rainbow(4),
-                    labels = c("1", "7", "26", "42"),
+                    labels = c("1", "7", "21", "42"),
                     name = "Day") +
   scale_shape_manual(values = c(1, 2, 0, 4),
-                     labels = c("1", "7", "26", "42"),
+                     labels = c("1", "7", "21", "42"),
                      name = "Day") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Same as above but color by day and not treatment
@@ -400,17 +400,17 @@ pcaPlot6 <- autoplot(scaled.pca.TT.id, data = (transMetabData %>% filter(., day 
                      frame = TRUE, frame.colour = "treatment_day", loadings = FALSE) +
   scale_color_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
                                 "salmon4", "salmon2", "firebrick1", plotColors[1]),
-                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                      name = "Treatment") +
   scale_fill_manual(values = c("lightblue4", "lightblue2", "steelblue1", plotColors[3], 
                                "salmon4", "salmon2", "firebrick1", plotColors[1]),
-                    labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                               "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                    labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                               "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                     name = "Treatment") +
   scale_shape_manual(values = c(1, 2, 0, 4, 1, 2, 0, 4),
-                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 26", "5ºC at Day 42",
-                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 26", "25ºC at Day 42"),
+                     labels = c("5ºC at Day 1", "5ºC at Day 7", "5ºC at Day 21", "5ºC at Day 42",
+                                "25ºC at Day 1", "25ºC at Day 7", "25ºC at Day 21", "25ºC at Day 42"),
                      name = "Treatment") +
   theme_classic(base_size = 15) + theme(legend.position = "right",
                                         plot.background = element_blank()) #Use autoplot to plot the prcomp object. Color points and confidence ellipses by treatment, and have different shapes for each day. Do not include loadings. Manually define color, fill, and shapes.
@@ -826,7 +826,7 @@ plotIndiv(final.splsda.treatmentDay.known, comp = c(1,3), ind.names = FALSE,
 
 # Early vs. late comparisons
 
-Based on the PCA, ASCA, and PLS-DAs above, it seems like there is a clear separation between early (days 1 and 7) and late (days 26 and 42) timepoints. I'm going to repeat my analyses using these larger time classifications for the known metabolites.
+Based on the PCA, ASCA, and PLS-DAs above, it seems like there is a clear separation between early (days 1 and 7) and late (days 21 and 42) timepoints. I'm going to repeat my analyses using these larger time classifications for the known metabolites.
 
 ## Format data
 
@@ -834,7 +834,7 @@ Based on the PCA, ASCA, and PLS-DAs above, it seems like there is a clear separa
 transMetabData_knownTimepoint <- transMetabData[c(1:198)] %>%
   filter(., day != "0") %>%
   mutate(., timepoint = case_when(day == "01" | day == "07" ~ "early",
-                                  day == "26" | day == "42" ~ "late")) %>%
+                                  day == "21" | day == "42" ~ "late")) %>%
   mutate(., treatment_timepoint = paste(treatment, timepoint, sep = "_")) #Take known metabolites and remove day 0 samples. Create columns for timepoint (early vs late) and a column with combined treatment and timepoint information
 head(transMetabData_knownTimepoint) #Confirm dataframe creation. Columns 14:198 would still be the metabolite data.
 ```
@@ -942,7 +942,7 @@ tempTimepoint.ASCA <- transMetabData_knownTimepoint %>%
   dplyr::rename(treatment = treatment.x,
                 original.treatment = treatment.y) %>%
   mutate(., timepoint = case_when(day == "01" | day == "07" ~ "early",
-                                  day == "26" | day == "42" ~ "late")) %>%
+                                  day == "21" | day == "42" ~ "late")) %>%
   dplyr::select(., c(crab.ID:treatment, timepoint)) %>%
   mutate(., treatment = as.factor(treatment),
          timepoint = as.factor(timepoint))
