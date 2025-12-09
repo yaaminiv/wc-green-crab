@@ -25,6 +25,9 @@ getwd()
 #install.packages("plotrix")
 #install.packages("RColorBrewer")
 #install.packages(lme4)
+# install.packages("emmeans")
+# install.packages("multcompView")
+# install.packages("multcomp")
 #install.packages("ggpubr")
 #install.packages("patchwork")
 #install.packages("respirometry")
@@ -32,6 +35,9 @@ require(tidyverse)
 require(plotrix)
 require(RColorBrewer)
 require(lme4)
+require(emmeans)
+require(multcompView)
+require(multcomp)
 require(ggpubr)
 require(patchwork)
 require(respirometry)
@@ -50,14 +56,14 @@ head(rawTTR) #Confirm import. Trial data is in seconds.
 
 ```{r}
 crabMetadata <- read.csv("../../data/crab-metadata.csv", header = TRUE) %>%
-  select(., c("ID", "treatment", "carapace.width", "carapace.length", "respirometry")) %>%
+  dplyr::select(., c("ID", "treatment", "carapace.width", "carapace.length", "respirometry")) %>%
   dplyr::rename(crab.ID = "ID") #Import metadata. Select ID, treatment, width and length columns. Rename "ID" as "crab.ID"
 head(crabMetadata) #Confirm changes
 ```
 
 ```{r}
 genotypeData <- read.csv("../../data/genotype/2023-crab-genotype.csv", header = TRUE, na.strings = "") %>%
-  select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
+  dplyr::select(., crab.ID, treatment, final.genotype) #Import genotype data. Remove rows without final genotypes
 head(genotypeData) #Confirm genotype dataframe creation
 ```
 
@@ -115,6 +121,7 @@ is.na(modTTR$weight) %>% sum(.)
 is.na(modTTR$missing.swimmer) %>% sum(.)
 is.na(modTTR$final.genotype) %>% sum(.)
 ```
+
 # Data exploration
 
 ```{bash}
@@ -396,6 +403,7 @@ TTRnullIntegument2 <- lmer(log(TTRavg) ~ treatment + day + treatment:day +
                              (1|crab.ID), data = modTTR, REML = FALSE) #Run model without interaction to identify significance of predictor. The full model constructed does not include an interaction
 anova(TTRnullIntegument2, TTRmodel) #Integument color is not a significant predictor
 ```
+
 ```{r}
 TTRModelComparisons <- rbind(broom::tidy(anova(TTRDVnullSex, TTRmodelDV)),
                              broom::tidy(anova(TTRDVnullIntegument, TTRmodelDV)),
@@ -451,6 +459,7 @@ TTRmodelGenotype <- lmer(log(TTRavg) ~ treatment + day + treatment:day +
                          data = modTTR, REML = FALSE) #Run model with treatment, timepoint, their interaction, sex, integument color, carapace width, weight, and missing swimmer information as fixed effects, and individual as a random effect. Change the likelihood estimator (REML = FALSE) to compare models with LRT later.
 anova(TTRmodelFinal, TTRmodelGenotype) #Full genotype is not a significant predictor
 ```
+
 ```{r}
 TTRmodelpresenceC <- lmer(log(TTRavg) ~ treatment + day + treatment:day + 
                             presenceC +
@@ -547,6 +556,55 @@ modTTRGenotype %>%
                      labels = c("CC", "CT", "TT")) +
   theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
 ggsave("figures/time-to-right-avg-boxplot-genotype.pdf", height = 8.5, width = 11)
+```
+
+### Posthoc test for significant predictors
+
+There were significant impacts of treatment, timepoint, and their interaction on average righting response! I will investigate these effects using post-hoc tests with `emmeans`.
+
+#### Treatment
+
+The first thing I will do is explore pairwise differences between treatment. Since time was also significant, I'll need to look at treatment differences at ech timepoint.
+
+```{r}
+TTRmodelFinal_treatment <- emmeans(TTRmodelFinal, pairwise ~ treatment | day, at = list(timepoint = c(0, 1, 2, 7, 12, 14, 19, 21, 26, 28, 42)), adjust = "tukey", data = modTTR) #Use emmeans to obtain pairwise treatment differences at the timepoints listed. 
+TTRmodelFinal_treatment$contrasts %>% broom::tidy(.) #Extract the contrast information to look at pairwise test output. Clean output using broom.
+TTRmodelFinal_treatment$contrasts %>% 
+  broom::tidy(.) %>%
+  write.csv("tukey-test-avgTTR-treatment.csv", quote = FALSE, row.names = FALSE) #Save output as a csv.
+```
+
+Interactions can also be investigated by looking at differences in linear model slopes. I will estimate simple slopes to understand how average TTR changes over time for each treatment.
+
+```{r}
+TTRmodelFinal_treatment_slope <- emtrends(TTRmodelFinal, pairwise ~ treatment, var = "day", data = modTTR) #Obtain simple slopes for the interaction between each temperature and time. Test if the effect of time significantly differs between the two treatments
+TTRmodelFinal_treatment_slope$emtrends #Different slopes for each temperature (makes sense because there was an interaction)
+TTRmodelFinal_treatment_slope$contrasts #Significance test for the different slopes. Slopes were significantly different between the control and the cold and warm conditions
+```
+
+#### Timepoint
+
+I want to understand how TTR varied by timepoint within different treatments. There is no way to do this with my original model since timepoint was (rightfully) coded as a continuous variable. In order to get pairwise estimates, I will need to refactor time as a categorical variable, rerun the model, and then use `emmeans` on this revised model.
+
+```{r}
+modTTR$day_factor <- as.factor(modTTR$day) #Code day as a factor
+TTRmodelFinal_factor <- lmer(log(TTRavg) ~ treatment + day_factor + treatment:day_factor + 
+                          (1|crab.ID), 
+                        data = modTTR, REML = FALSE) #Run the original model, but use day as a factor
+TTRmodelFinal_day <- emmeans(TTRmodelFinal_factor, pairwise ~ day_factor | treatment, adjust = "tukey", data = modTTR) #Rerun emmeans using day as a factor
+TTRmodelFinal_day$contrasts %>% broom::tidy(.) #Extract contrasts to look at pairwise output. Clean output using broom.
+TTRmodelFinal_day$contrasts %>%
+  broom::tidy(.) %>%
+  write.csv("tukey-test-avgTTR-day.csv", quote = FALSE, row.names = FALSE) #Save output as a csv.
+```
+
+### Calculate average values
+
+```{r}
+modTTR %>%
+  group_by(., treatment, timepoint) %>%
+  summarize(mean = mean(TTRavg, na.rm = TRUE), sd = sd(TTRavg, na.rm = TRUE)) %>%
+  write.csv("average-TTR-calculations.csv", quote = FALSE, row.names = FALSE)
 ```
 
 # Threshold analysis
