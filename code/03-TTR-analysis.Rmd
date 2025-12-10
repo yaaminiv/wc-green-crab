@@ -28,6 +28,7 @@ getwd()
 # install.packages("emmeans")
 # install.packages("multcompView")
 # install.packages("multcomp")
+#install.packages("cowplot")
 #install.packages("ggpubr")
 #install.packages("patchwork")
 #install.packages("respirometry")
@@ -38,6 +39,7 @@ require(lme4)
 require(emmeans)
 require(multcompView)
 require(multcomp)
+require(cowplot)
 require(ggpubr)
 require(patchwork)
 require(respirometry)
@@ -582,9 +584,9 @@ TTRmodelFinal_treatment_slope$emtrends #Different slopes for each temperature (m
 TTRmodelFinal_treatment_slope$contrasts #Significance test for the different slopes. Slopes were significantly different between the control and the cold and warm conditions
 ```
 
-#### Timepoint
+#### Day
 
-I want to understand how TTR varied by timepoint within different treatments. There is no way to do this with my original model since timepoint was (rightfully) coded as a continuous variable. In order to get pairwise estimates, I will need to refactor time as a categorical variable, rerun the model, and then use `emmeans` on this revised model.
+I want to understand how TTR varied by day within different treatments. There is no way to do this with my original model since day was (rightfully) coded as a continuous variable. In order to get pairwise estimates, I will need to refactor day as a categorical variable, rerun the model, and then use `emmeans` on this revised model.
 
 ```{r}
 modTTR$day_factor <- as.factor(modTTR$day) #Code day as a factor
@@ -703,7 +705,12 @@ ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
-modTTR %>%
+mainPlot
+```
+
+
+```{r}
+mainPlot <- modTTR %>%
   dplyr::select(., c(day, treatment, TTRavg)) %>%
   distinct(.) %>%
   mutate(., day = case_when(day == 1 ~ "01",
@@ -727,6 +734,41 @@ modTTR %>%
                      breaks = c("05C", "15C", "25C"),
                      labels = c("5", "15", "25")) +
   theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
+
+insetPlot <-  modTTR %>%
+  dplyr::select(., c(day, treatment, TTRavg)) %>%
+  distinct(.) %>%
+  filter(., treatment != "5C") %>%
+  mutate(., day = case_when(day == 1 ~ "01",
+                            day == 2 ~ "02",
+                            day == 7 ~ "07",
+                            day != 1 | 2 | 7 ~ as.character(day))) %>%
+  ggplot(mapping = aes(x = day, y = TTRavg, color = treatment, shape = treatment)) +
+  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_dodge(width = 0.75)) +
+  ylab("") +
+  scale_x_discrete(name = "",
+                   breaks = c("0", "01", "02", "07", "12", "14", "19", "21", "26", "28", "42"),
+                   labels = c("0", "1", "2", "7", "12", "14", "19", "21", "26", "28", "42")) +
+  scale_color_manual(values = c(plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C"),
+                     labels = c("15", "25")) +
+  scale_shape_manual(values = c(19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C"),
+                     labels = c("15", "25")) +
+  scale_y_continuous(limits = c(0,3)) +
+  theme_classic() + theme(legend.position = "none",
+                          axis.line.x.bottom = element_line(linewidth = 0),
+                          axis.line.y.left = element_line(linewidth = 0),
+                          panel.border = element_rect(colour = "black", fill = NA, size = 1))
+
+plotWithInset <- ggdraw() +
+  draw_plot(mainPlot) +
+  draw_plot(insetPlot, x = 0.09, y = 0.63, width = 0.65, height = 0.25)
+
+plotWithInset
+
 ggsave("figures/time-to-right-avg-boxplot.pdf", height = 8.5, width = 11)
 ```
 
