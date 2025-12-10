@@ -27,6 +27,9 @@ getwd()
 #if ("respirometry" %in% rownames(installed.packages()) == 'FALSE') install.packages("respirometry")
 #if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages("gridExtra")
 #if ("lme4" %in% rownames(installed.packages()) == 'FALSE') install.packages("lme4")
+#if ("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages("emmeans")
+#if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcompView")
+#if ("multcomp" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcomp")
 #if ("broom" %in% rownames(installed.packages()) == 'FALSE') install.packages("broom")
 # if ("patchwork" %in% rownames(installed.packages()) == 'FALSE') install.packages("patchwork")
 # if ("grid" %in% rownames(installed.packages()) == 'FALSE') install.packages('grid')
@@ -37,6 +40,9 @@ require(lubridate)
 require(respirometry)
 require(gridExtra)
 require(lme4)
+require(emmeans)
+require(multcompView)
+require(multcomp)
 require(broom)
 require(patchwork)
 require(grid)
@@ -3074,7 +3080,7 @@ all_MO2_slope_results_demTTRdata_genotype <- all_MO2_slope_results_demTTRdata %>
 head(all_MO2_slope_results_demTTRdata_genotype) #Confirm left_join and dataframe manipulation
 ```
 
-### GLM
+### Mixed effects model
 
 ```{r}
 hist(-(all_MO2_slope_results$slope_nmol_hr_corrected)) #Check distribution
@@ -3221,6 +3227,7 @@ lmAllSlopeResultsHasT <- lmer(log(-slope_nmol_hr_corrected) ~ treatment +
                               data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10)), REML = FALSE) #Create a null model without the factor of interest
 anova(lmAllSlopeResultsHasT, lmAllSlopeResultsNullDay) #Compare models. T allele is not significant
 ```
+
 ```{r}
 modelStatOutput <- rbind(broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVSex)),
       broom::tidy(anova(lmAllSlopeDV, lmAllSlopeDVWeight)),
@@ -3261,6 +3268,18 @@ hist(residuals(lmAllSlopeResultsFinal)) #Residuals normally distributed
 
 plot(fitted(lmAllSlopeResultsFinal), residuals(lmAllSlopeResultsFinal)) #Very heteroskedastic...
 abline(h = 0, lty = 2, col = "grey")
+```
+
+#### Posthoc test for significant predictors
+
+There was significant impact of treatment on oxygen consumption. I will investigate these effects using post-hoc tests with `emmeans`.
+
+```{r}
+lmAllSlopeResultsFinal_treatment <- emmeans(lmAllSlopeResultsFinal, pairwise ~ treatment, adjust = "tukey", data = (all_MO2_slope_results_demTTRdata_genotype %>% filter(., blank_ratio < 0.10))) #Use emmeans to obtain pairwise treatment differences at the timepoints listed. 
+lmAllSlopeResultsFinal_treatment$contrasts %>% broom::tidy(.) #Extract the contrast information to look at pairwise test output. Clean output using broom.
+lmAllSlopeResultsFinal_treatment$contrasts %>% 
+  broom::tidy(.) %>%
+  write.csv("tukey-test-oxygenConsumptionRate-treatment.csv", quote = FALSE, row.names = FALSE) #Save output as a csv.
 ```
 
 ## Create multipanel figure for oxygen consumption
