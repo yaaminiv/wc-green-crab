@@ -27,9 +27,9 @@ getwd()
 #if ("respirometry" %in% rownames(installed.packages()) == 'FALSE') install.packages("respirometry")
 #if ("gridExtra" %in% rownames(installed.packages()) == 'FALSE') install.packages("gridExtra")
 #if ("lme4" %in% rownames(installed.packages()) == 'FALSE') install.packages("lme4")
-#if ("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages("emmeans")
-#if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcompView")
-#if ("multcomp" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcomp")
+# if ("emmeans" %in% rownames(installed.packages()) == 'FALSE') install.packages("emmeans")
+# if ("multcompView" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcompView")
+# if ("multcomp" %in% rownames(installed.packages()) == 'FALSE') install.packages("multcomp")
 #if ("broom" %in% rownames(installed.packages()) == 'FALSE') install.packages("broom")
 # if ("patchwork" %in% rownames(installed.packages()) == 'FALSE') install.packages("patchwork")
 # if ("grid" %in% rownames(installed.packages()) == 'FALSE') install.packages('grid')
@@ -3304,7 +3304,6 @@ hasT_labels <- c("N" = "CC",
                  "Y" = "CT or TT") #Assign labels for facets
 ```
 
-- rm facests
 - add test results (temp, day, and interaction)
 
 ```{r}
@@ -3329,7 +3328,77 @@ all_MO2_slope_results_reorder %>%
                                         axis.title.x = element_blank(),
                                         strip.text.x = element_text(size = 15),
                                         strip.background = element_rect(colour = "white"))
+# ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
+#Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
+```
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+  ggplot(., aes(x = day, y = -slope_nmol_hr_corrected, color = treatment, shape = treatment)) + 
+  geom_boxplot(outlier.shape = NA) + geom_jitter(position = position_dodge(width = 0.75)) +
+  xlab("") + ylab("Oxygen Consumption (nmol/hr)") +
+  scale_x_discrete(name = "Day",
+                   breaks = c("07", "14", "21", "28", "42", "49"),
+                   labels = c("7", "14", "21", "28", "42", "49")) +
+  scale_y_continuous(breaks = seq(0, 25000, 5000)) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  geom_text(x = 4.5, y = 25000,
+            label = "bolditalic(Temperature) * \": \" * chi^2 * \" = 61.03, p < 0.0001\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  geom_text(x = 4.5, y = 24200,
+            label = "bolditalic(Day) * \": \" * chi^2 * \" = 9.26, p = 0.29\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  geom_text(x = 4.5, y = 24200 - 800,
+            label = "bolditalic(Interaction) * \": \" * chi^2 * \" = 6.15, p < 0.51\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  theme_classic(base_size = 15)
 ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
+```
+
+
+```{r}
+all_MO2_slope_results_reorder %>%
+  filter(., blank_ratio < 0.10) %>%
+  ggplot(., aes(x = treatment, y = -slope_nmol_hr_corrected, color = treatment)) + 
+  geom_boxplot() + geom_point(aes(shape = treatment), size = 2) +
+  xlab("") + ylab("Oxygen Consumption (nmol/hr)") +
+  facet_wrap(. ~ day, ncol = 3, labeller = labeller (day = facet_labels)) +
+  scale_x_discrete(breaks = c("05C", "15C", "25C"),
+                   labels = c("", "", "")) +
+  scale_y_continuous(breaks = seq(0, 25000, 5000)) +
+  scale_color_manual(values = c(plotColors[3], plotColors[2], plotColors[1]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  scale_shape_manual(values = c(15, 19, 17),
+                     name = "Temperature (ºC)",
+                     breaks = c("05C", "15C", "25C"),
+                     labels = c("5", "15", "25")) +
+  theme_classic(base_size = 15) + theme(axis.ticks.x = element_blank(),
+                                        axis.title.x = element_blank(),
+                                        strip.text.x = element_text(size = 15),
+                                        strip.background = element_rect(colour = "white"))
+#ggsave("figures/multipanel-oxygen-consumption-corrected.pdf", height = 8.5, width = 11)
 #Create a boxplot for oxygen consumption (µmol/hr). Use -slope_nmol_hr so the larger the slope, the faster the oxygen consumption over the hour. Facet wrap and use the labeller to relabel facets. Add consistent color and shape scales.
 ```
 
