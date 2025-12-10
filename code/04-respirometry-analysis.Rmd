@@ -3365,7 +3365,7 @@ all_MO2_slope_results_reorder %>%
             color = "black",
             size = 3.5) +
   geom_text(x = 4.5, y = 24200 - 800,
-            label = "bolditalic(Interaction) * \": \" * chi^2 * \" = 6.15, p < 0.51\"",
+            label = "bolditalic(Interaction) * \": \" * chi^2 * \" = 6.15, p = 0.51\"",
             hjust = 0,
             parse = TRUE,
             inherit.aes = FALSE,
