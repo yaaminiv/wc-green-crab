@@ -3304,6 +3304,9 @@ hasT_labels <- c("N" = "CC",
                  "Y" = "CT or TT") #Assign labels for facets
 ```
 
+- rm facests
+- add test results (temp, day, and interaction)
+
 ```{r}
 all_MO2_slope_results_reorder %>%
   filter(., blank_ratio < 0.10) %>%
