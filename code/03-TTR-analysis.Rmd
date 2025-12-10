@@ -591,8 +591,8 @@ I want to understand how TTR varied by day within different treatments. There is
 ```{r}
 modTTR$day_factor <- as.factor(modTTR$day) #Code day as a factor
 TTRmodelFinal_factor <- lmer(log(TTRavg) ~ treatment + day_factor + treatment:day_factor + 
-                          (1|crab.ID), 
-                        data = modTTR, REML = FALSE) #Run the original model, but use day as a factor
+                               (1|crab.ID), 
+                             data = modTTR, REML = FALSE) #Run the original model, but use day as a factor
 TTRmodelFinal_day <- emmeans(TTRmodelFinal_factor, pairwise ~ day_factor | treatment, adjust = "tukey", data = modTTR) #Rerun emmeans using day as a factor
 TTRmodelFinal_day$contrasts %>% broom::tidy(.) #Extract contrasts to look at pairwise output. Clean output using broom.
 TTRmodelFinal_day$contrasts %>%
@@ -705,11 +705,6 @@ ggsave("figures/time-to-right-avg-nothresh.pdf", height = 8.5, width = 11)
 ```
 
 ```{r}
-mainPlot
-```
-
-
-```{r}
 mainPlot <- modTTR %>%
   dplyr::select(., c(day, treatment, TTRavg)) %>%
   distinct(.) %>%
@@ -733,7 +728,28 @@ mainPlot <- modTTR %>%
                      name = "Temperature (ºC)",
                      breaks = c("05C", "15C", "25C"),
                      labels = c("5", "15", "25")) +
-  theme_classic(base_size = 15) #Select unique day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Increase base font size.
+  geom_text(x = 1.5, y = 22,
+            label = "bolditalic(Temperature) * \": \" * chi^2 * \" = 239.28, p < 0.0001\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  geom_text(x = 1.5, y = 21,
+            label = "bolditalic(Day) * \": \" * chi^2 * \" = 148.24, p < 0.0001\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  geom_text(x = 1.5, y = 20,
+            label = "bolditalic(Interaction) * \": \" * chi^2 * \" = 147.41, p < 0.0001\"",
+            hjust = 0,
+            parse = TRUE,
+            inherit.aes = FALSE,
+            color = "black",
+            size = 3.5) +
+  theme_classic(base_size = 15) #Select day, treatment, and TTRavg data. Replace numbers with characters to facilitate better ordering. Plot average TTR for each crab in a boxplot. Do not show outliers with the OG boxplot, but add them in with geom_jitter. Add horizontal line for boxplot outlier threshold. Assign colors to each treatment. Annotate with stat output. Increase base font size.
 
 insetPlot <-  modTTR %>%
   dplyr::select(., c(day, treatment, TTRavg)) %>%
@@ -765,7 +781,7 @@ insetPlot <-  modTTR %>%
 
 plotWithInset <- ggdraw() +
   draw_plot(mainPlot) +
-  draw_plot(insetPlot, x = 0.09, y = 0.63, width = 0.65, height = 0.25)
+  draw_plot(insetPlot, x = 0.09, y = 0.67, width = 0.65, height = 0.23)
 
 plotWithInset
 
