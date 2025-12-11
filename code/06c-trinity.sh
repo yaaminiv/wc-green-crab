@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --partition=compute          								 				  								  	     		    # Queue selection
+#SBATCH --partition=medmem          								 				  								  	     		    # Queue selection
 #SBATCH --job-name=yrv_trinity        							 															        # Job name
 #SBATCH --mail-type=ALL              							   				     									     		    # Mail events (BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=yaamini.venkataraman@whoi.edu    				    									    		    # Where to send mail
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
-#SBATCH --mem=180gb                                                 								          # Job memory request
+#SBATCH --mem=500gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
 #SBATCH --time=10-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
