@@ -40,6 +40,7 @@ getwd()
 # if (!requireNamespace("devtools", quietly = TRUE))
 #     install.packages("devtools")
 # devtools::install_github("andjar/ALASCA", ref = "main")
+# if ("patchwork" %in% rownames(installed.packages()) == 'FALSE') install.packages("patchwork")
 require(tidyverse)
 require(vegan)
 require(caret)
@@ -56,6 +57,7 @@ require(svglite)
 require(ggfortify)
 require(devtools)
 require(ALASCA)
+require(patchwork)
 ```
 
 ```{r}
@@ -73,6 +75,7 @@ rawMetabolomicsData <- read.csv("../../data/raw-metabolomics-data-2023.csv", hea
   dplyr::rename_with(~stringr::str_replace_all(., "X", "")) %>%
   mutate(BinBase.name = str_trim(BinBase.name, "both")) #Import data. Remove the "X" prefix for crab IDs. Remove white space from both sides of name
 head(rawMetabolomicsData) #Confirm import. Crab IDs have "." instead of "-"
+nrow(rawMetabolomicsData) 
 ```
 
 ```{r}
@@ -873,6 +876,12 @@ pcaPlot34 <- autoplot(scaled.pca.TTP.id, data = (transMetabData_knownTimepoint),
 pcaPlot34
 ggsave("PCA/figures/known-metabolites-PCA-temperatureTimepoint.pdf", height = 8.5, width = 11)
 ```
+
+```{r}
+(pcaPlot6 + ggtitle("A. Experimental day")) / (pcaPlot34 + ggtitle("B. Timepoint"))
+ggsave("PCA/figures/known-metabolites-PCA-dayTimepoint-multipanel.pdf", height = 11, width = 8.5)
+```
+
 
 ## Conduct PERMANOVA
 
