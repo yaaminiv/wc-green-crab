@@ -2306,7 +2306,7 @@ earlyvlate_25_pathwayResults <- read.csv("metaboanalyst/25-earlyvlate_metaboanal
   mutate(., enrichmentRatio = Hits/Expected) %>%
   mutate(., negLogFDR = -log(FDR))
 #Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
-head(earlyvlate_5_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+head(earlyvlate_25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
 ```
 
 ```{r}
@@ -4295,6 +4295,293 @@ t.test_CTvTT_25C %>%
   filter(., p.adj < 0.05) %>%
   nrow(.) #0 significantly different metabolites
 ```
+
+Well, there are no VIP that distinguish genotypes within a temperature. Looking at some of the ASCA trends again, it may be informative to look at how the same genotype may be responding to different temperature conditions.
+
+#### CC: 5ºC vs. 25ºC
+
+```{r}
+list <- c("05C_CC", "25C_CC") #Assign treatments to examine
+```
+
+```{r}
+X <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts
+Y <- as.factor(X$treatment_genotype) #Treatments for Y
+X <- X[, 14:198] #Retain data only
+```
+
+```{r}
+known.plsda_CC_5Cv25C <- plsda(X, Y, ncomp = 4) #Run PLSDA for desired contrast
+VIP_CC_5Cv25C <- as.data.frame(PLSDA.VIP(known.plsda_CC_5Cv25C)[["tab"]]) %>%
+  rownames_to_column(., var = "metabolite") %>%
+  filter(., VIP >= 1) #Extract VIP list and filter for VIP > 1
+VIP_CC_5Cv25C
+```
+
+```{r}
+clean_CC_5Cv25C <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts.
+VIP_select_CC_5Cv25C <- cbind(clean_CC_5Cv25C[, c(1:2, 6, 10)], 
+                              log(clean_CC_5Cv25C[, names(clean_CC_5Cv25C) %in% VIP_CC_5Cv25C$metabolite])) %>%
+  pivot_longer(., cols = 5:63, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
+VIP_select_CC_5Cv25C #Confirm changes
+```
+
+```{r}
+t.test_CC_5Cv25C <-do(VIP_select_CC_5Cv25C, tidy(t.test(.$log_norm_counts ~ .$treatment_genotype,
+                                                        alternative = "two.sided",
+                                                        mu = 0,
+                                                        var.equal = FALSE,
+                                                        conf.level = 0.95
+))) #Looped t-test for all metabolites with VIP > 1
+t.test_CC_5Cv25C$p.adj <- p.adjust(t.test_CC_5Cv25C$p.value, method = c("fdr"), n = length(VIP_CC_5Cv25C$metabolite)) #Adjust p value for the number of comparisons
+t.test_CC_5Cv25C
+```
+
+```{r}
+t.test_CC_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  nrow(.) #26 significantly different metabolites
+t.test_CC_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
+  nrow(.) #2 metabolites higher in 5ºC
+t.test_CC_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
+  nrow(.) #24 metabolites higher in 25ºC
+```
+
+```{r}
+t.test_CC_5Cv25C %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_CC",
+                                          estimate1 < estimate2 ~ "5C_CC")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-CC_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
+```
+
+```{r}
+t.test_CC_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., VIP_CC_5Cv25C, by = "metabolite") %>%
+  mutate(., direction = case_when(estimate > 0 ~ "5",
+                                  estimate < 0 ~ "25")) %>%
+  mutate(., score = case_when(estimate > 0 ~ VIP,
+                              estimate < 0 ~ -VIP)) %>%
+  arrange(score) %>%
+  ggplot(aes(x = score, y = reorder(metabolite, score, sum))) +
+  geom_bar(aes(fill = direction), stat = 'identity') +
+  xlab("VIP Score") + ylab("Metabolite") +
+  scale_fill_manual(values = c(plotColors[3], plotColors[1]), 
+                    name = "Temperature (ºC)",
+                    breaks = c("5", "25"),
+                    labels = c("5", "25")) +
+  theme_classic(base_size = 15) + theme() #Take t-test results and filter out significant metabolites. Create two new columns using estimate values: one for the direction of increase, and another for positive or negative VIP. Arrange by metabolite name and reorder by cumulative VIP score. Plot bars and change x and y axis labels. Add scale information.
+ggsave("PLSDA/figures/significant-VIP-5v25-CC.pdf", height = 8.5, width = 11)
+```
+
+#### CT: 5ºC vs. 25ºC
+
+```{r}
+list <- c("05C_CT", "25C_CT") #Assign treatments to examine
+```
+
+```{r}
+X <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts
+Y <- as.factor(X$treatment_genotype) #Treatments for Y
+X <- X[, 14:198] #Retain data only
+```
+
+```{r}
+known.plsda_CT_5Cv25C <- plsda(X, Y, ncomp = 4) #Run PLSDA for desired contrast
+VIP_CT_5Cv25C <- as.data.frame(PLSDA.VIP(known.plsda_CT_5Cv25C)[["tab"]]) %>%
+  rownames_to_column(., var = "metabolite") %>%
+  filter(., VIP >= 1) #Extract VIP list and filter for VIP > 1
+VIP_CT_5Cv25C
+```
+
+```{r}
+clean_CT_5Cv25C <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts.
+VIP_select_CT_5Cv25C <- cbind(clean_CT_5Cv25C[, c(1:2, 6, 10)], 
+                              log(clean_CT_5Cv25C[, names(clean_CT_5Cv25C) %in% VIP_CT_5Cv25C$metabolite])) %>%
+  pivot_longer(., cols = 5:73, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
+VIP_select_CT_5Cv25C #Confirm changes
+```
+
+```{r}
+t.test_CT_5Cv25C <-do(VIP_select_CT_5Cv25C, tidy(t.test(.$log_norm_counts ~ .$treatment_genotype,
+                                                        alternative = "two.sided",
+                                                        mu = 0,
+                                                        var.equal = FALSE,
+                                                        conf.level = 0.95
+))) #Looped t-test for all metabolites with VIP > 1
+t.test_CT_5Cv25C$p.adj <- p.adjust(t.test_CT_5Cv25C$p.value, method = c("fdr"), n = length(VIP_CT_5Cv25C$metabolite)) #Adjust p value for the number of comparisons
+t.test_CT_5Cv25C
+```
+
+```{r}
+t.test_CT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  nrow(.) #35 significantly different metabolites
+t.test_CT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
+  nrow(.) #6 metabolites higher in 5ºC
+t.test_CT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
+  nrow(.) #29 metabolites higher in 25ºC
+```
+
+```{r}
+t.test_CT_5Cv25C %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_CT",
+                                          estimate1 < estimate2 ~ "5C_CT")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-CT_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
+```
+
+```{r}
+t.test_CT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., VIP_CT_5Cv25C, by = "metabolite") %>%
+  mutate(., direction = case_when(estimate > 0 ~ "5",
+                                  estimate < 0 ~ "25")) %>%
+  mutate(., score = case_when(estimate > 0 ~ VIP,
+                              estimate < 0 ~ -VIP)) %>%
+  arrange(score) %>%
+  ggplot(aes(x = score, y = reorder(metabolite, score, sum))) +
+  geom_bar(aes(fill = direction), stat = 'identity') +
+  xlab("VIP Score") + ylab("Metabolite") +
+  scale_fill_manual(values = c(plotColors[3], plotColors[1]), 
+                    name = "Temperature (ºC)",
+                    breaks = c("5", "25"),
+                    labels = c("5", "25")) +
+  theme_classic(base_size = 15) + theme() #Take t-test results and filter out significant metabolites. Create two new columns using estimate values: one for the direction of increase, and another for positive or negative VIP. Arrange by metabolite name and reorder by cumulative VIP score. Plot bars and change x and y axis labels. Add scale information.
+ggsave("PLSDA/figures/significant-VIP-5v25-CT.pdf", height = 8.5, width = 11)
+```
+
+#### TT: 5ºC vs. 25ºC
+
+```{r}
+list <- c("05C_TT", "25C_TT") #Assign treatments to examine
+```
+
+```{r}
+X <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts
+Y <- as.factor(X$treatment_genotype) #Treatments for Y
+X <- X[, 14:198] #Retain data only
+```
+
+```{r}
+known.plsda_TT_5Cv25C <- plsda(X, Y, ncomp = 4) #Run PLSDA for desired contrast
+VIP_TT_5Cv25C <- as.data.frame(PLSDA.VIP(known.plsda_TT_5Cv25C)[["tab"]]) %>%
+  rownames_to_column(., var = "metabolite") %>%
+  filter(., VIP >= 1) #Extract VIP list and filter for VIP > 1
+VIP_TT_5Cv25C
+```
+
+```{r}
+clean_TT_5Cv25C <- transMetabData_knownTimepoint %>%
+  dplyr::filter(., treatment_genotype %in% list) %>%
+  droplevels() #Filter transMetabData for desired contrasts.
+VIP_select_TT_5Cv25C <- cbind(clean_TT_5Cv25C[, c(1:2, 6, 10)], 
+                              log(clean_TT_5Cv25C[, names(clean_TT_5Cv25C) %in% VIP_TT_5Cv25C$metabolite])) %>%
+  pivot_longer(., cols = 5:75, values_to = "log_norm_counts", names_to = "metabolite") %>%
+  group_by(., metabolite) #cbind metadata columns (1:4) and log-transformed "clean" data for VIP. Pivot data longer and group by metabolites.
+VIP_select_TT_5Cv25C #Confirm changes
+```
+
+```{r}
+t.test_TT_5Cv25C <-do(VIP_select_TT_5Cv25C, tidy(t.test(.$log_norm_counts ~ .$treatment_genotype,
+                                                        alternative = "two.sided",
+                                                        mu = 0,
+                                                        var.equal = FALSE,
+                                                        conf.level = 0.95
+))) #Looped t-test for all metabolites with VIP > 1
+t.test_TT_5Cv25C$p.adj <- p.adjust(t.test_TT_5Cv25C$p.value, method = c("fdr"), n = length(VIP_TT_5Cv25C$metabolite)) #Adjust p value for the number of comparisons
+t.test_TT_5Cv25C
+```
+
+```{r}
+t.test_TT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  nrow(.) #29 significantly different metabolites
+t.test_TT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 > estimate2) %>%
+  nrow(.) #3 metabolites higher in 5ºC
+t.test_TT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>% filter(., estimate1 < estimate2) %>%
+  nrow(.) #26 metabolites higher in 25ºC
+```
+
+```{r}
+t.test_TT_5Cv25C %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_TT",
+                                          estimate1 < estimate2 ~ "5C_TT")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-TT_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
+```
+
+```{r}
+t.test_TT_5Cv25C %>%
+  ungroup(.) %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., VIP_TT_5Cv25C, by = "metabolite") %>%
+  mutate(., direction = case_when(estimate > 0 ~ "5",
+                                  estimate < 0 ~ "25")) %>%
+  mutate(., score = case_when(estimate > 0 ~ VIP,
+                              estimate < 0 ~ -VIP)) %>%
+  arrange(score) %>%
+  ggplot(aes(x = score, y = reorder(metabolite, score, sum))) +
+  geom_bar(aes(fill = direction), stat = 'identity') +
+  xlab("VIP Score") + ylab("Metabolite") +
+  scale_fill_manual(values = c(plotColors[3], plotColors[1]), 
+                    name = "Temperature (ºC)",
+                    breaks = c("5", "25"),
+                    labels = c("5", "25")) +
+  theme_classic(base_size = 15) + theme() #Take t-test results and filter out significant metabolites. Create two new columns using estimate values: one for the direction of increase, and another for positive or negative VIP. Arrange by metabolite name and reorder by cumulative VIP score. Plot bars and change x and y axis labels. Add scale information.
+ggsave("PLSDA/figures/significant-VIP-5v25-TT.pdf", height = 8.5, width = 11)
+```
+
+#### Unique VIP for each genotype-temperature contrast
+
+Above, I identified VIP that drove differences between temperatures for each genotype. I want to know if there are any VIP that are unique for a specific genotype.
+
+
 
 # Impact of genotype within each temperature
 

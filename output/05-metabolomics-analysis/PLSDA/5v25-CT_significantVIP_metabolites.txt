@@ -1,0 +1,36 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+1,5-anhydroglucitol	64960	C07326	5C_CT
+2,3-dihydroxypyridine	28115		5C_CT
+2,4-diaminobutyric acid	134490	C03283	5C_CT
+2,5-dihydroxypyrazine 	23368901		5C_CT
+2-hydroxyglutaric acid	43	C02630	5C_CT
+alanine	5950	C00041	25C_CT
+aminomalonic acid	100714	C00872	25C_CT
+behenic acid	8215	C08281	5C_CT
+beta-sitosterol	222284	C01753	5C_CT
+butyrolactam 	12025		5C_CT
+cadaverine	273		5C_CT
+cholesterol	5997	C00187	5C_CT
+ciliatine	339	C03557	25C_CT
+conduritol-beta-epoxide	9989541		5C_CT
+dehydroascorbic acid	440667	C05422	5C_CT
+diphenoxyethane	7713		5C_CT
+glucose	64689	C00221	5C_CT
+glutathione	124886	C00051	5C_CT
+glycerol-alpha-phosphate	754	C03189	25C_CT
+glycine	750	C00037	25C_CT
+heptadecanoic acid	10465		5C_CT
+homoserine	12647	C00263	5C_CT
+inosine	6021	C00294	5C_CT
+lactic acid	612	C01432	5C_CT
+levoglucosan	2724705	C22350	5C_CT
+n-epsilon-trimethyllysine	440121		5C_CT
+nicotinamide	936	C00153	5C_CT
+nonadecanoic acid	12591	C16535	5C_CT
+octadecanol	8221		5C_CT
+ononitol	230881		5C_CT
+phenol 	NA		5C_CT
+pinitol	164619		5C_CT
+sorbitol	5780	C00794	5C_CT
+uridine	6029	C00299	5C_CT
+xanthine	1188	C00385	25C_CT
