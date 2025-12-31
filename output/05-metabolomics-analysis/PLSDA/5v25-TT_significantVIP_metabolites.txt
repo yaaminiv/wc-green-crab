@@ -1,30 +1,30 @@
 metabolite	PubChem	KEGG	higherAbundanceIn
-1,5-anhydroglucitol	64960	C07326	5C_TT
-1-monopalmitin	14900		5C_TT
-1-monostearin	24699	D01947	5C_TT
-2-hydroxyglutaric acid	43	C02630	5C_TT
-2-picolinic acid	1018	C10164	5C_TT
-aminomalonic acid	100714	C00872	25C_TT
-cadaverine	273		5C_TT
-campesterol 	173183	C01789	5C_TT
-citric acid	311	C00158	5C_TT
-conduritol-beta-epoxide	9989541		5C_TT
-gluconic acid lactone	7027	C00198	5C_TT
-glucose	64689	C00221	5C_TT
-glutathione	124886	C00051	5C_TT
-glycerol-3-galactoside	16048618	C05401	5C_TT
-glycine	750	C00037	25C_TT
-hexadecylglycerol 	72733	C13859	5C_TT
-inosine	6021	C00294	5C_TT
-inositol-4-monophosphate	440043	C03546	5C_TT
-lactose 	440995	C00243	5C_TT
-levoglucosan	2724705	C22350	5C_TT
-ononitol	230881		5C_TT
-phenol 	NA		5C_TT
-phosphogluconic acid	91493	C00345	5C_TT
-pinitol	164619		5C_TT
-sarcosine	7311726	C00213	25C_TT
-sorbitol	5780	C00794	5C_TT
-trans-4-hydroxyproline	5810	C01157	5C_TT
-trehalose-6-phosphate	122336	C00689	5C_TT
-uridine	6029	C00299	5C_TT
+1,5-anhydroglucitol	64960	C07326	25C_TT
+1-monopalmitin	14900		25C_TT
+1-monostearin	24699	D01947	25C_TT
+2-hydroxyglutaric acid	43	C02630	25C_TT
+2-picolinic acid	1018	C10164	25C_TT
+aminomalonic acid	100714	C00872	5C_TT
+cadaverine	273		25C_TT
+campesterol 	173183	C01789	25C_TT
+citric acid	311	C00158	25C_TT
+conduritol-beta-epoxide	9989541		25C_TT
+gluconic acid lactone	7027	C00198	25C_TT
+glucose	64689	C00221	25C_TT
+glutathione	124886	C00051	25C_TT
+glycerol-3-galactoside	16048618	C05401	25C_TT
+glycine	750	C00037	5C_TT
+hexadecylglycerol 	72733	C13859	25C_TT
+inosine	6021	C00294	25C_TT
+inositol-4-monophosphate	440043	C03546	25C_TT
+lactose 	440995	C00243	25C_TT
+levoglucosan	2724705	C22350	25C_TT
+ononitol	230881		25C_TT
+phenol 	NA		25C_TT
+phosphogluconic acid	91493	C00345	25C_TT
+pinitol	164619		25C_TT
+sarcosine	7311726	C00213	5C_TT
+sorbitol	5780	C00794	25C_TT
+trans-4-hydroxyproline	5810	C01157	25C_TT
+trehalose-6-phosphate	122336	C00689	25C_TT
+uridine	6029	C00299	25C_TT

@@ -1,0 +1,15 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+2,4-diaminobutyric acid	134490	C03283	25C_CT
+behenic acid	8215	C08281	25C_CT
+beta-sitosterol	222284	C01753	25C_CT
+butyrolactam 	12025		25C_CT
+cholesterol	5997	C00187	25C_CT
+ciliatine	339	C03557	5C_CT
+dehydroascorbic acid	440667	C05422	25C_CT
+diphenoxyethane	7713		25C_CT
+glycerol-alpha-phosphate	754	C03189	5C_CT
+heptadecanoic acid	10465		25C_CT
+nicotinamide	936	C00153	25C_CT
+nonadecanoic acid	12591	C16535	25C_CT
+octadecanol	8221		25C_CT
+xanthine	1188	C00385	5C_CT

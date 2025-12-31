@@ -1,27 +1,27 @@
 metabolite	PubChem	KEGG	higherAbundanceIn
-1,5-anhydroglucitol	64960	C07326	5C_CC
-2,3-dihydroxypyridine	28115		5C_CC
-2,5-dihydroxypyrazine 	23368901		5C_CC
-2-hydroxyglutaric acid	43	C02630	5C_CC
-4-hydroxymandelic acid	328	C11527	5C_CC
-alanine	5950	C00041	25C_CC
-campesterol 	173183	C01789	5C_CC
-conduritol-beta-epoxide	9989541		5C_CC
-cysteine	5862	C00097	5C_CC
-gluconic acid lactone	7027	C00198	5C_CC
-glutathione	124886	C00051	5C_CC
-glycine	750	C00037	25C_CC
-homoserine	12647	C00263	5C_CC
-ketoisoleucine 	47	C03465	5C_CC
-lactic acid	612	C01432	5C_CC
-lactose 	440995	C00243	5C_CC
-maltose	439186	C00208	5C_CC
-maltotriose	439586	C01835	5C_CC
-melezitose	92817	C08243	5C_CC
-n-epsilon-trimethyllysine	440121		5C_CC
-ononitol	230881		5C_CC
-oxoproline	7405	C01879	5C_CC
-panose 	94448		5C_CC
-phenol 	NA		5C_CC
-pinitol	164619		5C_CC
-sucrose	5988	C00089	5C_CC
+1,5-anhydroglucitol	64960	C07326	25C_CC
+2,3-dihydroxypyridine	28115		25C_CC
+2,5-dihydroxypyrazine 	23368901		25C_CC
+2-hydroxyglutaric acid	43	C02630	25C_CC
+4-hydroxymandelic acid	328	C11527	25C_CC
+alanine	5950	C00041	5C_CC
+campesterol 	173183	C01789	25C_CC
+conduritol-beta-epoxide	9989541		25C_CC
+cysteine	5862	C00097	25C_CC
+gluconic acid lactone	7027	C00198	25C_CC
+glutathione	124886	C00051	25C_CC
+glycine	750	C00037	5C_CC
+homoserine	12647	C00263	25C_CC
+ketoisoleucine 	47	C03465	25C_CC
+lactic acid	612	C01432	25C_CC
+lactose 	440995	C00243	25C_CC
+maltose	439186	C00208	25C_CC
+maltotriose	439586	C01835	25C_CC
+melezitose	92817	C08243	25C_CC
+n-epsilon-trimethyllysine	440121		25C_CC
+ononitol	230881		25C_CC
+oxoproline	7405	C01879	25C_CC
+panose 	94448		25C_CC
+phenol 	NA		25C_CC
+pinitol	164619		25C_CC
+sucrose	5988	C00089	25C_CC

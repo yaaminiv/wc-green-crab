@@ -4363,8 +4363,8 @@ t.test_CC_5Cv25C %>%
   left_join(., (rawMetabolomicsData %>% 
                   dplyr::rename(metabolite = BinBase.name)), 
             by = "metabolite") %>%
-  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_CC",
-                                          estimate1 < estimate2 ~ "5C_CC")) %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_CC",
+                                          estimate1 < estimate2 ~ "25C_CC")) %>%
   dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
   unique(.) %>%
   write.table("PLSDA/5v25-CC_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
@@ -4456,8 +4456,8 @@ t.test_CT_5Cv25C %>%
   left_join(., (rawMetabolomicsData %>% 
                   dplyr::rename(metabolite = BinBase.name)), 
             by = "metabolite") %>%
-  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_CT",
-                                          estimate1 < estimate2 ~ "5C_CT")) %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_CT",
+                                          estimate1 < estimate2 ~ "25C_CT")) %>%
   dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
   unique(.) %>%
   write.table("PLSDA/5v25-CT_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
@@ -4549,8 +4549,8 @@ t.test_TT_5Cv25C %>%
   left_join(., (rawMetabolomicsData %>% 
                   dplyr::rename(metabolite = BinBase.name)), 
             by = "metabolite") %>%
-  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "25C_TT",
-                                          estimate1 < estimate2 ~ "5C_TT")) %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_TT",
+                                          estimate1 < estimate2 ~ "25C_TT")) %>%
   dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
   unique(.) %>%
   write.table("PLSDA/5v25-TT_significantVIP_metabolites.txt", sep = "\t", quote = FALSE, row.names = FALSE) #Take significant pairwise VIP data and join with identifiers. Create a column with information on condition with the higher abundance. Retain unique entries and write table.
@@ -4581,7 +4581,65 @@ ggsave("PLSDA/figures/significant-VIP-5v25-TT.pdf", height = 8.5, width = 11)
 
 Above, I identified VIP that drove differences between temperatures for each genotype. I want to know if there are any VIP that are unique for a specific genotype.
 
+```{r}
+anti_join(x = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  right_join(x = t.test_CC_5Cv25C, y = ., by = "metabolite") %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_CC",
+                                          estimate1 < estimate2 ~ "25C_CC")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-CC_significantVIP_metabolitesUnique.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+#Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CC crabs. Match it back with t-test results. Retain unique entries and save table.
+```
 
+```{r}
+anti_join(x = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  right_join(x = t.test_CT_5Cv25C, y = ., by = "metabolite") %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_CT",
+                                          estimate1 < estimate2 ~ "25C_CT")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-CT_significantVIP_metabolitesUnique.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+#Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CC crabs. Match it back with t-test results. Retain unique entries and save table.
+```
+
+```{r}
+anti_join(x = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          by = "metabolite") %>%
+  right_join(x = t.test_TT_5Cv25C, y = ., by = "metabolite") %>%
+  filter(., p.adj < 0.05) %>%
+  left_join(., (rawMetabolomicsData %>% 
+                  dplyr::rename(metabolite = BinBase.name)), 
+            by = "metabolite") %>%
+  mutate(., higherAbundanceIn = case_when(estimate1 > estimate2 ~ "5C_TT",
+                                          estimate1 < estimate2 ~ "25C_TT")) %>%
+  dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
+  unique(.) %>%
+  write.table("PLSDA/5v25-TT_significantVIP_metabolitesUnique.txt", sep = "\t", quote = FALSE, row.names = FALSE)
+#Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CC crabs. Match it back with t-test results. Retain unique entries and save table.
+```
 
 # Impact of genotype within each temperature
 

@@ -1,0 +1,10 @@
+metabolite	PubChem	KEGG	higherAbundanceIn
+4-hydroxymandelic acid	328	C11527	25C_CC
+cysteine	5862	C00097	25C_CC
+ketoisoleucine 	47	C03465	25C_CC
+maltose	439186	C00208	25C_CC
+maltotriose	439586	C01835	25C_CC
+melezitose	92817	C08243	25C_CC
+oxoproline	7405	C01879	25C_CC
+panose 	94448		25C_CC
+sucrose	5988	C00089	25C_CC
