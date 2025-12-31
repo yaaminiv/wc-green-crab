@@ -8,7 +8,7 @@
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
 #SBATCH --mem=500gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
-#SBATCH --time=10-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
+#SBATCH --time=25-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
 
@@ -36,7 +36,7 @@ SAMTOOLS=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/samtoo
 
 #Directory and file paths
 DATA_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/trim-illumina-polyA
-OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trimgalore
+OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
 assembly_stats=assembly_stats.txt
 trinity_file_list=/vortexfs1/home/yaamini.venkataraman/trinity-samples.txt
 
