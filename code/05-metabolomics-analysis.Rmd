@@ -2468,10 +2468,10 @@ C00025: glutamic acid
 
 ```{r}
 earlyvlate_25_alanineMetabolism_facets <- c("1" = "aspartic acid",
-                                           "2" = "asparagine",
-                                           "3" = "fumaric acid",
-                                           "4" = "alpha-ketoglutarate",
-                                           "5" = "glutamic acid") #Assign labels for facets
+                                            "2" = "asparagine",
+                                            "3" = "fumaric acid",
+                                            "4" = "alpha-ketoglutarate",
+                                            "5" = "glutamic acid") #Assign labels for facets
 ```
 
 ```{r}
@@ -4587,7 +4587,17 @@ anti_join(x = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(met
           by = "metabolite") %>%
   anti_join(x = .,
             y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
+  nrow(.) #9 metabolites unique to this comparison
+```
+
+```{r}
+anti_join(x = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
           by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
   right_join(x = t.test_CC_5Cv25C, y = ., by = "metabolite") %>%
   filter(., p.adj < 0.05) %>%
   left_join(., (rawMetabolomicsData %>% 
@@ -4607,7 +4617,17 @@ anti_join(x = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(met
           by = "metabolite") %>%
   anti_join(x = .,
             y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
+  nrow(.) #14 metabolites unique to this comparison
+```
+
+```{r}
+anti_join(x = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
           by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
   right_join(x = t.test_CT_5Cv25C, y = ., by = "metabolite") %>%
   filter(., p.adj < 0.05) %>%
   left_join(., (rawMetabolomicsData %>% 
@@ -4618,7 +4638,7 @@ anti_join(x = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(met
   dplyr::select(., metabolite, PubChem, KEGG, higherAbundanceIn) %>%
   unique(.) %>%
   write.table("PLSDA/5v25-CT_significantVIP_metabolitesUnique.txt", sep = "\t", quote = FALSE, row.names = FALSE)
-#Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CC crabs. Match it back with t-test results. Retain unique entries and save table.
+#Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CT crabs. Match it back with t-test results. Retain unique entries and save table.
 ```
 
 ```{r}
@@ -4627,7 +4647,17 @@ anti_join(x = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(met
           by = "metabolite") %>%
   anti_join(x = .,
             y = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
+  nrow(.) #11 metabolites unique to this comparison
+```
+
+```{r}
+anti_join(x = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+          y = t.test_CC_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
           by = "metabolite") %>%
+  anti_join(x = .,
+            y = t.test_CT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(metabolite),
+            by = "metabolite") %>%
   right_join(x = t.test_TT_5Cv25C, y = ., by = "metabolite") %>%
   filter(., p.adj < 0.05) %>%
   left_join(., (rawMetabolomicsData %>% 
@@ -4681,9 +4711,9 @@ C00097: cysteine
 
 ```{r}
 CC_5v25_glutathioneMetabolism_facets <- c("1" = "glycine",
-                                              "2" = "glutathione",
-                                              "3" = "oxoproline",
-                                              "4" = "cysteine") #Assign labels for facets
+                                          "2" = "glutathione",
+                                          "3" = "oxoproline",
+                                          "4" = "cysteine") #Assign labels for facets
 ```
 
 ```{r}
@@ -4706,10 +4736,10 @@ transMetabData %>%
   geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
   geom_point(pch = 21, position = position_dodge(width = 0.5)) +
   scale_colour_manual(name = "Temperature (ºC)", 
-                    values = c(plotColors[3],
-                               plotColors[1]),
-                    labels = c("5ºC", 
-                               "25ºC")) +
+                      values = c(plotColors[3],
+                                 plotColors[1]),
+                      labels = c("5ºC", 
+                                 "25ºC")) +
   xlab("") + #Axis titles
   ggtitle("Glutathione Metabolism") +
   theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
