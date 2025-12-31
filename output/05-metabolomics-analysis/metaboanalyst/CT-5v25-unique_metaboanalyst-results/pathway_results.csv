@@ -1,0 +1,6 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Steroid biosynthesis",4,0.015066,1,0.015002,1.8238,1,0.72095,0
+"Phosphonate and phosphinate metabolism",5,0.018832,1,0.018726,1.7276,1,0.72095,0
+"Nicotinate and nicotinamide metabolism",9,0.033898,1,0.033517,1.4747,1,0.86026,0.0566
+"Insect hormone biosynthesis",21,0.079096,1,0.076886,1.1142,1,1,0
+"Purine metabolism",68,0.25612,1,0.23285,0.63292,1,1,0.02909

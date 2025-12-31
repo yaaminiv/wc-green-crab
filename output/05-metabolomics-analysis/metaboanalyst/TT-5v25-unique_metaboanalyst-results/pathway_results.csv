@@ -1,0 +1,9 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Starch and sucrose metabolism",14,0.079096,1,0.07671,1.1152,1,1,0.05062
+"Citrate cycle (TCA cycle)",20,0.11299,1,0.10805,0.96638,1,1,0.09038
+"Pentose phosphate pathway",22,0.12429,1,0.1183,0.92703,1,1,0.04453
+"One carbon pool by folate",23,0.12994,1,0.12338,0.90874,1,1,0.08204
+"Glyoxylate and dicarboxylate metabolism",24,0.13559,1,0.12845,0.89128,1,1,0.10959
+"Inositol phosphate metabolism",28,0.15819,1,0.14845,0.82842,1,1,0.03858
+"Glycine, serine and threonine metabolism",29,0.16384,1,0.15339,0.8142,1,1,0
+"Arginine and proline metabolism",29,0.16384,1,0.15339,0.8142,1,1,0.05333

@@ -1,0 +1,10 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Starch and sucrose metabolism",14,0.052731,2,0.00095456,3.0202,0.073501,0.073501,0.19776
+"Glutathione metabolism",26,0.097928,2,0.0033575,2.474,0.25517,0.12927,0.0261
+"Taurine and hypotaurine metabolism",7,0.026365,1,0.026142,1.5827,1,0.50324,0
+"Thiamine metabolism",7,0.026365,1,0.026142,1.5827,1,0.50324,0
+"Galactose metabolism",15,0.056497,1,0.055388,1.2566,1,0.85298,0.01
+"Pantothenate and CoA biosynthesis",20,0.07533,1,0.073329,1.1347,1,0.92367,0
+"One carbon pool by folate",23,0.086629,1,0.08397,1.0759,1,0.92367,0
+"Glycine, serine and threonine metabolism",29,0.10923,1,0.10498,0.97891,1,0.98683,0
+"Cysteine and methionine metabolism",32,0.12053,1,0.11534,0.93801,1,0.98683,0.0999

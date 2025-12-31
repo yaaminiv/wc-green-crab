@@ -1,0 +1,17 @@
+"","Total","Expected","Hits","Raw p","-log10(p)","Holm adjust","FDR","Impact"
+"Glutathione metabolism",26,0.24482,4,5.3865e-05,4.2687,0.0041476,0.0041476,0.4397
+"Starch and sucrose metabolism",14,0.13183,2,0.0068414,2.1649,0.51995,0.20159,0.19776
+"Galactose metabolism",15,0.14124,2,0.0078542,2.1049,0.58906,0.20159,0.19
+"One carbon pool by folate",23,0.21657,2,0.018176,1.7405,1,0.34988,0.12705
+"Glycine, serine and threonine metabolism",29,0.27307,2,0.028297,1.5483,1,0.43577,0.31258
+"Taurine and hypotaurine metabolism",7,0.065913,1,0.064257,1.1921,1,0.70683,0
+"Thiamine metabolism",7,0.065913,1,0.064257,1.1921,1,0.70683,0
+"Pantothenate and CoA biosynthesis",20,0.18832,1,0.17382,0.75991,1,1,0
+"Pentose phosphate pathway",22,0.20716,1,0.18961,0.72215,1,1,0
+"Alanine, aspartate and glutamate metabolism",23,0.21657,1,0.1974,0.70466,1,1,0
+"Pyruvate metabolism",23,0.21657,1,0.1974,0.70466,1,1,0
+"Porphyrin metabolism",24,0.22599,1,0.20512,0.68799,1,1,0
+"Glyoxylate and dicarboxylate metabolism",24,0.22599,1,0.20512,0.68799,1,1,0.09132
+"Glycolysis or Gluconeogenesis",26,0.24482,1,0.22037,0.65684,1,1,0
+"Lipoic acid metabolism",27,0.25424,1,0.2279,0.64226,1,1,0.00189
+"Cysteine and methionine metabolism",32,0.30132,1,0.26455,0.57749,1,1,0.0999

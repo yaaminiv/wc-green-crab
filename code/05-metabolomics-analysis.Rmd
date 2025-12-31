@@ -4641,6 +4641,236 @@ anti_join(x = t.test_TT_5Cv25C %>% filter(., p.adj < 0.05) %>% dplyr::select(met
 #Use a series of anti-joins to identify metabolites that are unique VIP for driving temperature differences in CC crabs. Match it back with t-test results. Retain unique entries and save table.
 ```
 
+### Metaboanalyst
+
+#### All VIP
+
+##### CC: 5ºC vs. 25ºC
+
+```{r}
+CC_5v25_pathwayResults <- read.csv("metaboanalyst/CC-5v25_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(CC_5v25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+CC_5v25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/CC_5v25-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+Glutathione metabolism:
+
+C00037: glycine
+C00051: glutathione
+C01879: oxoproline
+C00097: cysteine
+
+```{r}
+CC_5v25_glutathioneMetabolism_facets <- c("1" = "glycine",
+                                              "2" = "glutathione",
+                                              "3" = "oxoproline",
+                                              "4" = "cysteine") #Assign labels for facets
+```
+
+```{r}
+transMetabData %>%
+  filter(., treatment != "15C") %>%
+  filter(., final.genotype == "CC") %>%
+  dplyr::select(., c(crab.ID, treatment, 
+                     glycine, glutathione, oxoproline, cysteine)) %>%
+  pivot_longer(., cols = c(3:6), names_to = "metabolite", values_to = "value") %>%
+  mutate(value = log(value)) %>% 
+  mutate_if(is.numeric, list(~na_if(., -Inf))) %>%
+  replace(is.na(.), 0) %>%
+  mutate(., order = case_when(metabolite == "glycine" ~ 1,
+                              metabolite == "glutathione" ~ 2,
+                              metabolite == "oxoproline" ~ 3,
+                              metabolite == "cysteine" ~ 4)) %>%
+  ggplot(., mapping = aes(x = treatment, y = value, color = treatment)) +
+  facet_wrap(~order, scales = "free_y", labeller = labeller(order = CC_5v25_glutathioneMetabolism_facets)) +
+  ylab("Log-Transformed Abundance") +
+  geom_boxplot(width = 0.5, position = position_dodge(width = 0.5), alpha = 0.7) +
+  geom_point(pch = 21, position = position_dodge(width = 0.5)) +
+  scale_colour_manual(name = "Temperature (ºC)", 
+                    values = c(plotColors[3],
+                               plotColors[1]),
+                    labels = c("5ºC", 
+                               "25ºC")) +
+  xlab("") + #Axis titles
+  ggtitle("Glutathione Metabolism") +
+  theme_classic(base_size = 15) + theme(axis.text.x = element_blank(), 
+                                        axis.ticks.x = element_blank(),
+                                        legend.position = "bottom", 
+                                        legend.text = element_text(color = "black", size = 12), 
+                                        strip.text.x = element_text(size = 10, color = "black", face="bold"))
+ggsave("metaboanalyst/figures/CC-5v25_glutathione-metabolism-plot.pdf", height = 8.5, width = 11)
+```
+
+##### CT: 5ºC vs. 25ºC
+
+```{r}
+CT_5v25_pathwayResults <- read.csv("metaboanalyst/CT-5v25_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(CT_5v25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+CT_5v25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/CT_5v25-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not pursue additional visualization.
+
+##### TT: 5ºC vs. 25ºC
+
+```{r}
+TT_5v25_pathwayResults <- read.csv("metaboanalyst/TT-5v25_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expecTed hits)
+head(TT_5v25_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impaTT is from pathway topology analysis
+```
+
+```{r}
+TT_5v25_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/TT_5v25-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not pursue additional visualization.
+
+#### Unique VIP
+
+##### CC: 5ºC vs. 25ºC
+
+```{r}
+CC_5v25_unique_pathwayResults <- read.csv("metaboanalyst/CC-5v25-unique_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(CC_5v25_unique_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+CC_5v25_unique_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/CC_5v25_unique-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not pursue additional visualization.
+
+##### CT: 5ºC vs. 25ºC
+
+```{r}
+CT_5v25_unique_pathwayResults <- read.csv("metaboanalyst/CT-5v25-unique_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(CT_5v25_unique_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+CT_5v25_unique_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/CT_5v25_unique-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+
+No significant pathways, will not pursue additional visualization.
+
+##### TT: 5ºC vs. 25ºC
+
+```{r}
+TT_5v25_unique_pathwayResults <- read.csv("metaboanalyst/TT-5v25-unique_metaboanalyst-results/pathway_results.csv") %>%
+  dplyr::rename(metabolite = "X") %>%
+  mutate(., Observed = Hits/Total) %>%
+  mutate(., Significant = case_when(FDR < 0.05 ~ "Yes",
+                                    FDR >= 0.05 ~ "No")) %>%
+  mutate(., enrichmentRatio = Hits/Expected) %>%
+  mutate(., negLogFDR = -log(FDR))
+#Import pathway assignment data. Rename metabolite column and create new columns (pop observed hits: number of hits/total metabolites in pathway; enrichment ratio: hits/expected hits)
+head(TT_5v25_unique_pathwayResults) #Look at pathway analysis results. P-values are from enrichment analysis, impact is from pathway topology analysis
+```
+
+```{r}
+TT_5v25_unique_pathwayResults %>%
+  ggplot(., aes(x = Impact, y = X.log10.p., size = enrichmentRatio, color = Significant)) +
+  geom_point(alpha = 0.6) +
+  labs(x = "Pathway Impact", y = "Scaled Enrichment P-Value") +
+  ylim(0, 6) +
+  scale_size_continuous(name = "Enrichment Ratio") +
+  scale_color_manual(name = "FDR",
+                     values = c("grey20", "springgreen4"),
+                     labels = c(expression("">=0.05), expression(""<0.05))) +
+  theme_classic(base_size = 15)
+ggsave("metaboanalyst/figures/TT_5v25_unique-pathwaySignificance.pdf", heigh = 8.5, width = 11)
+```
+No significant pathways, will not pursue additional visualization.
+
 # Impact of genotype within each temperature
 
 Above, I looked at the interaction between temperature and genotype across all the treatments. However, I have some temperature-specific expectations for each genotype. In cold temperatures, I expect having at least one C (cold-adapted) allele to be beneficial, and I expect having at least one T (warm-adapted) allele to be beneficial in warm temperatures. Since these alleles have differing roles in each tmeperature, and given that we know there are temperature-specific impacts on the metabolome, it may be hard to tease apart genotyping differences when considering both 5ºC and 25ºC. I'm going to look for genotype-specific impacts within each temperature.
