@@ -232,3 +232,20 @@ WARN  [2025-12-09 10:10:09] Showing 20 of 185 variables. Adjust the number with 
 INFO  [2025-12-09 10:10:26] Prediction plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 3.
 INFO  [2025-12-09 10:10:26] Selecting the 5 variables with highest/lowest loading on `timepoint+timepoint:treatment+treatment` (PC3). Use `variable` to specify variables to plot
 INFO  [2025-12-09 10:10:32] Loadings for effect number 1 and principal component(s) 3
+INFO  [2026-01-05 22:55:41] Effect plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 1.
+WARN  [2026-01-05 22:55:41] Showing 20 of 185 variables. Adjust the number with `n_limit`
+INFO  [2026-01-05 22:56:26] Effect plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 1 and 3.
+WARN  [2026-01-05 22:56:26] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:56:27] Showing 20 of 185 variables. Adjust the number with `n_limit`
+INFO  [2026-01-05 22:56:39] Effect plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 1 and 2 and 3.
+WARN  [2026-01-05 22:56:39] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:56:39] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:56:39] Showing 20 of 185 variables. Adjust the number with `n_limit`
+INFO  [2026-01-05 22:56:56] Effect plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 1 and 2 and 3.
+WARN  [2026-01-05 22:56:56] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:56:56] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:56:57] Showing 20 of 185 variables. Adjust the number with `n_limit`
+INFO  [2026-01-05 22:57:17] Effect plot. Selected effect (nr 1): `timepoint+timepoint:treatment+treatment`. Component: 1 and 2 and 3.
+WARN  [2026-01-05 22:57:17] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:57:18] Showing 20 of 185 variables. Adjust the number with `n_limit`
+WARN  [2026-01-05 22:57:18] Showing 20 of 185 variables. Adjust the number with `n_limit`

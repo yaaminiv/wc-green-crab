@@ -973,6 +973,19 @@ plot(tempTimepoint.ASCAmodel, component = 1:10, type = "scree") #Scree plot of v
 # dev.off()
 ```
 
+```{r}
+plot(tempTimepoint.ASCAmodel, effect = 1, component = c(1:3), type = 'effect', 
+     n_limit = 10, 
+     ribbon = TRUE,
+     x_angle = 0, x_h_just= 0.5,
+     flip_axis = TRUE,
+     palette = c(plotColors[3], plotColors[1]),
+     my_theme = theme_classic(),
+     x_label = "Timepoint",
+     group_label = "Temperature (ºC)")
+ggsave("ASCA/figures/tempTimepoint-effect-plot-allPCs.pdf", height = 11, width = 8.5)
+```
+
 #### Component 1
 
 This component shows metabolites with consistently higher abundance at 25ºC that decrease in abundance over time.
@@ -8271,3 +8284,18 @@ plot(metabolomics.ASCAmodel, effect = 1, component = seq(1,4), type = 'effect',
      group_label = "Temperature (ºC)")
 ggsave("ASCA/figures/effect-plot-all-components.pdf", height = 11, width = 8.5)
 ```
+
+
+# Supergene annotations
+
+```{r}
+read.delim("../../metadata/RNA-Seq/Cmaenas_inversion_contig_annotations.tsv", sep = "\t", skip = 4)
+```
+
+glutamate receptor
+inositol hexakisphosphate kinase 1
+glutathione S-transferase, C-terminal domain
+serine threonine-protein kinase
+sodium:solute symporter family
+
+
