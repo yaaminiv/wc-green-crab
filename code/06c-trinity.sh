@@ -50,6 +50,9 @@ ${TRINITY}/Trinity \
 --full_cleanup \
 --CPU 28
 
+# Move transcriptome to the correct location
+mv trinity_out_dir.Trinity.fasta trinity_out_dir/Trinity.fasta
+
 # Assembly stats
 ${TRINITY}/util/TrinityStats.pl \
 ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
