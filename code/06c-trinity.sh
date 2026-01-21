@@ -33,6 +33,7 @@ python=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/python
 JELLYFISH=//vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/jellyfish
 SALMON=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/salmon
 SAMTOOLS=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/samtools
+BOWTIE2=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/bowtie2
 
 #Directory and file paths
 DATA_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/trim-illumina-polyA
@@ -54,7 +55,6 @@ ${TRINITY}/Trinity \
 mv trinity_out_dir.Trinity.fasta trinity_out_dir/Trinity.fasta
 
 #Use within-trinity tools to get baseline assembly statistics and files necessary for downstream analysis
-
 # Assembly stats
 ${TRINITY}/util/TrinityStats.pl \
 ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
@@ -73,3 +73,25 @@ ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
 # Create FastA index
 ${SAMTOOLS} faidx \
 ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta
+
+# Prepare the reference (target index) with bowtie2 prior to transcript abundance estimation. The output is a BAM file necessary for pseudo-alignment
+${TRINITY}/util/align_and_estimate_abundance.pl \
+--transcripts ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+--est_method salmon \
+--aln_method bowtie2 \
+--gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
+--prep_reference \
+--coordsort_bam
+
+# Perform transcript abundance estimation with salmon
+${TRINITY}/util/align_and_estimate_abundance.pl \
+--transcripts ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+--seqType fq \
+--samples_file ${trinity_file_list} \
+--SS_lib_type RF \
+--est_method salmon \
+--aln_method bowtie2 \
+--gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
+--output_dir ${OUTPUT_DIR} \
+--salmon_add_opts "--validateMappings " \
+--thread_count 16
