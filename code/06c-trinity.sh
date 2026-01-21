@@ -53,6 +53,8 @@ ${TRINITY}/Trinity \
 # Move transcriptome to the correct location
 mv trinity_out_dir.Trinity.fasta trinity_out_dir/Trinity.fasta
 
+#Use within-trinity tools to get baseline assembly statistics and files necessary for downstream analysis
+
 # Assembly stats
 ${TRINITY}/util/TrinityStats.pl \
 ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
@@ -63,13 +65,11 @@ ${TRINITY}/util/support_scripts/get_Trinity_gene_to_trans_map.pl \
 ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
 > ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map
 
-# RUN THINGS TO GET EXN50 STATS SIMILAR TO ZAC'S CODE
-
 # Create sequence lengths file (used for differential gene expression)
-# ${TRINITY}/util/misc/fasta_seq_length.pl \
-# ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-# > ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.seq_lens
+${TRINITY}/util/misc/fasta_seq_length.pl \
+${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+> ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.seq_lens
 
 # Create FastA index
-# ${SAMTOOLS} faidx \
-# ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta
+${SAMTOOLS} faidx \
+${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta
