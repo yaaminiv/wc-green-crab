@@ -93,5 +93,4 @@ ${TRINITY}/util/align_and_estimate_abundance.pl \
 --aln_method bowtie2 \
 --gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
 --output_dir ${OUTPUT_DIR} \
---salmon_add_opts "--validateMappings " \
 --thread_count 16
