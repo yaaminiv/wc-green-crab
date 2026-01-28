@@ -3,3 +3,6 @@
 *.RData
 .Ruserdata
 output/03-TTR-analysis/03-TTR-analysis.RData
+output/06c-trinity/salmon.isoform.counts.matrix
+output/06c-trinity/salmon.isoform.TMM.EXPR.matrix
+output/06c-trinity/salmon.isoform.TPM.not_cross_norm
