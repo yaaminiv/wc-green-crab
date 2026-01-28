@@ -94,3 +94,22 @@ ${TRINITY}/util/align_and_estimate_abundance.pl \
 --gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
 --output_dir ${OUTPUT_DIR} \
 --thread_count 16
+
+# Get a list of the salmon quant.sf files so we don't have to list them individually
+find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/salmon.quant_files.txt
+
+# Generate a matrix with all abundance estimates
+$TRINITY_HOME/util/abundance_estimates_to_matrix.pl \
+--est_method salmon \
+--gene_trans_map none \
+--quant_files ${OUTPUT_DIR}/salmon.quant_files.txt \
+--name_sample_by_basedir
+
+# Calculate Ex50 statistics
+contig_ExN50_statistic.pl ${OUTPUT_DIR}/salmon.isoform.TPM.not_cross_norm \
+${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+| tee ${OUTPUT_DIR}/ExN50.stats
+
+# Calculate N50 statistics
+TrinityStats.pl ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+> ${OUTPUT_DIR}/N50.txt
