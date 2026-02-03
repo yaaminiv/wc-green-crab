@@ -9,8 +9,8 @@
 #SBATCH --mem=180gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
 #SBATCH --time=5-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
-#SBATCH --output=yrv_blasty%j.log  								   															     		# Standard output/error
-#SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06d-trinity	  # Working directory for this script
+#SBATCH --output=yrv_blast%j.log  								   															     		# Standard output/error
+#SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06d-blast	  # Working directory for this script
 
 #Adapted from the following:
 #script by Grace Crandall: https://github.com/grace-ac/project-pycno-sswd-2021/blob/main/code/03-20220811_pycno_trinity_RNAseq_transcriptome.sh
