@@ -143,9 +143,9 @@ sessionInfo()
 # [22] magrittr_2.0.4     tools_4.5.2        withr_3.0.2       
 # # [25] gtable_0.3.6     
 #loading the data
-read.csv(file = "C:/Users/ashra/Documents/GitHub/wc-green-crab/data/time-to-right.csv", header = TRUE)
+read.csv(file = "../data/time-to-right.csv", header = TRUE)
 group_by(tank)
-crab.dat <- read.csv(file = "C:/Users/ashra/Documents/GitHub/wc-green-crab/data/time-to-right.csv", header = TRUE)
+crab.dat <- read.csv(file = "../data/time-to-right.csv", header = TRUE)
 read(crab.dat)
 head(crab.dat)
 %>% crab.dat
@@ -200,4 +200,16 @@ tank.one %>%
 tank.one %>% 
   sort(integument.color)
 tank.one %>% 
-  mean(weight)
+  mean(weight , na.rm = TRUE)
+load(tidyverse)
+require(tidyverse)
+head(tank.one)
+str(tank.one)
+crab.dat %>% 
+  group_by(tank) %>% 
+  summarize(mean.tank.weight = mean(weight, na.rm = TRUE)) #finding the mean weight for each tank
+crab.dat %>% 
+  group_by(sex) %>% 
+  count("M" , "F") #counting the number of males and females in total
+treatment.5 <- crab.dat %>% 
+  

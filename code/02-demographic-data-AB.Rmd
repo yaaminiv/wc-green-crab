@@ -1,0 +1,21 @@
+---
+title: "02-demographic-data-AB"
+output: html_document
+date: "2026-02-04"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+```{r}
+require(tidyverse)
+```
+
+
+```{r}
+sessionInfo()
+```
+```{r}
+
+```
+
