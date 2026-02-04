@@ -183,3 +183,21 @@ tank.one %>%
 tank.one %>% 
   summarize
 summarize(tank.one)
+tank.one %>% 
+  filter(sex == "M")
+male.t.one <- tank.one %>% 
+  filter(sex == "M")
+count(male.t.one)
+tank.one %>% 
+  filter(sex == "F")
+female.t.one <- tank.one %>% 
+  filter(sex == "F")
+count(female.t.one)
+tank.one %>% 
+  mean(weight)
+tank.one %>% 
+  group_by(integument.color)
+tank.one %>% 
+  sort(integument.color)
+tank.one %>% 
+  mean(weight)
