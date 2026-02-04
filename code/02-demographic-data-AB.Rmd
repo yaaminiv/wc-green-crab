@@ -16,6 +16,64 @@ require(tidyverse)
 sessionInfo()
 ```
 ```{r}
-
+crab.dat <- read.csv(file = "../data/time-to-right.csv", header = TRUE)
+```
+```{r}
+crab.dat %>% 
+  group_by(tank) %>% 
+  summarize(mean.tank.weight = mean(weight, na.rm = TRUE)) #finding the mean weight for each tank
+```
+```{r}
+crab.dat %>% 
+  group_by(tank) %>% 
+  count(sex = "M" , "F") #counting how many males and females are in each tank
+```
+```{r} 
+#counting how many of each integument color exist
+crab.dat %>% 
+  group_by(integument.color) %>% 
+  count(integument.color) 
+```
+```{r}
+#manually counting the percentages for integument colors
+BGper <- (6 / 805) * 100
+Gper <- (72 / 805) * 100
+Oper <- (74 / 805) * 100
+Yper <- (371 / 805) * 100
+YGper <- (193 / 805) * 100
+YOper <- (89 / 805) * 100
+```
+```{r}
+#adding a column for the average right times
+crab.dat %>% 
+  rowwise() %>% 
+  mutate(., avgTime = mean(c(trial.1, trial.2, trial.3)))
+```
+```{r}
+#filtering for specific 5C treatment
+treatment5 <- crab.dat %>% 
+  filter(., tank == "T1" | tank == "T4" | tank == "T7")
+```
+```{r}
+#filtering for specific 15C treatment
+treatment15 <- crab.dat %>% 
+  filter(., tank == "T2" | tank == "T5" | tank == "T8")
+```
+```{r}
+#filtering for specific 25C treatment
+treatment25 <- crab.dat %>% 
+  filter(., tank == "T3" | tank == "T6" | tank == "T9")
+```
+```{r}
+str(treatment5)
+```
+```{r}
+#average weight per treatment
+treatment5 %>% 
+  summarize(mean5 = mean(weight, na.rm = TRUE))
+treatment15 %>% 
+  summarize(mean15 = mean(weight, na.rm = TRUE))
+treatment25 %>% 
+  summarize(mean25 = mean(weight, na.rm = TRUE))
 ```
 
