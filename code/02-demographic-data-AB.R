@@ -161,6 +161,25 @@ crab.dat %>%
 crab.dat %>% 
   mean(weight)
 mean(weight)
-crab.dat mean(weight)
+#summarizing the entire dataset mean weight
 crab.dat %>% 
   summarize(mean(weight))
+crab.dat %>% 
+  filter(tank == "T1") %>% 
+  count(sex = M)
+# filtering into only tank 1
+crab.dat %>% 
+  filter(tank == "T1")
+tank.one <- crab.dat %>% 
+  filter(tank == "T1")
+tank.one
+tank.one %>% 
+  count(sex = "M" , "F")
+# counting how many males/females are in tank 1
+tank.one %>% 
+  count(sex = "M")
+tank.one %>% 
+  count(sex = "F")
+tank.one %>% 
+  summarize
+summarize(tank.one)
