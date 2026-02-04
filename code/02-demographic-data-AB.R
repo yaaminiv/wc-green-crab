@@ -143,4 +143,24 @@ sessionInfo()
 # [22] magrittr_2.0.4     tools_4.5.2        withr_3.0.2       
 # # [25] gtable_0.3.6     
 #loading the data
-read.csv(file = "time-to-right.csv", header = FALSE)
+read.csv(file = "C:/Users/ashra/Documents/GitHub/wc-green-crab/data/time-to-right.csv", header = TRUE)
+group_by(tank)
+crab.dat <- read.csv(file = "C:/Users/ashra/Documents/GitHub/wc-green-crab/data/time-to-right.csv", header = TRUE)
+read(crab.dat)
+head(crab.dat)
+%>% crab.dat
+group_by(tank)
+crab.dat %>% 
+  summarize(tank)
+crab.dat %>% 
+  group_by(tank)
+crab.dat %>% 
+  summarize(tank)
+crab.dat %>% 
+  count(sex)
+crab.dat %>% 
+  mean(weight)
+mean(weight)
+crab.dat mean(weight)
+crab.dat %>% 
+  summarize(mean(weight))
