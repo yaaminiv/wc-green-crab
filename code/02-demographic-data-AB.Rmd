@@ -76,4 +76,12 @@ treatment15 %>%
 treatment25 %>% 
   summarize(mean25 = mean(weight, na.rm = TRUE))
 ```
+```{r}
+crab.meta <- read.csv(file = "../data/crab-metadata.csv", header = TRUE)
+# loading in the metadata to add the extra carapace width column
+```
+```{r}
+# trimming dataset to only contain the carapace width
+...
+```
 
