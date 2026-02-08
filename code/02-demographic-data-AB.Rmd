@@ -82,6 +82,100 @@ crab.meta <- read.csv(file = "../data/crab-metadata.csv", header = TRUE)
 ```
 ```{r}
 # trimming dataset to only contain the carapace width
-...
+crab.meta$weight <- NULL
+crab.meta$integument.color <- NULL
+crab.meta$notes <- NULL
+crab.meta$dead.date <- NULL
+crab.meta$respirometry <- NULL
 ```
+```{r}
+crab.meta <- crab.meta %>% 
+  rename(crab.ID = ID)
+# trying to rename ID to crab.ID for join function
+```
+```{r}
+# combining the two datasets
+crab.dat.main <- inner_join(crab.dat, crab.meta, by = "crab.ID")
+```
+```{r}
+#filtering for specific 5C treatment but better
+treatment5 <- crab.dat.main %>% 
+  filter(., tank.x == "T1" | tank.x == "T4" | tank.x == "T7")
+```
+```{r}
+#filtering for specific 15C treatment but better 
+treatment15 <- crab.dat.main %>% 
+  filter(., tank.x == "T2" | tank.x == "T5" | tank.x == "T8")
+```
+```{r}
+#filtering for specific 25C treatment but better
+treatment25 <- crab.dat.main %>% 
+  filter(., tank.x == "T3" | tank.x == "T6" | tank.x == "T9")
+```
+```{r}
+# viewing the treatment to make sure it worked
+str(treatment5)
+```
+```{r}
+# trimmming the main dataset again to only have what I need
+crab.dat.main$tank.y <- NULL
+crab.dat.main$sex.y <- NULL
+crab.dat.main$notes <- NULL
+crab.dat.main$probe.number <- NULL
+crab.dat.main$missing.non.sampled <- NULL
+crab.dat.main$missing.swimmer <- NULL
+```
+```{r}
+#finding average carapace width per treatment 
+treatment5 %>% 
+  summarize(mean5w = mean(carapace.width, na.rm = TRUE))
+treatment15 %>% 
+  summarize(mean15w = mean(carapace.width, na.rm = TRUE))
+treatment25 %>% 
+  summarize(mean25w = mean(carapace.width, na.rm = TRUE))
+```
+```{r}
+# adding the total mean weight as an entire column for each treatment
+treatment5 <- treatment5 %>% 
+  mutate(mean5w = mean(carapace.width, na.rm = TRUE))
+treatment15 <- treatment15 %>% 
+  mutate(mean15w = mean(carapace.width, na.rm = TRUE))
+treatment25 <- treatment25 %>% 
+  mutate(mean25w = mean(carapace.width, na.rm = TRUE))
+```
+```{r}
+# trimming the 5c treatment dataset
+treatment5$tank.y <- NULL
+treatment5$`(mean5w = mean(carapace.width, na.rm = TRUE))` <- NULL
+treatment5$notes <- NULL
+treatment5$sex.y <- NULL
+treatment5$number.legs <- NULL
+treatment5$probe.number <- NULL
+treatment5$missing.non.sampled <- NULL
+treatment5$probe.number <- NULL
+treatment5$number <- NULL
+
+# trimming the 15c treatment dataset
+treatment15$tank.y <- NULL
+treatment15$notes <- NULL
+treatment15$sex.y <- NULL
+treatment15$number.legs <- NULL
+treatment15$probe.number <- NULL
+treatment15$missing.non.sampled <- NULL
+treatment15$probe.number <- NULL
+treatment15$number <- NULL
+
+# trimming the 25c treatment dataset
+treatment25$tank.y <- NULL
+treatment25$notes <- NULL
+treatment25$sex.y <- NULL
+treatment25$number.legs <- NULL
+treatment25$probe.number <- NULL
+treatment25$missing.non.sampled <- NULL
+treatment25$probe.number <- NULL
+treatment25$number <- NULL
+
+```
+
+
 
