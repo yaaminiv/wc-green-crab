@@ -191,7 +191,30 @@ simple.output.summary <- crab.dat.main %>%
             mean.carapace.width = mean(carapace.width))
 ```
 ```{r}
+#exporting the dataset I created
 write.csv(simple.output.summary, file = "../output/02-demographic-data/AB_simple_output_summary.csv", row.names = TRUE)
+```
+```{r}
+crab.dat.main$integument.color
+```
+```{r}
+#trying to get the integument percentages in an easier way
+percentages.inegument.color <- crab.dat.main %>% 
+  group_by(integument.color) %>% 
+  summarize(count = n()) %>% 
+  mutate(Percents = count / sum(count) * 100)
+```
+```{r}
+full.summary <- crab.dat.main %>% 
+  group_by(treatment , sex.x , integument.color) %>% 
+  summarize(count = n(), 
+            mean.weight = mean(weight), 
+            mean.carapace.width = mean(carapace.width))
+```
+```{r}
+#cleaning up some extra datasets
+rm(percentages.i.c)
+rm(percentages.i.c.2)
 ```
 
 
