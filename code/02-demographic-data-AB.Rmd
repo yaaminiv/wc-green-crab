@@ -176,6 +176,25 @@ treatment25$probe.number <- NULL
 treatment25$number <- NULL
 
 ```
+```{r}
+# getting the average trial times for the main dataset
+crab.dat.main <- crab.dat.main %>% 
+  rowwise() %>% 
+  mutate(., avgTime = mean(c(trial.1, trial.2, trial.3)))
+```
+```{r}
+#trying to get the counts in one nice line of code
+simple.output.summary <- crab.dat.main %>% 
+  group_by(treatment , sex.x) %>% 
+  summarize(count = n(), 
+            mean.weight = mean(weight), 
+            mean.carapace.width = mean(carapace.width))
+```
+```{r}
+write.csv(simple.output.summary, file = "../output/02-demographic-data/AB_simple_output_summary.csv", row.names = TRUE)
+```
+
+
 
 
 
