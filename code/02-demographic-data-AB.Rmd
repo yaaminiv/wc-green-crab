@@ -216,8 +216,22 @@ full.summary <- crab.dat.main %>%
 rm(percentages.i.c)
 rm(percentages.i.c.2)
 ```
-
-
+```{r}
+# adding the date and getting the time dataset
+crab.dat.main <- crab.dat.main %>% 
+    mutate(., day = case_when(date == "6/28/23" ~ 0,
+                            date == "6/29/23" ~ 1,
+                            date == "7/3/23" ~ 2,
+                            date == "7/5/23" ~ 7,
+                            date == "7/10/23" ~ 12, 
+                            date == "7/12/23" ~ 14,
+                            date == "7/17/23" ~ 19,
+                            date == "7/19/23" ~ 21,
+                            date == "7/24/23" ~ 26,
+                            date == "7/26/23" ~ 28,
+                            date == "8/9/23" ~ 42,
+                            date == "8/16/23" ~ 49))
+```
 
 
 
