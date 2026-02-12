@@ -56,4 +56,6 @@ blastn -query ${TRINITY_DIR}/trinity_out_dir/Trinity.fasta \
 # Identify contam: bacteria,archaea,viruses,platyhelminthes,nematoda,fungi,alveolata,viridiplantae,rhodophyta,amoebozoa,rhizaria,stramenopiles,rhizocephala,entoniscidae
 conda activate ete3
 
+# python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(); ncbi.update_taxonomy_database()" #Only run this if you haven't updated the blast database recently
+
 python ${HOME_DIR}/map_contam_ids.py ${OUTPUT_DIR}/blast-results/${OUTPUT_DIR}/blast-resultstranscriptome-contam.tab ${OUTPUT_DIR}/contam_list.txt

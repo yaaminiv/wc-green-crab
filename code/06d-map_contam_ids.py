@@ -14,7 +14,11 @@ contam = []
 for i in hits.index:
     contig = hits.loc[i,0]
     taxid = hits.loc[i,13]
-    lineage = ncbi.get_lineage(taxid)
+    try:
+        lineage = ncbi.get_lineage(taxid)
+    except ValueError:
+        print(f"Warning: TaxID {taxid} not found in local database. Skipping.")
+        lineage = [] # Or handle as "Unknown"
     if bool(set(lineage) & set(candidate_contam)):
         contam.append(contig)
 
