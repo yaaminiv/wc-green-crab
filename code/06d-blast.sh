@@ -23,7 +23,6 @@ set -e
 #Load module, activate the shell hook, and load environment
 module load mambaforge
 eval "$(conda shell.bash hook)"
-conda activate trinity_env
 
 #Program paths
 TRINITY=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/
@@ -38,6 +37,7 @@ BOWTIE2=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/bowtie2
 #Directory and file paths
 TRINITY_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
 OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06d-blast
+HOME_DIR=/vortexfs1/home/yaamini.venkataraman
 
 # Blast transcriptome against nt. database from Dec 31 2018 for initial round of contaminant filtering
 mkdir ${OUTPUT_DIR}/blast-results
@@ -52,3 +52,10 @@ blastn -query ${TRINITY_DIR}/trinity_out_dir/Trinity.fasta \
 -num_threads 35 \
 -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore stitle staxids" \
 -out ${OUTPUT_DIR}/blast-results/transcriptome-contam.tab
+
+# Identify contam: bacteria,archaea,viruses,platyhelminthes,nematoda,fungi,alveolata,viridiplantae,rhodophyta,amoebozoa,rhizaria,stramenopiles,rhizocephala,entoniscidae
+conda activate ete3
+
+# python -c "from ete3 import NCBITaxa; ncbi = NCBITaxa(); ncbi.update_taxonomy_database()" #Only run this if you haven't updated the blast database recently
+
+python ${HOME_DIR}/map_contam_ids.py ${OUTPUT_DIR}/blast-results/${OUTPUT_DIR}/blast-resultstranscriptome-contam.tab ${OUTPUT_DIR}/contam_list.txt
