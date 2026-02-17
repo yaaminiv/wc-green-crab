@@ -236,6 +236,16 @@ crab.dat.main <- crab.dat.main %>%
 # trying to make the figures, only first 2
 crab.dat.main %>% ggplot(., aes(x = as.character(day), y = avgTime, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Average Righting Response (s)") + theme_classic()
 ```
+```{r}
+# trying to make a bar graph instead
+bar.graph <- ggplot(crab.dat.main, aes(x=day)) + geom_histogram(binwidth=2,colour="orange")
+bar.graph + facet_grid(integument.color ~ sex.x)
+```
+```{r}
+# remade the second bar graph
+bar.graph.two <- ggplot(crab.dat.main, aes(x=day)) + geom_histogram(binwidth=2,colour="orange")
+bar.graph.two + facet_grid(sex.x ~ treatment, scales= "free", space= "free")
+```
 
 
 
