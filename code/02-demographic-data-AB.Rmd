@@ -232,6 +232,11 @@ crab.dat.main <- crab.dat.main %>%
                             date == "8/9/23" ~ 42,
                             date == "8/16/23" ~ 49))
 ```
+```{r}
+# trying to make the figures, only first 2
+crab.dat.main %>% ggplot(., aes(x = as.character(day), y = avgTime, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Average Righting Response (s)") + theme_classic()
+```
+
 
 
 
