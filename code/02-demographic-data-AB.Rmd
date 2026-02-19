@@ -219,22 +219,24 @@ rm(percentages.i.c.2)
 ```{r}
 # adding the date and getting the time dataset
 crab.dat.main <- crab.dat.main %>% 
-    mutate(., day = case_when(date == "6/28/23" ~ 0,
-                            date == "6/29/23" ~ 1,
-                            date == "7/3/23" ~ 2,
-                            date == "7/5/23" ~ 7,
-                            date == "7/10/23" ~ 12, 
-                            date == "7/12/23" ~ 14,
-                            date == "7/17/23" ~ 19,
-                            date == "7/19/23" ~ 21,
-                            date == "7/24/23" ~ 26,
-                            date == "7/26/23" ~ 28,
-                            date == "8/9/23" ~ 42,
-                            date == "8/16/23" ~ 49))
+    mutate(., day = case_when(date == "6/28/23" ~ "0",
+                            date == "6/29/23" ~ "01",
+                            date == "7/3/23" ~ "02",
+                            date == "7/5/23" ~ "07",
+                            date == "7/10/23" ~ "12", 
+                            date == "7/12/23" ~ "14",
+                            date == "7/17/23" ~ "19",
+                            date == "7/19/23" ~ "21",
+                            date == "7/24/23" ~ "26",
+                            date == "7/26/23" ~ "28",
+                            date == "8/9/23" ~ "42",
+                            date == "8/16/23" ~ "49"))
 ```
 ```{r}
 # trying to make the figures, only first 2
-crab.dat.main %>% ggplot(., aes(x = as.character(day), y = avgTime, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Average Righting Response (s)") + theme_classic()
+crab.dat.main %>% 
+  filter(day == "0" | day == "01" | day == "07" | day == "21" | day == "42") %>% 
+  ggplot(., aes(x = day, y = carapace.width, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Caraoace Wdth (mm)") + theme_classic()
 ```
 ```{r}
 # trying to make a bar graph instead
@@ -243,8 +245,14 @@ bar.graph + facet_grid(integument.color ~ sex.x)
 ```
 ```{r}
 # remade the second bar graph
-bar.graph.two <- ggplot(crab.dat.main, aes(x=day)) + geom_histogram(binwidth=2,colour="orange")
+bar.graph.two <- ggplot(crab.dat.main, aes(x=day, y=) + geom_bar()
 bar.graph.two + facet_grid(sex.x ~ treatment, scales= "free", space= "free")
+```
+```{r}
+# making graphs for weights per treatment
+crab.dat.main %>% 
+  filter(day == "0" | day == "01" | day == "07" | day == "21" | day == "42") %>% 
+  ggplot(., aes(x = day, y = weight, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Average Weight (g)") + theme_classic()
 ```
 
 
