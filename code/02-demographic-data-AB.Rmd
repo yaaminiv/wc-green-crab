@@ -234,9 +234,12 @@ crab.dat.main <- crab.dat.main %>%
 ```
 ```{r}
 # trying to make the figures, only first 2
-crab.dat.main %>% 
+graph.1 <- crab.dat.main %>% 
   filter(day == "0" | day == "01" | day == "07" | day == "21" | day == "42") %>% 
-  ggplot(., aes(x = day, y = carapace.width, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Caraoace Wdth (mm)") + theme_classic()
+  ggplot(., aes(x = day, y = carapace.width, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Caraoace Wdth (mm)") + theme_classic() + scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5"))
 ```
 ```{r}
 # trying to make a bar graph instead
@@ -253,6 +256,39 @@ bar.graph.two + facet_grid(sex.x ~ treatment, scales= "free", space= "free")
 crab.dat.main %>% 
   filter(day == "0" | day == "01" | day == "07" | day == "21" | day == "42") %>% 
   ggplot(., aes(x = day, y = weight, color = treatment)) + geom_boxplot() + labs(x = "Timepoint (Day)", y = "Average Weight (g)") + theme_classic()
+
+
+plotColors <- c(brewer.pal(9, "Reds")[7],
+                brewer.pal(9, "Greys")[7],
+                brewer.pal(9, "Blues")[7]) #Create color scheme
+
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5"))
+
+```
+```{r}
+# installing color brewer to fix the graph
+require(RColorBrewer)
+```
+
+
+```{r}
+plotColors <- c(brewer.pal(9, "Reds")[7],
+                brewer.pal(9, "Greys")[7],
+                brewer.pal(9, "Blues")[7]) #Create color scheme
+```
+```{r}
+graph.2 <- graph.1 %>% 
+  scale_color_manual(values = c(plotColors[2], plotColors[1], plotColors[3]), 
+                     name = "Temperature (ºC)",
+                     breaks = c("15C", "25C", "5C"),
+                     labels = c("15", "25", "5"))
+
+```
+```{r}
+plot(graph.1)
 ```
 
 
