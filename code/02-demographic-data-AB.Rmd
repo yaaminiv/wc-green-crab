@@ -290,6 +290,14 @@ graph.2 <- graph.1 %>%
 ```{r}
 plot(graph.1)
 ```
+```{r}
+# running ANOVA test to see example
+ANOVAresult <- aov(formula = carapace.width ~ weight, data = crab.dat.main)
+```
+```{r}
+# getting the ANOVA results
+summary(ANOVAresult)
+```
 
 
 
