@@ -30,7 +30,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ```{r}
 # importing the dataset 
 require(tidyverse)
-salmon.data <- read.delim("C:/Users/ashra/Downloads/salmon.isoform.TPM.not_cross_norm", header=FALSE)
+salmon.data <- read.delim("../../../Downloads/salmon.isoform.TPM.not_cross_norm", header=TRUE)
 ```
 ```{r}
 #filtering for only 25 and 5 treatments
@@ -44,7 +44,7 @@ salmon.data$V7 = NULL
 ```
 ```{r}
 #importing the other dataset 
-Sequencing.Picks <- read.csv("C:/Users/ashra/Downloads/2023-crab-genotype - Sequencing Picks.csv")
+Sequencing.Picks <- read.csv("")
 ```
 ```{r}
 #importing final dataset
@@ -93,7 +93,7 @@ countData
 ```
 ```{r}
 #getting the metadata now
-metaData <- read.csv("C:/Users/ashra/Downloads/airway_metadata.csv", header = TRUE, sep = ",")
+metaData <- read.csv("../../../Downloads/ai", header = TRUE, sep = ",")
 metaData
 ```
 ```{r}
@@ -139,6 +139,9 @@ with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log1
 ```{r}
 vsdata <- vst(dds, blind=FALSE)
 plotPCA(vsdata, intgroup="dex")
+```
+```{r}
+head(salmon.data)
 ```
 
 
