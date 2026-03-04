@@ -27,3 +27,19 @@ plot(pressure)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+# importing the dataset 
+require(tidyverse)
+salmon.data <- read.delim("~/Downloads/salmon.isoform.TPM.not_cross_norm", header=FALSE)
+```
+```{r}
+#filtering for only 25 and 5 treatments
+salmon.data$V1 = NULL
+salmon.data$V2 = NULL
+salmon.data$V3 = NULL
+salmon.data$V4 = NULL
+salmon.data$V5 = NULL
+salmon.data$V6 = NULL
+salmon.data$V7 = NULL
+```
+
