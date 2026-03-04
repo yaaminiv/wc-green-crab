@@ -30,7 +30,7 @@ Note that the `echo = FALSE` parameter was added to the code chunk to prevent pr
 ```{r}
 # importing the dataset 
 require(tidyverse)
-salmon.data <- read.delim("~/Downloads/salmon.isoform.TPM.not_cross_norm", header=FALSE)
+salmon.data <- read.delim("C:/Users/ashra/Downloads/salmon.isoform.TPM.not_cross_norm", header=FALSE)
 ```
 ```{r}
 #filtering for only 25 and 5 treatments
@@ -42,4 +42,13 @@ salmon.data$V5 = NULL
 salmon.data$V6 = NULL
 salmon.data$V7 = NULL
 ```
+```{r}
+#importing the other dataset 
+Sequencing.Picks <- read.csv("C:/Users/ashra/Downloads/2023-crab-genotype - Sequencing Picks.csv")
+```
+```{r}
+#importing final dataset
+metadata.main <- read.csv("C:/Users/ashra/Downloads/metabolomics-sample-list.csv")
+```
+
 
