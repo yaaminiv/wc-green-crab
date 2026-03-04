@@ -50,5 +50,95 @@ Sequencing.Picks <- read.csv("C:/Users/ashra/Downloads/2023-crab-genotype - Sequ
 #importing final dataset
 metadata.main <- read.csv("C:/Users/ashra/Downloads/metabolomics-sample-list.csv")
 ```
+```{r}
+# downloading deseq2
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("DESeq2")
+library(DESeq2)
+library(ggplot2)
+```
+```{r}
+# doing the tutorial
+countsName <- "http://bioconnector.org/workshops/data/airway_scaledcounts.csv"
+download.file(countsName, destfile = "airway_scaledcounts.csv", method = "auto")
+
+countData <- read.csv('airway_scaledcounts.csv', header = TRUE, sep = ",")
+head(countData)
+```
+```{r}
+metaDataName <- "http://bioconnector.org/workshops/data/airway_metadata.csv"
+download.file(metaDataName, destfile = "airway_metadata.csv", method = "auto")
+
+metaData <- read.csv('airway_metadata.csv', header = TRUE, sep = ",")
+metaData
+```
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=countData, 
+                              colData=metaData, 
+                              design=~dex, tidy = TRUE)
+```
+
+```{r}
+countsName <- "https://github.com/bioconnector/workshops/blob/master/data/airway_scaledcounts.csv"
+download.file(countsName, destfile = "airway_scaledcounts.csv", method = "auto")
+
+countData <- read.csv('airway_scaledcounts.csv', header = TRUE, sep = ",")
+head(countData)
+```
+```{r}
+countData <- read.csv("C:/Users/ashra/Downloads/airway_scaledcounts.csv", header = TRUE, sep = ",")
+countData
+```
+```{r}
+#getting the metadata now
+metaData <- read.csv("C:/Users/ashra/Downloads/airway_metadata.csv", header = TRUE, sep = ",")
+metaData
+```
+```{r}
+dds <- DESeqDataSetFromMatrix(countData=countData, 
+                              colData=metaData, 
+                              design=~dex, tidy = TRUE)
+```
+```{r}
+dds <- DESeq(dds)
+```
+```{r}
+?DESeq
+```
+```{r}
+# looking at results table
+res <- results(dds)
+head(results(dds, tidy=TRUE))
+```
+```{r}
+#summarize results
+summary(res)
+```
+```{r}
+res <- res[order(res$padj),]
+head(res)
+```
+```{r}
+par(mfrow=c(2,3))
+
+plotCounts(dds, gene="ENSG00000152583", intgroup="dex")
+plotCounts(dds, gene="ENSG00000179094", intgroup="dex")
+plotCounts(dds, gene="ENSG00000116584", intgroup="dex")
+plotCounts(dds, gene="ENSG00000189221", intgroup="dex")
+plotCounts(dds, gene="ENSG00000120129", intgroup="dex")
+plotCounts(dds, gene="ENSG00000148175", intgroup="dex")
+```
+```{r}
+par(mfrow=c(1,1))
+with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+```
+```{r}
+vsdata <- vst(dds, blind=FALSE)
+plotPCA(vsdata, intgroup="dex")
+```
 
 
