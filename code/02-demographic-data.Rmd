@@ -776,7 +776,6 @@ head(mortalityData, n = 9) #Confirm changes
 
 Samples were collected (censored == 0) on day 1 (all), day 6 (15ºC and 25ºC), day 8 (5ºC), day 26 (all), 42 (all), and 50 (5ºC)
 
-
 ```{r}
 mortalityDataLong <- mortalityData %>%
   pivot_longer(., cols = -tank, names_to = "day", values_to = "num_died") %>%
