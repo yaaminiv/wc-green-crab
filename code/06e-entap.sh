@@ -65,55 +65,52 @@ gzip uniref90_rf.fasta
 rm uniref90.fasta
 
 # Configure EnTAP. this indexes the reference databases into diamond format
-${ENTAP}/EnTAP --config -d nr.gz \
+${ENTAP}/EnTAP --config \
+--run-ini ${OUTPUT_DIR}/entap_run.params \
+--entap-ini ${OUTPUT_DIR}/entap_config.ini \
+-d nr.gz \
 -d uniprot_trembl.fasta.gz \
 -d refseq_complete.faa.gz \
 -d uniprot_sprot.fasta.gz \
 -d uniref90_rf.fasta.gz \
 -t 35
 
-#run EnTAP
+#Unset python variables again to avoid conflicts with EnTAP run
+unset PYTHONPATH
+unset PYTHONHOME
 
-rule run_EnTAP:
-    input:
-        config = ENTAP_CONFIG_OUT,
-        txm = TXM_LONG_CLEAN,
-    output:
-        ENTAP_ANNOT_OUT,
-        ENTAP_CONTAM
-    params:
-        dir = directory('EnTAP/')
-    shell:
-        """
-        cd {params.dir}
-        EnTAP --runN -i ../{input.txm} \
-            -d entap_outfiles/bin/nr.dmnd \
-            -d entap_outfiles/bin/refseq_complete.dmnd \
-            -d entap_outfiles/bin/uniprot_sprot.dmnd \
-            -d entap_outfiles/bin/uniprot_trembl.dmnd \
-            -d entap_outfiles/bin/uniref90_rf.dmnd \
-            -t 35 \
-            -c bacteria \
-            -c archaea \
-            -c viruses \
-            -c platyhelminthes \
-            -c nematoda \
-            -c fungi \
-            -c alveolata \
-            -c viridiplantae \
-            -c rhodophyta \
-            -c amoebozoa \
-            -c rhizaria \
-            -c stramenopiles \
-            -c rhizocephala \
-            -c entoniscidae \
-            --taxon brachyura
-        """
+#Run EnTAP. The goal is to identify sequences for another round of cleaning.
+
+${ENTAP}/EnTAP --run \
+--run-ini ${OUTPUT_DIR}/entap_run.params \
+--entap-ini ${OUTPUT_DIR}/entap_config.ini \
+-i ${BLAST_DIR}/transcriptome_contamRemoved.fasta \
+-d entap_outfiles/bin/nr.dmnd \
+-d entap_outfiles/bin/refseq_complete.dmnd \
+-d entap_outfiles/bin/uniprot_sprot.dmnd \
+-d entap_outfiles/bin/uniprot_trembl.dmnd \
+-d entap_outfiles/bin/uniref90_rf.dmnd \
+-t 35 \
+-c bacteria \
+-c archaea \
+-c viruses \
+-c platyhelminthes \
+-c nematoda \
+-c fungi \
+-c alveolata \
+-c viridiplantae \
+-c rhodophyta \
+-c amoebozoa \
+-c rhizaria \
+-c stramenopiles \
+-c rhizocephala \
+-c entoniscidae \
+--taxon brachyura
 
 # Remove EnTAP contamination
 
 rule remove_EnTAP_contam:
-            input:
+        input:
                 contam = ENTAP_CONTAM,
                 txm = TXM_LONG_CLEAN,
                 script = {'scripts/fasta_subsetter.py'}
