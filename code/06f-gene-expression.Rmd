@@ -44,6 +44,11 @@ require(tidyverse)
 salmon.data <- read.delim("../../../Downloads/salmon.isoform.TPM.not_cross_norm", header=TRUE , check.names = FALSE)
 ```
 ```{r}
+colnames(salmon.data)[1] <- "ID"
+head(salmon.data)
+```
+
+```{r}
 head(salmon.data)
 ```
 
@@ -64,10 +69,15 @@ sequencing.picks.8.9.23 <- Sequencing.Picks %>%
   filter(date == "8/9/23")
 ```
 ```{r}
-# making new data subset for end of exp
+# making new data subset for end of exp THIS IS WHERE ROW NAMES GETS ADDED(?)
 End.data <- salmon.data %>% 
-  select(any_of(sequencing.picks.8.9.23$crab.ID))
+  select(ID, any_of(sequencing.picks.8.9.23$crab.ID)) %>% 
+  mutate(across(where(is.numeric), round, 0))
 ```
+```{r}
+head(End.data)
+```
+
 ```{r}
 #importing final dataset
 metadata.main <- read.csv("C:/Users/ashra/Downloads/metabolomics-sample-list.csv")
@@ -169,7 +179,7 @@ head(salmon.data)
 #doing the proper gene analysis
 dds.crab <- DESeqDataSetFromMatrix(countData=End.data, 
                               colData=sequencing.picks.8.9.23, 
-                              design=~dex, tidy = TRUE)
+                              design=~treatment, tidy = TRUE)
 ```
 ```{r}
 #trying to move column names
@@ -179,16 +189,16 @@ end.dat <- merge(End.data, salmon.data, by = "ID", all.x = TRUE)
 ```
 ```{r}
 #priming the code so once error is fixed, it will take about 5 minutes to fix it
-dds.crab <- DESeq(dds.crab)
+crab.stats <- DESeq(dds.crab)
 ```
 ```{r}
-results.dat <- results(dds.crab)
-head(results(dds.crab, tidy=TRUE))
-results.dat <- results.dat[order(results.dat$padj),]
-head(results.dat)
+results.crab <- results(crab.stats)
+head(results(crab.stats, tidy=TRUE))
+results.main <- results.crab[order(results.crab$padj),]
+head(results.main)
 ```
 ```{r}
 par(mfrow=c(2,3))
-#... conitinue from the graph I made upstairs
+#... continue from the graph I made upstairs
 ```
 
