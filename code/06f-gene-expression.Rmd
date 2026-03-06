@@ -165,5 +165,17 @@ plotPCA(vsdata, intgroup="dex")
 ```{r}
 head(salmon.data)
 ```
+```{r}
+#doing the proper gene analysis
+dds <- DESeqDataSetFromMatrix(countData=End.data, 
+                              colData=sequencing.picks.8.9.23, 
+                              design=~dex, tidy = TRUE)
+```
+```{r}
+#trying to move column names
+salmon.data$ID <- rownames(salmon.data)
+End.data$ID <- rownames(End.data)
+end.dat <- merge(End.data, salmon.data, by = "ID", all.x = TRUE)
+```
 
 
