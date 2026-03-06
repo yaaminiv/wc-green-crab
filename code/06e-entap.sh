@@ -29,7 +29,7 @@ conda activate EnTAP
 module load bio #Load bio module
 module load rsem/1.3.0 #Load RSEM
 module load blast/2.7.1 #Dependency for TransDecoder
-module load transdecoder/5.3.0 #Load TransDecoder
+# module load transdecoder/5.3.0 #Load TransDecoder
 module load interproscan/5.51-85.0 #Load InterProScan
 
 #Load modules to compile EnTAP
@@ -84,7 +84,6 @@ unset PYTHONHOME
 ${ENTAP}/EnTAP --run \
 --run-ini ${OUTPUT_DIR}/entap_run.params \
 --entap-ini ${OUTPUT_DIR}/entap_config.ini \
--i ${BLAST_DIR}/transcriptome_contamRemoved.fasta \
 -d entap_outfiles/bin/nr.dmnd \
 -d entap_outfiles/bin/refseq_complete.dmnd \
 -d entap_outfiles/bin/uniprot_sprot.dmnd \
