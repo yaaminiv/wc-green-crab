@@ -28,10 +28,25 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
+# requiring the required code
+require(tidyverse)
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+
+BiocManager::install("DESeq2")
+library(DESeq2)
+library(ggplot2)
+```
+
+```{r}
 # importing the dataset 
 require(tidyverse)
-salmon.data <- read.delim("../../../Downloads/salmon.isoform.TPM.not_cross_norm", header=TRUE)
+salmon.data <- read.delim("../../../Downloads/salmon.isoform.TPM.not_cross_norm", header=TRUE , check.names = FALSE)
 ```
+```{r}
+head(salmon.data)
+```
+
 ```{r}
 #filtering for only 25 and 5 treatments
 salmon.data$V1 = NULL
@@ -44,7 +59,14 @@ salmon.data$V7 = NULL
 ```
 ```{r}
 #importing the other dataset 
-Sequencing.Picks <- read.csv("")
+Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
+sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
+  filter(date == "8/9/23")
+```
+```{r}
+# making new data subset for end of exp
+End.data <- salmon.data %>% 
+  select(any_of(sequencing.picks.8.9.23$crab.ID))
 ```
 ```{r}
 #importing final dataset
@@ -143,5 +165,30 @@ plotPCA(vsdata, intgroup="dex")
 ```{r}
 head(salmon.data)
 ```
-
+```{r}
+#doing the proper gene analysis
+dds.crab <- DESeqDataSetFromMatrix(countData=End.data, 
+                              colData=sequencing.picks.8.9.23, 
+                              design=~dex, tidy = TRUE)
+```
+```{r}
+#trying to move column names
+salmon.data$ID <- rownames(salmon.data)
+End.data$ID <- rownames(End.data)
+end.dat <- merge(End.data, salmon.data, by = "ID", all.x = TRUE)
+```
+```{r}
+#priming the code so once error is fixed, it will take about 5 minutes to fix it
+dds.crab <- DESeq(dds.crab)
+```
+```{r}
+results.dat <- results(dds.crab)
+head(results(dds.crab, tidy=TRUE))
+results.dat <- results.dat[order(results.dat$padj),]
+head(results.dat)
+```
+```{r}
+par(mfrow=c(2,3))
+#... conitinue from the graph I made upstairs
+```
 
