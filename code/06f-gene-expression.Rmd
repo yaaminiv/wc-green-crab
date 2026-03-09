@@ -53,21 +53,6 @@ salmon.data <- read.delim("../../../../Downloads/salmon.isoform.counts.matrix", 
 colnames(salmon.data)[1] <- "ID"
 head(salmon.data)
 ```
-
-```{r}
-head(salmon.data)
-```
-
-```{r}
-#filtering for only 25 and 5 treatments
-salmon.data$V1 = NULL
-salmon.data$V2 = NULL
-salmon.data$V3 = NULL
-salmon.data$V4 = NULL
-salmon.data$V5 = NULL
-salmon.data$V6 = NULL
-salmon.data$V7 = NULL
-```
 ```{r}
 #importing the other dataset on MAC
 Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
@@ -86,108 +71,23 @@ sequencing.picks.8.9.23 <- Sequencing.Picks %>%
 End.data <- salmon.data %>% 
   select(ID, any_of(sequencing.picks.8.9.23$crab.ID)) %>% 
   mutate(across(where(is.numeric), round, 0))
-```
-```{r}
 head(End.data)
-```
-
-```{r}
-#importing final dataset
-metadata.main <- read.csv("C:/Users/ashra/Downloads/metabolomics-sample-list.csv")
-```
-```{r}
-# downloading deseq2
-if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
-
-BiocManager::install("DESeq2")
-library(DESeq2)
-library(ggplot2)
-```
-```{r}
-# doing the tutorial
-countsName <- "http://bioconnector.org/workshops/data/airway_scaledcounts.csv"
-download.file(countsName, destfile = "airway_scaledcounts.csv", method = "auto")
-
-countData <- read.csv('airway_scaledcounts.csv', header = TRUE, sep = ",")
-head(countData)
-```
-```{r}
-metaDataName <- "http://bioconnector.org/workshops/data/airway_metadata.csv"
-download.file(metaDataName, destfile = "airway_metadata.csv", method = "auto")
-
-metaData <- read.csv('airway_metadata.csv', header = TRUE, sep = ",")
-metaData
-```
-```{r}
-dds <- DESeqDataSetFromMatrix(countData=countData, 
-                              colData=metaData, 
-                              design=~dex, tidy = TRUE)
-```
-```{r}
-countsName <- "https://github.com/bioconnector/workshops/blob/master/data/airway_scaledcounts.csv"
-download.file(countsName, destfile = "airway_scaledcounts.csv", method = "auto")
-
-countData <- read.csv('airway_scaledcounts.csv', header = TRUE, sep = ",")
-head(countData)
-```
-```{r}
-countData <- read.csv("C:/Users/ashra/Downloads/airway_scaledcounts.csv", header = TRUE, sep = ",")
-countData
-```
-```{r}
-#getting the metadata now
-metaData <- read.csv("../../../Downloads/ai", header = TRUE, sep = ",")
-metaData
-```
-```{r}
-dds <- DESeqDataSetFromMatrix(countData=countData, 
-                              colData=metaData, 
-                              design=~dex, tidy = TRUE)
-```
-```{r}
-dds <- DESeq(dds)
-```
-```{r}
-?DESeq
-```
-```{r}
-# looking at results table
-res <- results(dds)
-head(results(dds, tidy=TRUE))
-```
-```{r}
-#summarize results
-summary(res)
-```
-```{r}
-res <- res[order(res$padj),]
-head(res)
-```
-```{r}
-par(mfrow=c(2,3))
-
-plotCounts(dds, gene="ENSG00000152583", intgroup="dex")
-plotCounts(dds, gene="ENSG00000179094", intgroup="dex")
-plotCounts(dds, gene="ENSG00000116584", intgroup="dex")
-plotCounts(dds, gene="ENSG00000189221", intgroup="dex")
-plotCounts(dds, gene="ENSG00000120129", intgroup="dex")
-plotCounts(dds, gene="ENSG00000148175", intgroup="dex")
-```
-```{r}
-par(mfrow=c(1,1))
-with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
-with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
-```
-```{r}
-vsdata <- vst(dds, blind=FALSE)
-plotPCA(vsdata, intgroup="dex")
 ```
 ```{r}
 head(salmon.data)
 ```
 
+```{r}
+nrow(End.data) #Get initial row count: 913680
+End.data <- End.data %>%
+  mutate(Total = rowSums(.[, 2:35])) %>%
+  filter(!Total==0) %>%
+  select(!Total) #Remove rows with 0 counts across all samples
+nrow(End.data) #Get final row count: 785006
+```
+```{r}
+head(End.data)
+```
 
 ```{r}
 #doing the proper gene analysis
@@ -196,11 +96,15 @@ dds.crab <- DESeqDataSetFromMatrix(countData=End.data,
                               design=~treatment, tidy = TRUE)
 ```
 ```{r}
-#trying to move column names
-salmon.data$ID <- rownames(salmon.data)
-End.data$ID <- rownames(End.data)
-end.dat <- merge(End.data, salmon.data, by = "ID", all.x = TRUE)
+sf.dds.crab <- estimateSizeFactors(dds.crab) #Estimate size factors to determine if we can use VST to transform our data. Size factors should be less than 4 for us to use vst
+print(sizeFactors(sf.dds.crab)) #View size factors
+all(sizeFactors(sf.dds.crab)) < 4 #True = we can use VST transformation
 ```
+```{r}
+gvst <- vst(sf.dds.crab, blind=FALSE) #Apply a variance stabilizing transformation to minimize effects of small counts and normalize wrt library size
+head(assay(gvst), 3) #View transformed gene count data for the first three genes in the dataset.
+```
+
 ```{r}
 #priming the code so once error is fixed, it will take about 5 minutes to fix it
 crab.stats <- DESeq(dds.crab)
@@ -214,36 +118,23 @@ head(results.main)
 ```{r}
 par(mfrow=c(2,3))
 
-plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="crab.ID")
-plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="crab.ID")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="crab.ID")
-plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="crab.ID")
+plotCounts(crab.stats, gene="1", intgroup="treatment")
+plotCounts(crab.stats, gene="2", intgroup="treatment")
+plotCounts(crab.stats, gene="3", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="")
 plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="crab.ID")
 plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="crab.ID")
 #... continue from the graph I made upstairs - intgroup is messing me up
 ```
 ```{r}
 par(mfrow=c(1,1))
-with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
-with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+with(results.crab, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+with(subset(results.crab, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red")) #negative log2fold = underexpressed/downregulated, visa versa
 ```
 ```{r}
 gvst <- vst(crab.stats, blind=FALSE)
-plotPCA(vsdata, intgroup="crab.ID") # <- need help with the intgroup, then everything else should work
-```
-
-
-### moving onto the new data frame by trimming the old one
-```{r}
-sf.dds.crab <- estimateSizeFactors(dds.crab) #Estimate size factors to determine if we can use VST to transform our data. Size factors should be less than 4 for us to use vst
-print(sizeFactors(sf.dds.crab)) #View size factors
-all(sizeFactors(sf.dds.crab)) < 4 #True = we can use VST transformation
-```
-
-```{r}
-gvst <- vst(sf.dds.crab, blind=FALSE) #Apply a variance stabilizing transformation to minimize effects of small counts and normalize wrt library size
-head(assay(gvst), 3) #View transformed gene count data for the first three genes in the dataset.  
+plotPCA(gvst, intgroup="treatment") # horizontal is temp-driven changes in gene expression
 ```
 
 ### `arrayQualityMetrics`
