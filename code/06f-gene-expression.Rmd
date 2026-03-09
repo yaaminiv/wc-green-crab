@@ -39,10 +39,16 @@ library(ggplot2)
 ```
 
 ```{r}
-# importing the dataset 
+# importing the dataset for MAC
 require(tidyverse)
-salmon.data <- read.delim("../../../Downloads/salmon.isoform.TPM.not_cross_norm", header=TRUE , check.names = FALSE)
+salmon.data <- read.delim("../../../Downloads/salmon.isoform.counts.matrix", header=TRUE , check.names = FALSE)
 ```
+```{r}
+# importing dataset for WINDOWS
+require(tidyverse)
+salmon.data <- read.delim("../../../../Downloads/salmon.isoform.counts.matrix", header=TRUE , check.names = FALSE)
+```
+
 ```{r}
 colnames(salmon.data)[1] <- "ID"
 head(salmon.data)
@@ -63,11 +69,18 @@ salmon.data$V6 = NULL
 salmon.data$V7 = NULL
 ```
 ```{r}
-#importing the other dataset 
+#importing the other dataset on MAC
 Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
 sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
   filter(date == "8/9/23")
 ```
+```{r}
+#importing the other dataset on WINDOWS
+Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
+sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
+  filter(date == "8/9/23")
+```
+
 ```{r}
 # making new data subset for end of exp THIS IS WHERE ROW NAMES GETS ADDED(?)
 End.data <- salmon.data %>% 
@@ -111,7 +124,6 @@ dds <- DESeqDataSetFromMatrix(countData=countData,
                               colData=metaData, 
                               design=~dex, tidy = TRUE)
 ```
-
 ```{r}
 countsName <- "https://github.com/bioconnector/workshops/blob/master/data/airway_scaledcounts.csv"
 download.file(countsName, destfile = "airway_scaledcounts.csv", method = "auto")
@@ -175,6 +187,8 @@ plotPCA(vsdata, intgroup="dex")
 ```{r}
 head(salmon.data)
 ```
+
+
 ```{r}
 #doing the proper gene analysis
 dds.crab <- DESeqDataSetFromMatrix(countData=End.data, 
@@ -199,6 +213,17 @@ head(results.main)
 ```
 ```{r}
 par(mfrow=c(2,3))
-#... continue from the graph I made upstairs
+
+plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="row")
+#... continue from the graph I made upstairs - intgroup is messing me up
+```
+### moving onto the new data frame by trimming the old one
+```{r}
+
 ```
 
