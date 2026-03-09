@@ -214,16 +214,53 @@ head(results.main)
 ```{r}
 par(mfrow=c(2,3))
 
-plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="row")
-plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="row")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="row")
-plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="row")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="row")
-plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="row")
+plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="crab.ID")
 #... continue from the graph I made upstairs - intgroup is messing me up
 ```
+```{r}
+par(mfrow=c(1,1))
+with(res, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+with(subset(res, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(res, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red"))
+```
+```{r}
+gvst <- vst(crab.stats, blind=FALSE)
+plotPCA(vsdata, intgroup="crab.ID") # <- need help with the intgroup, then everything else should work
+```
+
+
 ### moving onto the new data frame by trimming the old one
 ```{r}
+sf.dds.crab <- estimateSizeFactors(dds.crab) #Estimate size factors to determine if we can use VST to transform our data. Size factors should be less than 4 for us to use vst
+print(sizeFactors(sf.dds.crab)) #View size factors
+all(sizeFactors(sf.dds.crab)) < 4 #True = we can use VST transformation
+```
 
+```{r}
+gvst <- vst(sf.dds.crab, blind=FALSE) #Apply a variance stabilizing transformation to minimize effects of small counts and normalize wrt library size
+head(assay(gvst), 3) #View transformed gene count data for the first three genes in the dataset.  
+```
+
+### `arrayQualityMetrics`
+
+```{r}
+#e <- ExpressionSet(assay(gvst), AnnotatedDataFrame(as.data.frame(colData(gvst)))) #Generate expression set for outlier identification
+#arrayQualityMetrics(e, intgroup = c("condition"), force = T, outdir = "report_for_genes_Loaded") #Identify outliers.
+
+#Based on the report, Apalm_13, (adjacent), Apalm_17 (adjacent), and Apalm_27 (hypoxic) are outliers based on distances between arrays.
+```
+
+### Remove outliers
+
+Apalm_27 was flagged as overrepresented sequences after trimming by FastQC and has a higher percentage of multiple mappings than any other sample. This gives me good reason to remove Apalm_27. Apalm_13 and Apalm_17 have no other reasons to be outliers, so I will keep them in the analysis.
+
+```{r}
+gcount <- gcount %>% select(-c(Apalm_27)) #Remove outliers
+metadata <- metadata %>% dplyr::slice(-c(12)) #Remove outliers
 ```
 
