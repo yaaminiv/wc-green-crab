@@ -140,4 +140,33 @@ Apalm_27 was flagged as overrepresented sequences after trimming by FastQC and h
 gcount <- gcount %>% select(-c(Apalm_27)) #Remove outliers
 metadata <- metadata %>% dplyr::slice(-c(12)) #Remove outliers
 ```
+```{r}
+head(results.crab)
+```
+```{r}
+lfc1.results <- results.crab %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 1)
+head(lfc1.results)
+nrow(lfc1.results) #39575 differentially expressed transcript
+```
+```{r}
+lfc2.results <- results.crab %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 2)
+head(lfc2.results)
+nrow(lfc2.results) #24028 diff expressed transcripts
+```
+```{r}
+count(lfc2.results$log2FoldChange > 0) # 14946 have higher expression at 25C
+count(lfc2.results$log2FoldChange < 0) # 9082 have higher expression at 5C
+```
+
+### new dataset, heatmap, fix PCA
+
+
+
+
 
