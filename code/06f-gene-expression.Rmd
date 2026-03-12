@@ -13,20 +13,6 @@ knitr::opts_chunk$set(echo = TRUE)
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 ```{r}
 # requiring the required code
 require(tidyverse)
@@ -118,12 +104,12 @@ head(results.main)
 ```{r}
 par(mfrow=c(2,3))
 
-plotCounts(crab.stats, gene="1", intgroup="treatment")
-plotCounts(crab.stats, gene="2", intgroup="treatment")
-plotCounts(crab.stats, gene="3", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="crab.ID")
-plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="crab.ID")
+plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="treatment")
 #... continue from the graph I made upstairs - intgroup is messing me up
 ```
 ```{r}
