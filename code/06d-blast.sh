@@ -61,6 +61,5 @@ conda activate ete3
 python ${HOME_DIR}/06d-map_contam_ids.py ${OUTPUT_DIR}/blast-results/ ${OUTPUT_DIR}/blast-results/transcriptome-contam.tab ${OUTPUT_DIR}/contam_list.txt
 
 # Remove contaminated sequences from the transcriptome
-
 python ${HOME_DIR}/06d-fasta_subsetter.py ${TRINITY_DIR}/trinity_out_dir/Trinity.fasta ${OUTPUT_DIR}/contam_list.txt REMOVE
 mv ${OUTPUT_DIR}/contam_lis_REMOVE.fasta ${OUTPUT_DIR}/transcriptome_contamRemoved.fasta
