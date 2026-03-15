@@ -8,11 +8,6 @@ date: "`r Sys.Date()`"
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 ```{r}
 # requiring the required code
 require(tidyverse)
@@ -27,12 +22,12 @@ library(ggplot2)
 ```{r}
 # importing the dataset for MAC
 require(tidyverse)
-salmon.data <- read.delim("../../../Downloads/salmon.isoform.counts.matrix", header=TRUE , check.names = FALSE)
+salmon.data <- read.delim("../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
 ```
 ```{r}
 # importing dataset for WINDOWS
 require(tidyverse)
-salmon.data <- read.delim("../../../../Downloads/salmon.isoform.counts.matrix", header=TRUE , check.names = FALSE)
+salmon.data <- read.delim("../../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
 ```
 
 ```{r}
@@ -45,12 +40,29 @@ Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
 sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
   filter(date == "8/9/23")
 ```
+
+# removing contaminated sequences
 ```{r}
-#importing the other dataset on WINDOWS
-Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
-sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
-  filter(date == "8/9/23")
+contamSeqBlast <- read.delim("../output/06d-blast/contam-list.txt", header = FALSE, check.names = FALSE, col.names = "ID") %>%
+  mutate(ID = gsub(pattern = ">", replacement = "", x = ID)) %>%
+  mutate(ID = gsub(pattern = "_i.", replacement = "", x = ID)) %>%
+  arrange(ID) %>%
+  distinct(.)
+  #Import list of contaminated sequences. Use gsub to get rid of ">". Use gsub to also get rid of isoform designation (_i = start of isoform, . = any character except new line) so entries can be mapped to gene-level count matrix. Arrange alphanumerically and retain distinct rows.
+head(contamSeqBlast) #Confirm changes
+nrow(contamSeqBlast) #51785 contaminated genes
 ```
+#modifying end data to remove contaminated sequences
+```{r}
+End.data <- salmon.data %>% 
+  select(ID, any_of(sequencing.picks.8.9.23$crab.ID)) %>% 
+  mutate(across(where(is.numeric), round, 0)) %>%
+  anti_join(., y = contamSeqBlast, by = "ID") %>% #Use anti-join to return all rows from salmon.data that do not match list of contamination sequences
+  arrange(ID)
+head(End.data)
+nrow(End.data) #597263 genes without contamination
+```
+
 
 ```{r}
 # making new data subset for end of exp THIS IS WHERE ROW NAMES GETS ADDED(?)
@@ -75,8 +87,8 @@ nrow(End.data) #Get final row count: 785006
 head(End.data)
 ```
 
+#creating the deseq object for the experiment
 ```{r}
-#doing the proper gene analysis
 dds.crab <- DESeqDataSetFromMatrix(countData=End.data, 
                               colData=sequencing.picks.8.9.23, 
                               design=~treatment, tidy = TRUE)
@@ -96,30 +108,25 @@ head(assay(gvst), 3) #View transformed gene count data for the first three genes
 crab.stats <- DESeq(dds.crab)
 ```
 ```{r}
-results.crab <- results(crab.stats)
+deseq.results.crab <- results(crab.stats)
 head(results(crab.stats, tidy=TRUE))
-results.main <- results.crab[order(results.crab$padj),]
+results.main <- deseq.results.crab[order(deseq.results.crab$padj),]
 head(results.main)
 ```
 ```{r}
 par(mfrow=c(2,3))
 
-plotCounts(crab.stats, gene="TRINITY_DN7046_c0_g1_i3", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i6", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN178823_c0_g1_i1", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN5483_c2_g1_i9", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN3903_c0_g3_i1", intgroup="treatment")
-plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1_i1", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN3052_c0_g1", intgroup="treatment")
+plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1", intgroup="treatment")
 #... continue from the graph I made upstairs - intgroup is messing me up
 ```
 ```{r}
 par(mfrow=c(1,1))
-with(results.crab, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
-with(subset(results.crab, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
-with(subset(results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red")) #negative log2fold = underexpressed/downregulated, visa versa
+with(deseq.results.crab, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volcano plot", xlim=c(-3,3)))
+with(subset(deseq.results.crab, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
+with(subset(deseq.results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red")) #negative log2fold = underexpressed/downregulated, visa versa
 ```
 ```{r}
-gvst <- vst(crab.stats, blind=FALSE)
 plotPCA(gvst, intgroup="treatment") # horizontal is temp-driven changes in gene expression
 ```
 
@@ -131,42 +138,49 @@ plotPCA(gvst, intgroup="treatment") # horizontal is temp-driven changes in gene 
 
 #Based on the report, Apalm_13, (adjacent), Apalm_17 (adjacent), and Apalm_27 (hypoxic) are outliers based on distances between arrays.
 ```
-
-### Remove outliers
-
-Apalm_27 was flagged as overrepresented sequences after trimming by FastQC and has a higher percentage of multiple mappings than any other sample. This gives me good reason to remove Apalm_27. Apalm_13 and Apalm_17 have no other reasons to be outliers, so I will keep them in the analysis.
-
 ```{r}
-gcount <- gcount %>% select(-c(Apalm_27)) #Remove outliers
-metadata <- metadata %>% dplyr::slice(-c(12)) #Remove outliers
+head(deseq.results.crab)
 ```
 ```{r}
-head(results.crab)
-```
-```{r}
-lfc1.results <- results.crab %>% 
+lfc1.results <- deseq.results.crab %>% 
   as.data.frame() %>% 
   filter(padj < 0.05) %>% 
   filter(abs(log2FoldChange) > 1)
 head(lfc1.results)
-nrow(lfc1.results) #39575 differentially expressed transcript
+nrow(lfc1.results) #30188 differentially expressed transcript
 ```
 ```{r}
-lfc2.results <- results.crab %>% 
+lfc2.results <- deseq.results.crab %>% 
   as.data.frame() %>% 
   filter(padj < 0.05) %>% 
   filter(abs(log2FoldChange) > 2)
 head(lfc2.results)
-nrow(lfc2.results) #24028 diff expressed transcripts
+nrow(lfc2.results) #14389 diff expressed transcripts
 ```
 ```{r}
-count(lfc2.results$log2FoldChange > 0) # 14946 have higher expression at 25C
-count(lfc2.results$log2FoldChange < 0) # 9082 have higher expression at 5C
+count(lfc2.results$log2FoldChange > 0) # 9297 have higher expression at 25C
+count(lfc2.results$log2FoldChange < 0) # 5092 have higher expression at 5C
+```
+```{r}
+lfc2.results$ID <- rownames(lfc2.results) #Convert rownames to a new column
+head(lfc2.results)
+```
+#importing annotation list and joining it with the lfc2 results
+```{r}
+blastAnnotations <- read.delim("../output/06d-blast/blast-results/transcriptome-contam.tab", header = FALSE, check.names = FALSE, ) %>%
+  select(1, 13) #Import annotations from blast. Keep only columns 1 and 13
+colnames(blastAnnotations) <- c("ID", "annotation") #Rename columns
+
+blastAnnotationsGenes <- blastAnnotations %>%
+    mutate(ID = gsub(pattern = "_i.", replacement = "", x = ID)) %>%
+  distinct(.) #Remove isoform indication from annotations to match gene-level count matrix and keep only distinct rows. 
+head(blastAnnotationsGenes) # 104423 genes remaining
+nrow(blastAnnotationsGenes)
+
+lfc2.results.annot <- left_join(x = lfc2.results, y = blastAnnotations, by = "ID") %>%
+  distinct(.) #Join to get ref transcript ID information associated with DEGs 
+nrow(lfc2.results.annot) # 14389 rows
+head(lfc2.results.annot)
 ```
 
 ### new dataset, heatmap, fix PCA
-
-
-
-
-
