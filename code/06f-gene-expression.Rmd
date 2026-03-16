@@ -7,9 +7,8 @@ date: "`r Sys.Date()`"
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-
+#loading required packages
 ```{r}
-# requiring the required code
 require(tidyverse)
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -35,7 +34,7 @@ colnames(salmon.data)[1] <- "ID"
 head(salmon.data)
 ```
 ```{r}
-#importing the other dataset on MAC
+#importing the other dataset 
 Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
 sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
   filter(date == "8/9/23")
@@ -63,18 +62,17 @@ head(End.data)
 nrow(End.data) #597263 genes without contamination
 ```
 
-
+# is this code chunk necessary?
 ```{r}
 # making new data subset for end of exp THIS IS WHERE ROW NAMES GETS ADDED(?)
 End.data <- salmon.data %>% 
   select(ID, any_of(sequencing.picks.8.9.23$crab.ID)) %>% 
   mutate(across(where(is.numeric), round, 0))
 head(End.data)
-```
-```{r}
+
 head(salmon.data)
 ```
-
+ #is this code chunk also necessary?
 ```{r}
 nrow(End.data) #Get initial row count: 913680
 End.data <- End.data %>%
@@ -126,18 +124,25 @@ with(deseq.results.crab, plot(log2FoldChange, -log10(pvalue), pch=20, main="Volc
 with(subset(deseq.results.crab, padj<.01 ), points(log2FoldChange, -log10(pvalue), pch=20, col="blue"))
 with(subset(deseq.results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red")) #negative log2fold = underexpressed/downregulated, visa versa
 ```
+
+# making the PCA for the dataset, does this go before or after the last step?
 ```{r}
 plotPCA(gvst, intgroup="treatment") # horizontal is temp-driven changes in gene expression
+
+pcaData <- plotPCA(gvst, intgroup = c("condition", "sample_id"), returnData = TRUE)
+percentVar <- round(100 * attr(pcaData, "percentVar"))
+ggplot(pcaData, aes(PC1, PC2, group = condition, color = condition)) +
+  geom_point(size=3) + 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data
+  xlab(paste0("PC1: ",percentVar[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
+  coord_fixed() +
+  theme_classic()
+
+#ggsave("diff-exp-PCA.pdf", width = 11, height = 8.5)
 ```
 
-### `arrayQualityMetrics`
 
-```{r}
-#e <- ExpressionSet(assay(gvst), AnnotatedDataFrame(as.data.frame(colData(gvst)))) #Generate expression set for outlier identification
-#arrayQualityMetrics(e, intgroup = c("condition"), force = T, outdir = "report_for_genes_Loaded") #Identify outliers.
-
-#Based on the report, Apalm_13, (adjacent), Apalm_17 (adjacent), and Apalm_27 (hypoxic) are outliers based on distances between arrays.
-```
 ```{r}
 head(deseq.results.crab)
 ```
@@ -182,5 +187,11 @@ lfc2.results.annot <- left_join(x = lfc2.results, y = blastAnnotations, by = "ID
 nrow(lfc2.results.annot) # 14389 rows
 head(lfc2.results.annot)
 ```
+# making the heatmap
+```{r}
+#pdf("diff-exp-heatmap.pdf", width = 11, height = 8.5)
 
-### new dataset, heatmap, fix PCA
+pheatmap(assay(gvst)[rownames(sigGenes),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
+
+#dev.off()
+```
