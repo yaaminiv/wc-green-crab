@@ -16,6 +16,9 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("DESeq2")
 library(DESeq2)
 library(ggplot2)
+
+install.packages("pheatmap")
+require(pheatmap)
 ```
 
 ```{r}
@@ -62,24 +65,15 @@ head(End.data)
 nrow(End.data) #597263 genes without contamination
 ```
 
-# is this code chunk necessary?
+ # removing 0 level transcripts
+ 
 ```{r}
-# making new data subset for end of exp THIS IS WHERE ROW NAMES GETS ADDED(?)
-End.data <- salmon.data %>% 
-  select(ID, any_of(sequencing.picks.8.9.23$crab.ID)) %>% 
-  mutate(across(where(is.numeric), round, 0))
-head(End.data)
-
-head(salmon.data)
-```
- #is this code chunk also necessary?
-```{r}
-nrow(End.data) #Get initial row count: 913680
+nrow(End.data) #Get initial row count: 597263
 End.data <- End.data %>%
   mutate(Total = rowSums(.[, 2:35])) %>%
   filter(!Total==0) %>%
   select(!Total) #Remove rows with 0 counts across all samples
-nrow(End.data) #Get final row count: 785006
+nrow(End.data) #Get final row count: 7514727
 ```
 ```{r}
 head(End.data)
@@ -127,11 +121,10 @@ with(subset(deseq.results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2Fo
 
 # making the PCA for the dataset, does this go before or after the last step?
 ```{r}
-plotPCA(gvst, intgroup="treatment") # horizontal is temp-driven changes in gene expression
 
-pcaData <- plotPCA(gvst, intgroup = c("condition", "sample_id"), returnData = TRUE)
+pcaData <- plotPCA(gvst, intgroup = c("treatment"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
-ggplot(pcaData, aes(PC1, PC2, group = condition, color = condition)) +
+ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
   geom_point(size=3) + 
   stat_ellipse() + #Add 95% confidence interval ellipses around data
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
@@ -144,27 +137,16 @@ ggplot(pcaData, aes(PC1, PC2, group = condition, color = condition)) +
 
 
 ```{r}
-head(deseq.results.crab)
-```
-```{r}
-lfc1.results <- deseq.results.crab %>% 
-  as.data.frame() %>% 
-  filter(padj < 0.05) %>% 
-  filter(abs(log2FoldChange) > 1)
-head(lfc1.results)
-nrow(lfc1.results) #30188 differentially expressed transcript
-```
-```{r}
 lfc2.results <- deseq.results.crab %>% 
   as.data.frame() %>% 
   filter(padj < 0.05) %>% 
   filter(abs(log2FoldChange) > 2)
 head(lfc2.results)
-nrow(lfc2.results) #14389 diff expressed transcripts
+nrow(lfc2.results) #14434 diff expressed transcripts
 ```
 ```{r}
-count(lfc2.results$log2FoldChange > 0) # 9297 have higher expression at 25C
-count(lfc2.results$log2FoldChange < 0) # 5092 have higher expression at 5C
+count(lfc2.results$log2FoldChange > 0) # 91331 have higher expression at 25C
+count(lfc2.results$log2FoldChange < 0) # 5103 have higher expression at 5C
 ```
 ```{r}
 lfc2.results$ID <- rownames(lfc2.results) #Convert rownames to a new column
@@ -184,14 +166,18 @@ nrow(blastAnnotationsGenes)
 
 lfc2.results.annot <- left_join(x = lfc2.results, y = blastAnnotations, by = "ID") %>%
   distinct(.) #Join to get ref transcript ID information associated with DEGs 
-nrow(lfc2.results.annot) # 14389 rows
+nrow(lfc2.results.annot) # 14434 rows
 head(lfc2.results.annot)
+write.table(lfc2.results.annot, "../output/06f-gene-expression/lfc2-results-annot.tab", sep = "\t", quote = FALSE)
 ```
+
 # making the heatmap
 ```{r}
 #pdf("diff-exp-heatmap.pdf", width = 11, height = 8.5)
 
-pheatmap(assay(gvst)[rownames(sigGenes),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
+pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
 
 #dev.off()
 ```
+
+#clean up PCA
