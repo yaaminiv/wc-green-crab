@@ -16,7 +16,7 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("DESeq2")
 library(DESeq2)
 library(ggplot2)
-
+require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
@@ -119,19 +119,24 @@ with(subset(deseq.results.crab, padj<.01 ), points(log2FoldChange, -log10(pvalue
 with(subset(deseq.results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2FoldChange, -log10(pvalue), pch=20, col="red")) #negative log2fold = underexpressed/downregulated, visa versa
 ```
 
-# making the PCA for the dataset, does this go before or after the last step?
+# making the PCA for the dataset
 ```{r}
 
 pcaData <- plotPCA(gvst, intgroup = c("treatment"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
-ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
+PCAmain <- ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
   geom_point(size=3) + 
   stat_ellipse() + #Add 95% confidence interval ellipses around data
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
   coord_fixed() +
-  theme_classic()
+  theme_classic() 
 
+
+
+PCAmain + theme(legend.title = "Temperature")
+ scale_color_manual(values = c(c(155, 192, 203), c(128, 0, 128), c(255, 165, 0)))
+ 
 #ggsave("diff-exp-PCA.pdf", width = 11, height = 8.5)
 ```
 
