@@ -124,18 +124,20 @@ with(subset(deseq.results.crab, padj<.01 & abs(log2FoldChange)>2), points(log2Fo
 
 pcaData <- plotPCA(gvst, intgroup = c("treatment"), returnData = TRUE)
 percentVar <- round(100 * attr(pcaData, "percentVar"))
-PCAmain <- ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
+ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
   geom_point(size=3) + 
   stat_ellipse() + #Add 95% confidence interval ellipses around data
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
   coord_fixed() +
+  scale_color_manual(values = c( "#CB181D", "#2171B5"), 
+                     name = "Temperature (ºC)",
+                     labels = c("25C", "5C")) +
+  scale_shape_manual(values = c(16, 15),
+                     name = "Temperature (ºC)",
+                     labels = c("25C", "5C"))
   theme_classic() 
 
-
-
-PCAmain + theme(legend.title = "Temperature")
- scale_color_manual(values = c(c(155, 192, 203), c(128, 0, 128), c(255, 165, 0)))
  
 #ggsave("diff-exp-PCA.pdf", width = 11, height = 8.5)
 ```
@@ -184,5 +186,3 @@ pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames
 
 #dev.off()
 ```
-
-#clean up PCA
