@@ -20,14 +20,13 @@ require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
-
+# MAC import dataset
 ```{r}
-# importing the dataset for MAC
 require(tidyverse)
 salmon.data <- read.delim("../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
 ```
+# WINDOWS import dataset
 ```{r}
-# importing dataset for WINDOWS
 require(tidyverse)
 salmon.data <- read.delim("../../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
 ```
@@ -94,12 +93,9 @@ all(sizeFactors(sf.dds.crab)) < 4 #True = we can use VST transformation
 gvst <- vst(sf.dds.crab, blind=FALSE) #Apply a variance stabilizing transformation to minimize effects of small counts and normalize wrt library size
 head(assay(gvst), 3) #View transformed gene count data for the first three genes in the dataset.
 ```
-
+# making the DESeq object and getting the results from it
 ```{r}
-#priming the code so once error is fixed, it will take about 5 minutes to fix it
 crab.stats <- DESeq(dds.crab)
-```
-```{r}
 deseq.results.crab <- results(crab.stats)
 head(results(crab.stats, tidy=TRUE))
 results.main <- deseq.results.crab[order(deseq.results.crab$padj),]
@@ -142,6 +138,7 @@ ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = trea
 #ggsave("diff-exp-PCA.pdf", width = 11, height = 8.5)
 ```
 
+#Finding how many differentially expressed transcripts there are for two temperature points
 
 ```{r}
 lfc2.results <- deseq.results.crab %>% 
@@ -159,7 +156,9 @@ count(lfc2.results$log2FoldChange < 0) # 5103 have higher expression at 5C
 lfc2.results$ID <- rownames(lfc2.results) #Convert rownames to a new column
 head(lfc2.results)
 ```
+
 #importing annotation list and joining it with the lfc2 results
+
 ```{r}
 blastAnnotations <- read.delim("../output/06d-blast/blast-results/transcriptome-contam.tab", header = FALSE, check.names = FALSE, ) %>%
   select(1, 13) #Import annotations from blast. Keep only columns 1 and 13
