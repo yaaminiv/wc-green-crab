@@ -106,7 +106,6 @@ par(mfrow=c(2,3))
 
 plotCounts(crab.stats, gene="TRINITY_DN3052_c0_g1", intgroup="treatment")
 plotCounts(crab.stats, gene="TRINITY_DN12380_c0_g1", intgroup="treatment")
-#... continue from the graph I made upstairs - intgroup is messing me up
 ```
 ```{r}
 par(mfrow=c(1,1))
@@ -131,11 +130,11 @@ ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = trea
                      labels = c("25C", "5C")) +
   scale_shape_manual(values = c(16, 15),
                      name = "Temperature (ºC)",
-                     labels = c("25C", "5C"))
+                     labels = c("25C", "5C")) +
   theme_classic() 
 
  
-#ggsave("diff-exp-PCA.pdf", width = 11, height = 8.5)
+ggsave("PCAcrab.pdf", width = 11, height = 8.5)
 ```
 
 #Finding how many differentially expressed transcripts there are for two temperature points
@@ -149,7 +148,7 @@ head(lfc2.results)
 nrow(lfc2.results) #14434 diff expressed transcripts
 ```
 ```{r}
-count(lfc2.results$log2FoldChange > 0) # 91331 have higher expression at 25C
+count(lfc2.results$log2FoldChange > 0) # 9331 have higher expression at 25C
 count(lfc2.results$log2FoldChange < 0) # 5103 have higher expression at 5C
 ```
 ```{r}
@@ -179,9 +178,9 @@ write.table(lfc2.results.annot, "../output/06f-gene-expression/lfc2-results-anno
 
 # making the heatmap
 ```{r}
-#pdf("diff-exp-heatmap.pdf", width = 11, height = 8.5)
 
-pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
 
+heatmap.data <- pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
+ggsave("Heatmapcrab.pdf", width = 11, height = 8.5)
 #dev.off()
 ```
