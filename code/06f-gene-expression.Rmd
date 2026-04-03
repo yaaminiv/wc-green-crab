@@ -134,7 +134,7 @@ ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = trea
   theme_classic() 
 
  
-ggsave("PCAcrab.pdf", width = 11, height = 8.5)
+ggsave("../output/06f-gene-expression/PCAcrab.pdf", width = 11, height = 8.5)
 ```
 
 #Finding how many differentially expressed transcripts there are for two temperature points
@@ -148,8 +148,8 @@ head(lfc2.results)
 nrow(lfc2.results) #14434 diff expressed transcripts
 ```
 ```{r}
-count(lfc2.results$log2FoldChange > 0) # 9331 have higher expression at 25C
-count(lfc2.results$log2FoldChange < 0) # 5103 have higher expression at 5C
+count(lfc2.results$log2FoldChange > 0) # 9331 have higher expression at 5C
+count(lfc2.results$log2FoldChange < 0) # 5103 have higher expression at 25C
 ```
 ```{r}
 lfc2.results$ID <- rownames(lfc2.results) #Convert rownames to a new column
@@ -179,8 +179,8 @@ write.table(lfc2.results.annot, "../output/06f-gene-expression/lfc2-results-anno
 # making the heatmap
 ```{r}
 
-
+pdf("../output/06f-gene-expression/heatmapcrab.pdf", width = 11, height = 8.5)
 heatmap.data <- pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
-ggsave("Heatmapcrab.pdf", width = 11, height = 8.5)
-#dev.off()
+
+dev.off()
 ```
