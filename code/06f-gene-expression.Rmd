@@ -127,11 +127,11 @@ ggplot(pcaData, aes(PC1, PC2, group = treatment, color = treatment, shape = trea
   coord_fixed() +
   scale_color_manual(values = c( "#CB181D", "#2171B5"), 
                      name = "Temperature (ºC)",
-                     labels = c("25C", "5C")) +
+                     labels = c("25", "5")) +
   scale_shape_manual(values = c(16, 15),
                      name = "Temperature (ºC)",
-                     labels = c("25C", "5C")) +
-  theme_classic() 
+                     labels = c("25", "5")) +
+  theme_classic() + theme(legend.position = "top")
 
  
 ggsave("../output/06f-gene-expression/PCAcrab.pdf", width = 11, height = 8.5)
@@ -178,9 +178,33 @@ write.table(lfc2.results.annot, "../output/06f-gene-expression/lfc2-results-anno
 
 # making the heatmap
 ```{r}
+sigGenesVST <- as.data.frame(assay(gvst)[rownames(lfc2.results),]) #Save VST values for DEG
+head(sigGenesVST)
+```
 
+
+```{r}
+plotColors <- rev(brewer.pal("PRGn", n = 5))
+```
+
+```{r}
+treatmentinfo <- Sequencing.Picks %>%
+  column_to_rownames("crab.ID") %>%
+  mutate(., Temperature = case_when(treatment == "25C" ~ "25ºC",
+                             treatment == "5C" ~ "5ºC")) %>%
+  select(., Temperature) #Create a new column for Exposed of Adjacent information, and only retain that column
+head(treatmentinfo) #Column annotation information
+```
+```{r}
+heatmapcolors <- list(Temperature = c("25ºC" = "#CB181D",
+                                  "5ºC" = "#2171B5")) #List of colors for column annotations
+heatmapcolors #Column annotation colors
+```
+
+```{r}
 pdf("../output/06f-gene-expression/heatmapcrab.pdf", width = 11, height = 8.5)
-heatmap.data <- pheatmap(assay(gvst)[rownames(lfc2.results),], cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row")
+
+pheatmap(sigGenesVST, cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row", color = plotColors, annotation_col = treatmentinfo, annotation_colors = heatmapcolors, annotation_names_col = FALSE)
 
 dev.off()
 ```
