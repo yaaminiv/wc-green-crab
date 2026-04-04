@@ -20,6 +20,11 @@ require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
+# link for the dataset download
+```{r}
+# https://osf.io/ea8mq/files/xnt56
+```
+
 # MAC import dataset
 ```{r}
 require(tidyverse)
