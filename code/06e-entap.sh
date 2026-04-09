@@ -8,7 +8,7 @@
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
 #SBATCH --mem=180gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
-#SBATCH --time=10-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
+#SBATCH --time=14-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_entap%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/scratch/yaamini.venkataraman/wc-green-crab/output/06e-entap	  # Working directory for this script
 
@@ -46,6 +46,11 @@ TRINITY_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
 BLAST_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06d-blast
 OUTPUT_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06e-entap
 HOME_DIR=/vortexfs1/home/yaamini.venkataraman
+
+# Retain only the longest isoform for annotation - significantly speeds up annotation process
+python ${HOME_DIR}/06e-list-trinity-dups-to-remove.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta
+python ${HOME_DIR}/06d-fasta_subsetter.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved.fasta_dups.txt REMOVE
+mv ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved_dupRemoved.fasta
 
 # Make EnTap database
 # First download reference databases for use in EnTAP: UniProt's uniref90, trembl, and sprot, and NCBI's nr and refseq databases.
