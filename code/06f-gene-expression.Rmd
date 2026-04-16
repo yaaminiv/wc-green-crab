@@ -77,7 +77,7 @@ End.data <- End.data %>%
   mutate(Total = rowSums(.[, 2:35])) %>%
   filter(!Total==0) %>%
   select(!Total) #Remove rows with 0 counts across all samples
-nrow(End.data) #Get final row count: 7514727
+nrow(End.data) #Get final row count: 514727
 ```
 ```{r}
 head(End.data)
@@ -212,4 +212,30 @@ pdf("../output/06f-gene-expression/heatmapcrab.pdf", width = 11, height = 8.5)
 pheatmap(sigGenesVST, cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row", color = plotColors, annotation_col = treatmentinfo, annotation_colors = heatmapcolors, annotation_names_col = FALSE)
 
 dev.off()
+```
+#beginning analysis with the control group as well
+
+```{r}
+all.treatment.data <- salmon.data %>% 
+  select(ID, any_of(Sequencing.Picks$crab.ID)) %>% 
+  mutate(across(where(is.numeric), round, 0)) %>%
+  anti_join(., y = contamSeqBlast, by = "ID") %>% #Use anti-join to return all rows from salmon.data that do not match list of contamination sequences
+  arrange(ID)
+head(all.treatment.data)
+nrow(all.treatment.data) #597263 genes without contamination
+```
+```{r}
+nrow(all.treatment.data) #Get initial row count: 597263
+all.treatment.data <- all.treatment.data %>%
+  mutate(Total = rowSums(.[, 2:88])) %>%
+  filter(!Total==0) %>%
+  select(!Total) #Remove rows with 0 counts across all samples
+nrow(all.treatment.data) #Get final row count: 596147
+```
+#creating a new DESeq object for the total dataset
+```{r}
+Sequencing.Picks <- Sequencing.Picks %>% arrange(date)
+dds.crab.total <- DESeqDataSetFromMatrix(countData=all.treatment.data, 
+                              colData=Sequencing.Picks, 
+                              design=~treatment, tidy = TRUE)
 ```
