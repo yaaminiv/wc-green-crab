@@ -239,3 +239,8 @@ dds.crab.total <- DESeqDataSetFromMatrix(countData=all.treatment.data,
                               colData=Sequencing.Picks, 
                               design=~treatment, tidy = TRUE)
 ```
+```{r}
+head(Sequencing.Picks)
+head(all.treatment.data)
+```
+
