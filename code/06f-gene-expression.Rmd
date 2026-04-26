@@ -234,13 +234,34 @@ nrow(all.treatment.data) #Get final row count: 596147
 ```
 #creating a new DESeq object for the total dataset
 ```{r}
-Sequencing.Picks <- Sequencing.Picks %>% arrange(date)
-dds.crab.total <- DESeqDataSetFromMatrix(countData=all.treatment.data, 
+dds.crab <- DESeqDataSetFromMatrix(countData=all.treatment.data.aligned, 
                               colData=Sequencing.Picks, 
                               design=~treatment, tidy = TRUE)
 ```
 ```{r}
-head(Sequencing.Picks)
-head(all.treatment.data)
+desired_order <- c("ID", Sequencing.Picks$crab.ID)
+counts_reordered <- all.treatment.data[, desired_order]
+matching_ids <- intersect(Sequencing.Picks$crab.ID, colnames(all.treatment.data))
+desired_order <- c("ID", matching_ids)
+counts_reordered <- all.treatment.data[, desired_order]
+head(desired_order)
+# 1. Find names that exist in BOTH df1's columns and df2's target column
+common_names <- intersect(colnames(all.treatment.data), Sequencing.Picks$crab.ID)
+
+# 2. Subset df1 columns safely
+all.treatment.data.aligned <- all.treatment.data[, common_names, drop = FALSE]
+
+# 3. (Optional) Filter df2 so it only keeps rows with those common names
+df2_aligned <- df2[df2$Target_Names %in% common_names, , drop = FALSE]
+
+head(df1_aligned)
 ```
+```{r}
+#Checking that all row and column names match. Should return "TRUE"
+# Replace metadata, sample_id, and gcount with the relevant dataframe names or column names in your script
+
+all(rownames(all.treatment.data$ID) %in% colnames(gcount))
+all(rownames(metadata$sample_id) == colnames(gcount)) 
+```
+
 
