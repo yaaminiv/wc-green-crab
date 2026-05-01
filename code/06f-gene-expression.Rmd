@@ -42,7 +42,8 @@ head(salmon.data)
 ```
 ```{r}
 #importing the other dataset 
-Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv")
+Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv") %>%
+  filter(., crab.ID != "5-064")
 sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
   filter(date == "8/9/23")
 ```
@@ -244,12 +245,19 @@ all.treatment.data.aligned <- all.treatment.data[, common_names, drop = FALSE]
 #Checking that all row and column names match. Should return "TRUE"
 # Replace metadata, sample_id, and gcount with the relevant dataframe names or column names in your script
 
-all(rownames(Sequencing.Picks$crab.ID) %in% colnames(all.treatment.data.aligned))
-all(rownames(Sequencing.Picks$crab.ID) == colnames(all.treatment.data.aligned))
+all(rownames(Sequencing.Picks$crab.ID) %in% colnames(all.treatment.data))
+all(rownames(Sequencing.Picks$crab.ID) == colnames(all.treatment.data))
 ```
 #creating a new DESeq object for the total dataset
+
 ```{r}
-dds.crab.all <- DESeqDataSetFromMatrix(countData=all.treatment.data.aligned, 
+ncol(all.treatment.data[-1])
+nrow(Sequencing.Picks)
+```
+
+
+```{r}
+dds.crab.all <- DESeqDataSetFromMatrix(countData=all.treatment.data, 
                               colData=Sequencing.Picks, 
                               design=~treatment, tidy = TRUE)
 ```
