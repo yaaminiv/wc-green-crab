@@ -43,7 +43,7 @@ head(salmon.data)
 ```{r}
 #importing the other dataset 
 Sequencing.Picks <- read.csv("../metadata/metabolomics-sample-list.csv") %>%
-  filter(., crab.ID != "5-064")
+  filter(., crab.ID != "5-064") #Remove sample that was dropped and not sequenced
 sequencing.picks.8.9.23 <- Sequencing.Picks %>% 
   filter(date == "8/9/23")
 ```
@@ -285,20 +285,88 @@ head(results.all)
 
 pcaData.all <- plotPCA(gvst.all, intgroup = c("treatment"), returnData = TRUE)
 percentVar.all <- round(100 * attr(pcaData.all, "percentVar"))
-ggplot(pcaData.ll, aes(PC1, PC2, PC3, group = treatment, color = treatment, shape = treatment)) +
+ggplot(pcaData.all, aes(PC1, PC2, group = treatment, color = treatment, shape = treatment)) +
   geom_point(size=3) + 
   stat_ellipse() + #Add 95% confidence interval ellipses around data
   xlab(paste0("PC1: ",percentVar[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar[2],"% variance")) + 
   coord_fixed() +
-  scale_color_manual(values = c( "#CB181D", "#2171B5"), 
+  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), 
                      name = "Temperature (ºC)",
-                     labels = c("25", "5")) +
-  scale_shape_manual(values = c(16, 15),
+                     labels = c("15", "25", "5")) +
+  scale_shape_manual(values = c(17, 16, 15),
                      name = "Temperature (ºC)",
-                     labels = c("25", "5")) +
+                     labels = c("15", "25", "5")) +
   theme_classic() + theme(legend.position = "top")
 
  
-ggsave("../output/06f-gene-expression/PCAcrab.pdf", width = 11, height = 8.5)
+ggsave("../output/06f-gene-expression/PCAcraball.pdf", width = 11, height = 8.5)
 ```
+#preparing to make the heatmap with all samples
+```{r}
+lfc2.results.all <- deseq.results.crab.all %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 2)
+head(lfc2.results.all)
+nrow(lfc2.results.all) #3690 diff expressed transcripts
+```
+```{r}
+count(lfc2.results.all$log2FoldChange > 0) # 3066 have higher expression at 5C
+count(lfc2.results.all$log2FoldChange < 0) # 624 have higher expression at 25C
+```
+```{r}
+lfc2.results.all$ID <- rownames(lfc2.results.all) #Convert rownames to a new column
+head(lfc2.results.all)
+```
+```{r}
+blastAnnotations <- read.delim("../output/06d-blast/blast-results/transcriptome-contam.tab", header = FALSE, check.names = FALSE, ) %>%
+  select(1, 13) #Import annotations from blast. Keep only columns 1 and 13
+colnames(blastAnnotations) <- c("ID", "annotation") #Rename columns
+
+blastAnnotationsGenes <- blastAnnotations %>%
+    mutate(ID = gsub(pattern = "_i.", replacement = "", x = ID)) %>%
+  distinct(.) #Remove isoform indication from annotations to match gene-level count matrix and keep only distinct rows. 
+head(blastAnnotationsGenes) # 104423 genes remaining
+nrow(blastAnnotationsGenes)
+
+lfc2.results.all.annot <- left_join(x = lfc2.results.all, y = blastAnnotations, by = "ID") %>%
+  distinct(.) #Join to get ref transcript ID information associated with DEGs 
+nrow(lfc2.results.all.annot) # 3690 rows
+head(lfc2.results.all.annot)
+write.table(lfc2.results.all.annot, "../output/06f-gene-expression/lfc2-results-all-annot.tab", sep = "\t", quote = FALSE)
+```
+```{r}
+sigGenesVST.all <- as.data.frame(assay(gvst.all)[rownames(lfc2.results.all),]) #Save VST values for DEG
+head(sigGenesVST.all)
+```
+```{r}
+plotColors.all <- rev(brewer.pal("PRGn", n = 5))
+```
+
+```{r}
+treatmentinfo.all <- Sequencing.Picks %>%
+  column_to_rownames("crab.ID") %>%
+  mutate(., Temperature = case_when(treatment == "25C" ~ "25ºC",
+                                    treatment == "15C" ~ "15ºC",
+                             treatment == "5C" ~ "5ºC")) %>%
+  select(., Temperature) #Create a new column for Exposed of Adjacent information, and only retain that column
+head(treatmentinfo.all) #Column annotation information
+```
+```{r}
+heatmapcolors.all <- list(Temperature = c("25ºC" = "#CB181D",
+                                          "15ºC" = "#969696",
+                                  "5ºC" = "#2171B5")) #List of colors for column annotations
+heatmapcolors.all #Column annotation colors
+```
+
+```{r}
+pdf("../output/06f-gene-expression/heatmapcraball.pdf", width = 11, height = 8.5)
+
+pheatmap(sigGenesVST.all, cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row", color = plotColors.all, annotation_col = treatmentinfo.all, annotation_colors = heatmapcolors.all, annotation_names_col = FALSE)
+
+dev.off()
+```
+```
+
+
