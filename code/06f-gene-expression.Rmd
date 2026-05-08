@@ -363,7 +363,7 @@ heatmapcolors.all #Column annotation colors
 ```{r}
 pdf("../output/06f-gene-expression/heatmapcraball.pdf", width = 11, height = 8.5)
 
-pheatmap(sigGenesVST.all, cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row", color = plotColors.all, annotation_col = treatmentinfo.all, annotation_colors = heatmapcolors.all, annotation_names_col = FALSE)
+pheatmap(sigGenesVST.all, cluster_row = TRUE, show_rownames = FALSE, cluster_cols = TRUE, show_colnames = FALSE, scale = "row", annotation_col = treatmentinfo.all, annotation_colors = heatmapcolors.all, annotation_names_col = FALSE)
 
 dev.off()
 ```
