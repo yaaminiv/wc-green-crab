@@ -367,6 +367,43 @@ pheatmap(sigGenesVST.all, cluster_row = TRUE, show_rownames = FALSE, cluster_col
 
 dev.off()
 ```
+
+#beginning the DESEQ analysis with each group against each other
+```{r}
+dds.new <- DESeqDataSetFromMatrix(countData=all.treatment.data, 
+                              colData=Sequencing.Picks, 
+                              design=~treatment, tidy = TRUE)
+```
+```{r}
+dds.new$treatment <- relevel(dds.new$treatment, ref = "15C")
 ```
 
+```{r}
+dds.new <- DESeq(dds.new)
+```
+
+```{r}
+res.15.25 <- results(dds.new, contrast=c("treatment","25C","15C"))
+res.5.25 <- results(dds.new, contrast=c("treatment","5C","15C"))
+res.15.5 <- results(dds.new, contrast=c("treatment","25C","5C"))
+```
+```{r}
+lfc2.results.15.25 <- res.15.25 %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 2)
+nrow(lfc2.results.15.25) #962 diff expressed transcripts
+
+lfc2.results.5.25 <- res.5.25 %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 2)
+nrow(lfc2.results.5.25) #3690 diff expressed transcripts
+
+lfc2.results.15.5 <- res.15.5 %>% 
+  as.data.frame() %>% 
+  filter(padj < 0.05) %>% 
+  filter(abs(log2FoldChange) > 2)
+nrow(lfc2.results.15.5) #9601 diff expressed transcripts
+```
 
