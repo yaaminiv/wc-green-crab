@@ -82,7 +82,7 @@ write.csv(salmon.data,"~/Downloads/salmondata.csv", row.names = FALSE)
 # Trying Method 2
 
 ```{r}
-counts_data <- read.csv("salmondata.csv", row.names = 1, check.names = FALSE)
+counts_data <- read.csv("../../../../Downloads/salmondata.csv", row.names = 1, check.names = FALSE)
 
 sample_names <- colnames(counts_data)
 groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
