@@ -21,9 +21,30 @@ require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
+# link for the dataset download
 ```{r}
+# https://osf.io/ea8mq/files/xnt56
+```
+
+# MAC import dataset
+```{r}
+require(tidyverse)
+salmon.data <- read.delim("../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
+```
+# WINDOWS import dataset
+```{r}
+require(tidyverse)
+salmon.data <- read.delim("../../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
+```
+# alter salmon.data so ID column doesn't mess with data
+```{r}
+colnames(salmon.data)[1] <- "ID"
 head(salmon.data)
 ```
+
+
+
+# beginning EdgeR analysis by making the table
 ```{r}
 counts <- salmon.data
 colnames(counts) <- counts[1, ]
@@ -32,11 +53,12 @@ dgList
 head(dgList$counts) #Many rows!
 head(dgList$genes)
 ```
+# finding counts per million expression levels
 ```{r}
 countsPerMillion <- cpm(dgList)
 summary(countsPerMillion)
 ```
-
+# removing expression levels that are too low
 ```{r}
 countCheck <- countsPerMillion > 1
 head(countCheck)
@@ -44,6 +66,7 @@ keep <- which(rowSums(countCheck) >= 2)
 dgList <- dgList[keep,]
 summary(cpm(dgList)) 
 ```
+# beginning the analysis
 ```{r}
 ?calcNormFactors
 dgList <- calcNormFactors(dgList, method="TMM")
@@ -51,7 +74,7 @@ dgList <- calcNormFactors(dgList, method="TMM")
 ```{r}
 plotMDS(dgList)
 ```
-
+# comparing different treatment groups to each other
 ```{r}
 sampleType<- rep("15", ncol(dgList)) #N=normal; T=tumour
 sampleType[grep("05", colnames(dgList))] <- "05"
@@ -60,74 +83,80 @@ sampleReplicate <- paste("S", rep(1:3, each=2), sep="")
 designMat <- model.matrix(~sampleReplicate + sampleType)
 designMat
 ```
+
 ```{r}
 dgList <- estimateGLMCommonDisp(dgList, design=designMat)
 dgList <- estimateGLMTrendedDisp(dgList, design=designMat)
 dgList <- estimateGLMTagwiseDisp(dgList, design=designMat)
 ```
-```{r}
 # Create a DGEList object
+```{r}
 dge <- DGEList(counts = salmon.data, group = group_factor)
-
-# Keep genes with at least 1 count-per-million (CPM) in 'n' samples 
-# (e.g., matching the size of your smallest experimental group)
 keep <- rowSums(cpm(dge) > 1) >= min(table(group_factor))
 dge <- dge[keep, , keep.lib.sizes = FALSE]
-
-```
-```{r}
-write.csv(salmon.data,"~/Downloads/salmondata.csv", row.names = FALSE)
 ```
 
-# Trying Method 2
 
+
+# Trying Method 2 - Gemini Assisted
+# making dataset renaming columns so they fit DGEList
 ```{r}
-counts_data <- read.csv("../../../../Downloads/salmondata.csv", row.names = 1, check.names = FALSE)
+counts_data <- salmon.data
 
 sample_names <- colnames(counts_data)
-groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
-groups <- factor(groups)
-table(groups)
+raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
+groups <- factor(paste0("G", raw_groups)) 
 ```
+
+# making DGEList object
+
 ```{r}
 y <- DGEList(counts = counts_data, group = groups)
 ```
+
+# filtering and normalization
+
 ```{r}
 keep <- filterByExpr(y)
+table(keep) # 59,912 genes were kept
 y <- y[keep, , keep.lib.sizes=FALSE]
-
-summary(keep)
-```
-```{r}
 y <- calcNormFactors(y)
 ```
+
+# creating design matrix
+
 ```{r}
 design <- model.matrix(~ 0 + groups)
-colnames(design) <- levels(groups)
+colnames(design) <- levels(groups) 
+```
 
+# fitting model
+
+```{r}
 y <- estimateDisp(y, design, robust=TRUE)
-
 fit <- glmQLFit(y, design, robust=TRUE)
 ```
+
+# comparing 25C and 5C treatments
+
 ```{r}
-# Create a contrast: Group 25 vs Group 5
-# Note: Positive logFC means upregulated in Group 25 compared to Group 5
-my.contrasts <- makeContrasts(Group25_vs_5 = `25` - `5`, levels = design)
-
-# Run the test
+my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
 qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
-
-# View the top differentially expressed genes
-topTags(qlf_25_vs_5, n=10)
-
-# Extract ALL results into a dataframe and save to CSV
-results_df <- topTags(qlf_25_vs_5, n=Inf)$table
-
-# Define significance (e.g., FDR < 0.05)
-significant_genes <- subset(results_df, FDR < 0.05)
-print(paste("Number of significant genes:", nrow(significant_genes)))
-
-# Save to file
-write.csv(results_df, "edgeR_results_25_vs_5.csv")
+topTags(qlf_25_vs_5, n=10) # change n= value to see more genes, or remove it to see all
 ```
 
+# comparing 15C and 5C treatments
+
+```{r}
+my.contrasts <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design)
+qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_5"])
+topTags(qlf_15_vs_5, n=10)
+```
+
+# comparing 15C and 25C treatments
+
+```{r}
+my.contrasts <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_25"])
+topTags(qlf_15_vs_25, n=10)
+```
