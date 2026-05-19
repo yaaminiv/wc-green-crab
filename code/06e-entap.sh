@@ -1,14 +1,14 @@
 #!/bin/bash
 
-#SBATCH --partition=compute          								 				  								  	     		    # Queue selection
+#SBATCH --partition=bigmem          								 				  								  	     		    # Queue selection
 #SBATCH --job-name=yrv_entap       							 															        # Job name
 #SBATCH --mail-type=ALL              							   				     									     		    # Mail events (BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=yaamini.venkataraman@whoi.edu    				    									    		    # Where to send mail
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
-#SBATCH --mem=180gb                                                 								          # Job memory request
+#SBATCH --mem=1000gb                                                 								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
-#SBATCH --time=14-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
+#SBATCH --time=7-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_entap%j.log  								   															     		# Standard output/error
 #SBATCH --chdir=/scratch/yaamini.venkataraman/wc-green-crab/output/06e-entap	  # Working directory for this script
 
