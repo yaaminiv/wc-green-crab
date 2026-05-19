@@ -52,86 +52,69 @@ ${TRINITY}/Trinity \
 --CPU 28
 
 # Move transcriptome to the correct location
-mv trinity_out_dir.Trinity.fasta trinity_out_dir/Trinity.fasta
+mv trinity_out_dir.Trinity.fasta ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta
+
+# Collapse isoforms into supertranscripts.
+# Output files are trinity_genes.fasta (supertranscripts in fasta format), trinity_genes.gtf (transcript structure annotation in gtf format), and trinity_genes.malign (multiple alignment view that contrasts the different candidate splicing isoforms)
+${TRINITY}/Analysis/SuperTranscripts/Trinity_gene_splice_modeler.py \
+--trinity_fasta ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+--incl_malign
+
+# Move output files to a new folder
+mkdir supertranscript_output
+rsync --archive --progress --verbose trinity_genes.* supertranscript_output/.
 
 #Use within-trinity tools to get baseline assembly statistics and files necessary for downstream analysis
 # Assembly stats
 ${TRINITY}/util/TrinityStats.pl \
-${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-> ${assembly_stats}
-
-# Create gene map files
-${TRINITY}/util/support_scripts/get_Trinity_gene_to_trans_map.pl \
-${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-> ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map
+${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+> ${OUTPUT_DIR}/supertranscript_output/${assembly_stats}
 
 # Create sequence lengths file (used for differential gene expression)
 ${TRINITY}/util/misc/fasta_seq_length.pl \
-${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-> ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.seq_lens
+${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+> ${OUTPUT_DIR}/supertranscript_output/Trinity.fasta.seq_lens
 
 # Create FastA index
 ${SAMTOOLS} faidx \
-${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta
+${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 
 # Prepare the reference (target index) with bowtie2 prior to transcript abundance estimation. The output is a BAM file necessary for pseudo-alignment
 ${TRINITY}/util/align_and_estimate_abundance.pl \
---transcripts ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+--transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 --est_method salmon \
 --aln_method bowtie2 \
---gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
 --prep_reference \
 --coordsort_bam
 
-# Perform transcript abundance estimation with salmon
+# Perform transcript abundance estimation with salmon for each sample
 ${TRINITY}/util/align_and_estimate_abundance.pl \
---transcripts ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
+--transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 --seqType fq \
 --samples_file ${trinity_file_list} \
 --SS_lib_type RF \
 --est_method salmon \
 --aln_method bowtie2 \
---gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
---output_dir ${OUTPUT_DIR} \
+--output_dir ${OUTPUT_DIR}/supertranscript_output \
 --thread_count 16
 
 #Transcript-level estimates
 ## Get a list of the salmon quant.sf files so we don't have to list them individually
-find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/salmon.quant_files.txt
+find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt
 
-## Generate a matrix with all abundance estimates
+## Generate a matrix with abundance estimates across all samples
 $TRINITY_HOME/util/abundance_estimates_to_matrix.pl \
 --est_method salmon \
---gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
---quant_files ${OUTPUT_DIR}/salmon.quant_files.txt \
+--quant_files ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt \
 --name_sample_by_basedir
 
-## Calculate Ex50 statistics
-contig_ExN50_statistic.pl ${OUTPUT_DIR}/salmon.isoform.TPM.not_cross_norm \
-${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-| tee ${OUTPUT_DIR}/ExN50.stats
-
-## Calculate N50 statistics
-TrinityStats.pl ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-> ${OUTPUT_DIR}/N50.txt
-
-#Gene-level estimates
-## Get a list of the salmon quant.sf files so we don't have to list them individually
-find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf.genes" | tee ${OUTPUT_DIR}/salmon.quant_genes_files.txt
-
-## Generate a matrix with all abundance estimates
-## NEED TO HAVE A SEPARATE OUTPUT DIRECTORY FOR GENE-LEVE ESTIMATES
-# $TRINITY_HOME/util/abundance_estimates_to_matrix.pl \
-# --est_method salmon \
-# --gene_trans_map ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta.gene_trans_map \
-# --quant_files ${OUTPUT_DIR}/salmon.quant_genes_files.txt \
-# --name_sample_by_basedir
+# FILTERING STEP GOES HERE.
 
 ## Calculate Ex50 statistics
-# contig_ExN50_statistic.pl ${OUTPUT_DIR}/salmon.isoform.TPM.not_cross_norm \
-# ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-# | tee ${OUTPUT_DIR}/ExN50.stats.genes
+contig_ExN50_statistic.pl ${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
+${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+| tee ${OUTPUT_DIR}/supertranscript_output/ExN50.stats
 
 ## Calculate N50 statistics
-# TrinityStats.pl ${OUTPUT_DIR}/trinity_out_dir/Trinity.fasta \
-# > ${OUTPUT_DIR}/N50.txt.genes
+TrinityStats.pl ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+> ${OUTPUT_DIR}/supertranscript_output/N50.txt
