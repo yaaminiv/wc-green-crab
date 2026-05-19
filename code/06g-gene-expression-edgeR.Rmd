@@ -82,7 +82,52 @@ write.csv(salmon.data,"~/Downloads/salmondata.csv", row.names = FALSE)
 # Trying Method 2
 
 ```{r}
+counts_data <- read.csv("salmondata.csv", row.names = 1, check.names = FALSE)
 
+sample_names <- colnames(counts_data)
+groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
+groups <- factor(groups)
+table(groups)
 ```
+```{r}
+y <- DGEList(counts = counts_data, group = groups)
+```
+```{r}
+keep <- filterByExpr(y)
+y <- y[keep, , keep.lib.sizes=FALSE]
 
+summary(keep)
+```
+```{r}
+y <- calcNormFactors(y)
+```
+```{r}
+design <- model.matrix(~ 0 + groups)
+colnames(design) <- levels(groups)
+
+y <- estimateDisp(y, design, robust=TRUE)
+
+fit <- glmQLFit(y, design, robust=TRUE)
+```
+```{r}
+# Create a contrast: Group 25 vs Group 5
+# Note: Positive logFC means upregulated in Group 25 compared to Group 5
+my.contrasts <- makeContrasts(Group25_vs_5 = `25` - `5`, levels = design)
+
+# Run the test
+qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
+
+# View the top differentially expressed genes
+topTags(qlf_25_vs_5, n=10)
+
+# Extract ALL results into a dataframe and save to CSV
+results_df <- topTags(qlf_25_vs_5, n=Inf)$table
+
+# Define significance (e.g., FDR < 0.05)
+significant_genes <- subset(results_df, FDR < 0.05)
+print(paste("Number of significant genes:", nrow(significant_genes)))
+
+# Save to file
+write.csv(results_df, "edgeR_results_25_vs_5.csv")
+```
 
