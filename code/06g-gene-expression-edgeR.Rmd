@@ -42,63 +42,6 @@ colnames(salmon.data)[1] <- "ID"
 head(salmon.data)
 ```
 
-
-
-# beginning EdgeR analysis by making the table
-```{r}
-counts <- salmon.data
-colnames(counts) <- counts[1, ]
-dgList <- DGEList(counts=counts, genes=rownames(counts))
-dgList
-head(dgList$counts) #Many rows!
-head(dgList$genes)
-```
-# finding counts per million expression levels
-```{r}
-countsPerMillion <- cpm(dgList)
-summary(countsPerMillion)
-```
-# removing expression levels that are too low
-```{r}
-countCheck <- countsPerMillion > 1
-head(countCheck)
-keep <- which(rowSums(countCheck) >= 2)
-dgList <- dgList[keep,]
-summary(cpm(dgList)) 
-```
-# beginning the analysis
-```{r}
-?calcNormFactors
-dgList <- calcNormFactors(dgList, method="TMM")
-```
-```{r}
-plotMDS(dgList)
-```
-# comparing different treatment groups to each other
-```{r}
-sampleType<- rep("15", ncol(dgList)) #N=normal; T=tumour
-sampleType[grep("05", colnames(dgList))] <- "05"
-#'grep' is a string matching function.
-sampleReplicate <- paste("S", rep(1:3, each=2), sep="")
-designMat <- model.matrix(~sampleReplicate + sampleType)
-designMat
-```
-
-```{r}
-dgList <- estimateGLMCommonDisp(dgList, design=designMat)
-dgList <- estimateGLMTrendedDisp(dgList, design=designMat)
-dgList <- estimateGLMTagwiseDisp(dgList, design=designMat)
-```
-# Create a DGEList object
-```{r}
-dge <- DGEList(counts = salmon.data, group = group_factor)
-keep <- rowSums(cpm(dge) > 1) >= min(table(group_factor))
-dge <- dge[keep, , keep.lib.sizes = FALSE]
-```
-
-
-
-# Trying Method 2 - Gemini Assisted
 # making dataset renaming columns so they fit DGEList
 ```{r}
 counts_data <- salmon.data
@@ -142,7 +85,10 @@ fit <- glmQLFit(y, design, robust=TRUE)
 ```{r}
 my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
 qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
-topTags(qlf_25_vs_5, n=10) # change n= value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
+topTags(qlf_25_vs_5, n=10)
+filtered_qlf_25_vs_5 <- qlf_25_vs_5 %>% 
+  filter(FDR < 0.05) - #large dataframe, find out how to filter specifically FDR
+  # change n= value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
 ```
 
 # comparing 15C and 5C treatments
