@@ -21,4 +21,68 @@ require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
+```{r}
+head(salmon.data)
+```
+```{r}
+counts <- salmon.data
+colnames(counts) <- counts[1, ]
+dgList <- DGEList(counts=counts, genes=rownames(counts))
+dgList
+head(dgList$counts) #Many rows!
+head(dgList$genes)
+```
+```{r}
+countsPerMillion <- cpm(dgList)
+summary(countsPerMillion)
+```
+
+```{r}
+countCheck <- countsPerMillion > 1
+head(countCheck)
+keep <- which(rowSums(countCheck) >= 2)
+dgList <- dgList[keep,]
+summary(cpm(dgList)) 
+```
+```{r}
+?calcNormFactors
+dgList <- calcNormFactors(dgList, method="TMM")
+```
+```{r}
+plotMDS(dgList)
+```
+
+```{r}
+sampleType<- rep("15", ncol(dgList)) #N=normal; T=tumour
+sampleType[grep("05", colnames(dgList))] <- "05"
+#'grep' is a string matching function.
+sampleReplicate <- paste("S", rep(1:3, each=2), sep="")
+designMat <- model.matrix(~sampleReplicate + sampleType)
+designMat
+```
+```{r}
+dgList <- estimateGLMCommonDisp(dgList, design=designMat)
+dgList <- estimateGLMTrendedDisp(dgList, design=designMat)
+dgList <- estimateGLMTagwiseDisp(dgList, design=designMat)
+```
+```{r}
+# Create a DGEList object
+dge <- DGEList(counts = salmon.data, group = group_factor)
+
+# Keep genes with at least 1 count-per-million (CPM) in 'n' samples 
+# (e.g., matching the size of your smallest experimental group)
+keep <- rowSums(cpm(dge) > 1) >= min(table(group_factor))
+dge <- dge[keep, , keep.lib.sizes = FALSE]
+
+```
+```{r}
+write.csv(salmon.data,"~/Downloads/salmondata.csv", row.names = FALSE)
+```
+
+# Trying Method 2
+
+```{r}
+
+```
+
 
