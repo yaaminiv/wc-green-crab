@@ -142,7 +142,7 @@ fit <- glmQLFit(y, design, robust=TRUE)
 ```{r}
 my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
 qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
-topTags(qlf_25_vs_5, n=10) # change n= value to see more genes, or remove it to see all
+topTags(qlf_25_vs_5, n=10) # change n= value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
 ```
 
 # comparing 15C and 5C treatments
