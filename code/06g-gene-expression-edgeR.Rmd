@@ -86,9 +86,10 @@ fit <- glmQLFit(y, design, robust=TRUE)
 my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
 qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
 topTags(qlf_25_vs_5, n=10)
-filtered_qlf_25_vs_5 <- qlf_25_vs_5 %>% 
-  filter(FDR < 0.05) - #large dataframe, find out how to filter specifically FDR
-  # change n= value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
+results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
+filtered_25vs5 <- subset(results_25vs5, FDR < 0.05)
+nrow(filtered_25vs5) # 33,733 DEGs 
+# change n= value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
 ```
 
 # comparing 15C and 5C treatments
@@ -97,6 +98,9 @@ filtered_qlf_25_vs_5 <- qlf_25_vs_5 %>%
 my.contrasts <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design)
 qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_5"])
 topTags(qlf_15_vs_5, n=10)
+results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table
+filtered_15vs5 <- subset(results_15vs5, FDR < 0.05)
+nrow(filtered_15vs5) # 8557 DEGs
 ```
 
 # comparing 15C and 25C treatments
@@ -105,4 +109,7 @@ topTags(qlf_15_vs_5, n=10)
 my.contrasts <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
 qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_25"])
 topTags(qlf_15_vs_25, n=10)
+results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table
+filtered_15vs25 <- subset(results_15vs25, FDR < 0.05)
+nrow(filtered_15vs25) # 888 DEGs
 ```
