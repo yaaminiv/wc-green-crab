@@ -108,7 +108,12 @@ $TRINITY_HOME/util/abundance_estimates_to_matrix.pl \
 --quant_files ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt \
 --name_sample_by_basedir
 
-# FILTERING STEP GOES HERE.
+#Filter out low-abundance transcripts (TPM < 0.5) for downstream analysis
+${TRINITY}/util/filter_low_expr_transcripts.pl \
+--matrix ${OUTPUT_DIR}/supertranscript_output/salmon_matrix.TPM.not_cross_norm \
+--transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+--min_expr_any 0.5 \
+--trinity_mode
 
 ## Calculate Ex50 statistics
 contig_ExN50_statistic.pl ${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
