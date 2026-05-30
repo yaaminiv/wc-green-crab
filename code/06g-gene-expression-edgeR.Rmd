@@ -45,7 +45,8 @@ head(salmon.data)
 # making dataset renaming columns so they fit DGEList
 ```{r}
 counts_data <- salmon.data
-
+rownames(counts_data) <- counts_data[, 1]
+counts_data <- counts_data[, -1]
 sample_names <- colnames(counts_data)
 raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
 groups <- factor(paste0("G", raw_groups)) 
@@ -113,3 +114,36 @@ results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table
 filtered_15vs25 <- subset(results_15vs25, FDR < 0.05)
 nrow(filtered_15vs25) # 888 DEGs
 ```
+
+# making the PCA
+```{r}
+logCPM <- cpm(y, log = TRUE)
+pca_results <- prcomp(t(logCPM), scale. = TRUE)
+pca_data <- data.frame(
+  Sample = rownames(pca_results$x),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2],
+  Group = groups 
+)
+
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1)
+```
+
+# plotting the PCA 
+
+```{r}
+ggplot(pca_data, aes(x = PC1, y = PC2, color = Group)) +
+  geom_point(size = 4, alpha = 0.8) +
+  stat_ellipse(level = 0.95, linetype = 2) + 
+  xlab(paste0("PC1: ", pca_var_perc[1], "% variance")) +
+  ylab(paste0("PC2: ", pca_var_perc[2], "% variance")) +
+  theme_minimal() + 
+  ggtitle("PCA Plot of Treatment Groups") +
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    legend.title = element_text(face = "bold")
+  )
+```
+
+
