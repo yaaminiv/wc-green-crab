@@ -133,17 +133,21 @@ pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1)
 # plotting the PCA 
 
 ```{r}
-ggplot(pca_data, aes(x = PC1, y = PC2, color = Group)) +
-  geom_point(size = 4, alpha = 0.8) +
-  stat_ellipse(level = 0.95, linetype = 2) + 
-  xlab(paste0("PC1: ", pca_var_perc[1], "% variance")) +
-  ylab(paste0("PC2: ", pca_var_perc[2], "% variance")) +
-  theme_minimal() + 
-  ggtitle("PCA Plot of Treatment Groups") +
-  theme(
-    plot.title = element_text(hjust = 0.5, face = "bold"),
-    legend.title = element_text(face = "bold")
-  )
+ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
+  geom_point(size=3) + 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data
+  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) +
+  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + 
+  coord_fixed() +
+  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), 
+                     name = "Temperature (ºC)",
+                     labels = c("15", "25", "5")) +
+  scale_shape_manual(values = c(17, 16, 15),
+                     name = "Temperature (ºC)",
+                     labels = c("15", "25", "5")) +
+  theme_classic() + theme(legend.position = "top")
+
+ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5)
 ```
 
 
