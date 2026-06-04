@@ -47,6 +47,18 @@ head(salmon.data)
 counts_data <- salmon.data
 rownames(counts_data) <- counts_data[, 1]
 counts_data <- counts_data[, -1]
+colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
+colnames(counts_data)[colnames(counts_data) == "5-009"] <- "15-009"
+colnames(counts_data)[colnames(counts_data) == "25-053"] <- "15-053"
+colnames(counts_data)[colnames(counts_data) == "25-119"] <- "15-119"
+colnames(counts_data)[colnames(counts_data) == "5-074"] <- "15-074"
+colnames(counts_data)[colnames(counts_data) == "5-122"] <- "15-122"
+colnames(counts_data)[colnames(counts_data) == "5-182"] <- "15-182"
+colnames(counts_data)[colnames(counts_data) == "5-189"] <- "15-189"
+colnames(counts_data)[colnames(counts_data) == "25-051"] <- "15-051"
+colnames(counts_data)[colnames(counts_data) == "25-110"] <- "15-110"
+colnames(counts_data)[colnames(counts_data) == "25-202"] <- "15-202"
+colnames(counts_data)[colnames(counts_data) == "5-133"] <- "15-133"
 sample_names <- colnames(counts_data)
 raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1)
 groups <- factor(paste0("G", raw_groups)) 
