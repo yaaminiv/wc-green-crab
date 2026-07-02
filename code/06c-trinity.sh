@@ -26,7 +26,7 @@ eval "$(conda shell.bash hook)"
 conda activate trinity_env
 
 #Program paths
-TRINITY=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/
+TRINITY=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin
 CUTADAPT=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/cutadapt
 FASTQC=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/fastqc
 python=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/python
@@ -41,12 +41,16 @@ OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trin
 assembly_stats=assembly_stats.txt
 trinity_file_list=/vortexfs1/home/yaamini.venkataraman/trinity-samples.txt
 
+# DE NOVO TRANSCRIPTOME ASSEMBLY
+
+echo "Start de novo transcriptome assembly"
+
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
 ${TRINITY}/Trinity \
 --seqType fq \
 --max_memory 100G \
 --samples_file ${trinity_file_list} \
---SS_lib_type RF \
+--SS_lib_type FR \
 --min_contig_length 200 \
 --full_cleanup \
 --CPU 28
@@ -64,7 +68,13 @@ ${TRINITY}/Analysis/SuperTranscripts/Trinity_gene_splice_modeler.py \
 mkdir supertranscript_output
 rsync --archive --progress --verbose trinity_genes.* supertranscript_output/.
 
+echo "Completed de novo transcriptome assembly"
+
+# GENERATE SUPPLEMENTAL FILES FOR THE TRANSCRIPTOME
 #Use within-trinity tools to get baseline assembly statistics and files necessary for downstream analysis
+
+echo "Start supplemental file creation"
+
 # Assembly stats
 ${TRINITY}/util/TrinityStats.pl \
 ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
@@ -78,6 +88,12 @@ ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 # Create FastA index
 ${SAMTOOLS} faidx \
 ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+
+echo "Completed supplemental file creation"
+
+# TRANSCRIPT ABUNDANCE ESTIMATION
+
+echo "Start transcript abundance estimation"
 
 # Prepare the reference (target index) with bowtie2 prior to transcript abundance estimation. The output is a BAM file necessary for pseudo-alignment
 ${TRINITY}/util/align_and_estimate_abundance.pl \
@@ -98,28 +114,61 @@ ${TRINITY}/util/align_and_estimate_abundance.pl \
 --output_dir ${OUTPUT_DIR}/supertranscript_output \
 --thread_count 16
 
-#Transcript-level estimates
-## Get a list of the salmon quant.sf files so we don't have to list them individually
+# Get a list of the salmon quant.sf files so we don't have to list them individually
 find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt
 
-## Generate a matrix with abundance estimates across all samples
-$TRINITY_HOME/util/abundance_estimates_to_matrix.pl \
+# Generate a matrix with abundance estimates across all samples
+${TRINITY}/util/abundance_estimates_to_matrix.pl \
 --est_method salmon \
 --quant_files ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt \
---name_sample_by_basedir
+--name_sample_by_basedir \
+--gene_trans_map none
 
-#Filter out low-abundance transcripts (TPM < 0.5) for downstream analysis
-${TRINITY}/util/filter_low_expr_transcripts.pl \
---matrix ${OUTPUT_DIR}/supertranscript_output/salmon_matrix.TPM.not_cross_norm \
---transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
---min_expr_any 0.5 \
---trinity_mode
+# Move files to the correct location
+rsync --archive --progress --verbose salmon* supertranscript_output/.
 
-## Calculate Ex50 statistics
+echo "Completed transcript abundance estimation"
+
+# TRANSCRIPTOME ASSEMBLY STATISTICS
+
+echo "Start transcript assembly statistic calculations"
+
+# Calculate Ex50 statistics
 contig_ExN50_statistic.pl ${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
 ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 | tee ${OUTPUT_DIR}/supertranscript_output/ExN50.stats
 
-## Calculate N50 statistics
+# Calculate N50 statistics
 TrinityStats.pl ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
 > ${OUTPUT_DIR}/supertranscript_output/N50.txt
+
+echo "Completed transcript assembly statistic calculations"
+
+# TRANSCRIPTOME FILTERING BY TPM
+# Although not always recommended at this stage, filtering is necessary for EnTAP annotation and contaminant removal.
+
+echo "Start transcript filtering: TPM < 0.5"
+
+#Filter out low-abundance transcripts (TPM < 0.5) for downstream analysis
+${TRINITY}/util/filter_low_expr_transcripts.pl \
+--matrix ${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
+--transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+--min_expr_any 0.5 \
+--trinity_mode \
+> ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_0.5.fasta
+
+echo "Completed transcript filtering: TPM < 0.5"
+
+echo "Start transcript filtering: TPM < 1"
+
+#Filter out low-abundance transcripts (TPM < 0.5) for downstream analysis
+${TRINITY}/util/filter_low_expr_transcripts.pl \
+--matrix ${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
+--transcripts ${OUTPUT_DIR}/supertranscript_output/trinity_genes.fasta \
+--min_expr_any 1 \
+--trinity_mode \
+> ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1.fasta
+
+echo "Completed transcript filtering: TPM < 1"
+
+echo "Ready to proceed to the next analytical step"
