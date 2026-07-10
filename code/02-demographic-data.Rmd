@@ -1,6 +1,6 @@
 ---
 title: "02-demographic-data"
-author: "Yaamini Venkataraman"
+author: "Sasha Darknell-Brown"
 date: '2023-10-17'
 output: html_document
 ---
