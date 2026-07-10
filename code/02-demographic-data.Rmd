@@ -16,6 +16,10 @@ knitr::opts_knit$set(root.dir = normalizePath("../output/02-demographic-data/"))
 getwd()
 ```
 
+# START YOUR CHANGES HERE
+
+# DON'T EDIT BELOW HERE
+
 # Survival analysis
 
 I want to determine if there was a significant difference in survival time between temperature treatments.
