@@ -266,8 +266,44 @@ library(ggplot2)
 integument_percent <- crab_metadata_day_filtered %>%
   count(`integument-color.x`, treatment) %>%
   group_by(`integument-color.x`) %>%
-  mutate(percent = n / sum(n) * 100) #create percentage data for the integument color 
+  mutate(percent = n / sum(n) * 100) #calculates the % of each treatment within eachh integument color 
 ```
+
+
+
+```{r}
+crab_metadata_day_filtered <- crab_metadata_day %>%
+  filter(!is.na(day))
+```
+
+
+```{r}
+table(crab_metadata_day_filtered$`integument-color`, useNA = "always") #Check what integuent colors are present
+```
+
+```{r}
+table(crab_metadata_day_filtered$`integument-color.x`, useNA = "always")
+```
+
+```{r}
+crab_metadata_day_filtered %>%
+  ggplot(aes(x = treatment,
+             fill = `integument-color.x`)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ day) +
+  labs(x = "Temperature (ºC)",
+       y = "Percent of Crabs (%)",
+       fill = "Integument Color") +
+  scale_x_discrete(labels = c("5", "15", "25")) +
+  scale_fill_manual(values = c("G" = "#C2E9BF",
+                               "Y" = "#F3F5A9",
+                               "YG" = "#E7F85E")) +
+  scale_y_continuous(labels = scales::percent) +
+  theme_classic()
+```
+
+
+
 
 
 
