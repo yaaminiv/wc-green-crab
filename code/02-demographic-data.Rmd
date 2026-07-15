@@ -30,10 +30,34 @@ library(readr)
 ```
 
 ```{r}
-my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings you 
+my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings the data set in 
+```
+
+```{r}
+my_data <- read_csv2("../../data/time-to-right.csv") #load the time to right data 
 ```
 
 
+
+#Reference for ggplot 
+```{r}
+metabolomics_sample_list %>% #Uses this data frame for the graph 
+  ggplot(., aes(x = as.character(timepoint), #tells us what column we are pulling data from to make the x-axis 
+                y= avg_righting, #tells us what column we are taking data from to use for Y 
+                color = population, #changes the color for each population of crab 
+                shape = population)) + #Puts different shapes for the two populations 
+  geom_boxplot() + #makes a boxplot
+  geom_jitter(position = position_dodge(width = 0.90)) + #spaces out the data points to keep them from overlapping
+  labs(x = "Timepoint (Hours)", y = "Average Righting Response (s)") + #Allows us to name the X and Y axes 
+  scale_color_manual(values = c("green", "purple"), #Allows us to pick the colors for out two crab populations
+                     name = "Population", #Legend title 
+                     labels = c("Maine", "Washington")) + #Names of the populations for the legend
+  scale_shape_manual(values = c(15, 16), #Lets us pick the shapes we want for the data points 
+                     name = "Population", #name of the legend --> putting it here as well means we will only get 1 legend rather than 2
+                     labels = c("Maine", "Washington")) + #what to name the two populations in the legend
+  theme_classic() + #gets rid of the grey background in the graph 
+  theme(legend.position = "bottom") #Allows us to re-position the legend 
+```
 
 
 
