@@ -52,6 +52,12 @@ names(metabolomics_sample_list) #Shows names of columns
 my_data <- read_csv("../../data/crab-metadata.csv") #load the time to right data
 ```
 
+```{r}
+crab_metadata$treatment <- factor(
+  crab_metadata$treatment, 
+  levels = c("5", "15,", "25")
+)
+```
 
 
 ```{r}
