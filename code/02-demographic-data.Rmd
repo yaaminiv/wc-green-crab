@@ -18,6 +18,7 @@ getwd()
 
 # START YOUR CHANGES HERE
 
+#Load packages
 ```{r}
 install.packages("tidyverse") #Download tidyverse package and run it 
 library(tidyverse)
@@ -29,6 +30,8 @@ install.packages("readr") #(not needed, but it imports the package to download y
 library(readr)
 ```
 
+
+#Import data sets 
 ```{r}
 my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings the data set in 
 ```
@@ -64,7 +67,7 @@ levels(crab_metadata$treatment)
 ```
 
 
-
+#Making Graph 1 
 
 ```{r}
 crab_metadata$treatment <- factor(
@@ -91,8 +94,35 @@ crab_metadata %>%
 
 
 ```{r}
-str(crab_metadata$treatment)
+str(crab_metadata$treatment) #checking the treatment variable to see if it was changed correctly
 table(crab_metadata$treatment, useNA = "always")
+```
+
+
+#Graph 1: Joining the two datasets (TTR & crab_metadata)
+
+
+
+```{r}
+names(crab_metadata)
+```
+
+
+```{r}
+names(time_to_right)
+```
+
+
+```{r}
+crab_metadata_day <- left_join(
+  crab_metadata,
+  time_to_right,
+  by = "tank"
+)
+```
+
+```{r}
+names(crab_metadata_day)
 ```
 
 
