@@ -200,7 +200,7 @@ crab_metadata_day_filtered %>%
   labs(x = "Temperature (ºC)",
        y = "Carapace Width (mm)") +
   scale_x_discrete(labels = c("5", "15", "25")) +
-  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
 ```
@@ -235,7 +235,23 @@ crab_metadata_day_filtered %>%
   theme_classic()
 ```
 
-
+#Graph 2.1 with the weight.y
+```{r}
+crab_metadata_day_filtered %>%
+  ggplot(aes(x = treatment,
+             y = weight.y,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  facet_wrap(~ day) +
+  labs(x = "Temperature (ºC)",
+       y = "Weight (g)") +
+  scale_x_discrete(labels = c("5", "15", "25")) +
+  scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic()
+```
 
 
 
