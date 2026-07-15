@@ -137,6 +137,36 @@ range(as.Date(crab_metadata_day$date, format = "%m/%d/%y"), na.rm = TRUE) #check
 ```
 
 
+#create the "Day" Column
+```{r}
+crab_metadata_day$date <- as.Date(
+  crab_metadata_day$date,
+  format = "%m/%d/%y"
+) #make sure that the dates are in the correct format
+```
+
+```{r}
+crab_metadata_day$day <- factor(
+  crab_metadata_day$date, 
+  levels = c("2023-06-28", "2023-07-19"),
+             labels = c("Day 1", "Day 22") #create the day groups 
+)
+```
+
+
+
+```{r}
+table(crab_metadata_day$day, useNA = "always") #check that the day columns were successfully added 
+```
+
+
+
+
+
+
+
+
+
 
 
 #Reference for ggplot 
