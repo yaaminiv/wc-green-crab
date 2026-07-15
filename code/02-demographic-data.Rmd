@@ -43,6 +43,16 @@ library()
 ```{r}
 names(time_to_right) #Shows me the names of the columns in the dataset
 ```
+```{r}
+names(metabolomics_sample_list) #Shows names of columns 
+```
+
+
+
+```{r}
+
+```
+
 
 
 
