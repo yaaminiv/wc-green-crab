@@ -20,7 +20,7 @@ getwd()
 
 ```{r}
 install.packages("tidyverse") #Download tidyverse package and run it 
-library()
+library(tidyverse)
 ```
 
 
@@ -55,10 +55,22 @@ my_data <- read_csv("../../data/crab-metadata.csv") #load the time to right data
 
 
 ```{r}
-metabolomics_sample_list %>%
-  ggplot(.,aes(x = as.character(treatment),
-               y =))
+crab_metadata %>% #Uses this data frame for the graph 
+  ggplot(., aes(x = as.character(treatment), #tells us what column we are pulling data from to make the x-axis 
+                y = `carapace-width`, #tells us what column we are taking data from to use for Y 
+                color = treatment, #changes the color for each treatment 
+                shape = treatment)) + #Puts different shapes for the two treatments
+  geom_boxplot() + #makes a boxplot
+  geom_jitter(position = position_dodge(width = 0.90)) + #spaces out the data points to keep them from overlapping
+  labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") + #Allows us to name the X and Y axes 
+  scale_color_manual(values = c("green", "purple", "lightblue")) + #Allows us to pick the colors for out two crab populations 
+                     
+  theme_classic()  #gets rid of the grey background in the graph 
+ 
 ```
+
+
+
 
 
 
