@@ -18,6 +18,32 @@ getwd()
 
 # START YOUR CHANGES HERE
 
+```{r}
+install.packages("tidyverse") #Download tidyverse package and run it 
+library()
+```
+
+
+```{r}
+install.packages("readr") #(not needed, but it imports the package to download your datasets)
+library(readr)
+```
+
+```{r}
+my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings you 
+```
+
+
+
+
+
+
+
+
+
+
+
+
 # DON'T EDIT BELOW HERE
 
 # Survival analysis
