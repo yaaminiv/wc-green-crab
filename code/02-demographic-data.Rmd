@@ -179,7 +179,7 @@ crab_metadata_day_filtered %>%
   facet_wrap(~ day) +
   labs(x = "Temperature (ºC)",
        y = "Carapace Width (mm)") +
-  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_color_manual(values = c("green", "purple", "blue")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
 ```
@@ -203,6 +203,9 @@ crab_metadata_day_filtered %>%
   scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
+ggsave("~/Desktop/carapce-width.pdf",
+         height = 8.5,
+         width = 11)
 ```
 
 
@@ -233,6 +236,9 @@ crab_metadata_day_filtered %>%
   scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
+ggsave("~/Desktop/weight.x-treatment.pdf",
+         height = 8.5,
+         width = 11)
 ```
 
 #Graph 2.1 with the weight.y
@@ -251,6 +257,9 @@ crab_metadata_day_filtered %>%
   scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
+ggsave("~/Desktop/weight.y-treatment.pdf",
+         height = 8.5,
+         width = 11)
 ```
 
 
@@ -286,7 +295,7 @@ table(crab_metadata_day_filtered$`integument-color.x`, useNA = "always")
 ```
 
 
-#Moving the legend in graph 3 to the bottom
+#integument.x graph
 ```{r}
 crab_metadata_day_filtered %>%
   ggplot(aes(x = treatment,
@@ -303,10 +312,13 @@ crab_metadata_day_filtered %>%
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
+ggsave("~/Desktop/integument-color.x.pdf",
+         height = 8.5,
+         width = 11)
 ```
 
 
-
+#integument.y graph
 ```{r}
 crab_metadata_day_filtered %>%
   ggplot(aes(x = treatment,
@@ -326,16 +338,57 @@ crab_metadata_day_filtered %>%
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
+ggsave("~/Desktop/integument-color.pdf",
+         height = 8.5,
+         width = 11)
 ```
 
 
 
 
 
+#Graph 4
+#sex.x graph
+```{r}
+crab_metadata_day_filtered %>%
+  ggplot(aes(x = treatment,
+             fill = `sex.x`)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ day) +
+  labs(x = "Temperature (ºC)",
+       y = "Percent of Crabs (%)",
+       fill = "Sex") +
+  scale_x_discrete(labels = c("5", "15", "25")) +
+  
+  scale_y_continuous(labels = scales::percent) +
+  theme_classic() +
+  theme(legend.position = "bottom")
+ggsave("~/Desktop/Sex.x-treatment.pdf",
+         height = 8.5,
+         width = 11)
+```
 
 
 
-
+#sex.y graph
+```{r}
+crab_metadata_day_filtered %>%
+  ggplot(aes(x = treatment,
+             fill = `sex.y`)) +
+  geom_bar(position = "fill") +
+  facet_wrap(~ day) +
+  labs(x = "Temperature (ºC)",
+       y = "Percent of Crabs (%)",
+       fill = "Sex") +
+  scale_x_discrete(labels = c("5", "15", "25")) +
+  
+  scale_y_continuous(labels = scales::percent) +
+  theme_classic() +
+  theme(legend.position = "bottom") 
+  ggsave("~/Desktop/Sex.y-treatment.pdf",
+         height = 8.5,
+         width = 11)
+```
 
 
 
