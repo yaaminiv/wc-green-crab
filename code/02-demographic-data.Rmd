@@ -160,8 +160,12 @@ table(crab_metadata_day$day, useNA = "always") #check that the day columns were 
 ```
 
 
+#Create filtered set of the metadata
 
-
+```{r}
+crab_metadata_day_filtered <- crab_metadata_day %>%
+  filter(!is.na(day))
+```
 
 
 
