@@ -168,6 +168,21 @@ crab_metadata_day_filtered <- crab_metadata_day %>%
 ```
 
 
+```{r}
+crab_metadata_day_filtered %>%
+  ggplot(aes(x = treatment,
+             y = `carapace-width`,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  facet_wrap(~ day) +
+  labs(x = "Temperature (ºC)",
+       y = "Carapace Width (mm)") +
+  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic()
+```
 
 
 
