@@ -129,6 +129,12 @@ names(crab_metadata_day)
 unique(crab_metadata_day$date) #checking to see if the merge worked
 ```
 
+```{r}
+table(crab_metadata_day$date, useNA = "always") #see how many crabs are in each 
+```
+```{r}
+range(as.Date(crab_metadata_day$date, format = "%m/%d/%y"), na.rm = TRUE) #checking the date range
+```
 
 
 
