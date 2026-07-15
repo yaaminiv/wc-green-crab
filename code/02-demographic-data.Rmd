@@ -117,12 +117,16 @@ names(time_to_right)
 crab_metadata_day <- left_join(
   crab_metadata,
   time_to_right,
-  by = "tank"
+  by = c("ID" = "crab-ID")
 )
 ```
 
 ```{r}
 names(crab_metadata_day)
+```
+
+```{r}
+unique(crab_metadata_day$date) #checking to see if the merge worked
 ```
 
 
