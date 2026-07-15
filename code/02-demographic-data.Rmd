@@ -255,6 +255,38 @@ crab_metadata_day_filtered %>%
 
 
 
+#Graph 3: Stacked bar graph 
+
+```{r}
+library(dplyr)
+library(ggplot2) 
+```
+
+```{r}
+integument_percent <- crab_metadata_day_filtered %>%
+  count(`integument-color.x`, treatment) %>%
+  group_by(`integument-color.x`) %>%
+  mutate(percent = n / sum(n) * 100) #create percentage data for the integument color 
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
