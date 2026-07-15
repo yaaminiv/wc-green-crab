@@ -34,7 +34,14 @@ my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings the d
 ```
 
 ```{r}
-my_data <- read_csv2("../../data/time-to-right.csv") #load the time to right data 
+my_data <- read_csv("../../data/time-to-right.csv") #load the time to right data 
+library()
+```
+
+
+
+```{r}
+names(time_to_right) #Shows me the names of the columns in the dataset
 ```
 
 
