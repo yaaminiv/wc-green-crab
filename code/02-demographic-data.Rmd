@@ -52,30 +52,48 @@ names(metabolomics_sample_list) #Shows names of columns
 my_data <- read_csv("../../data/crab-metadata.csv") #load the time to right data
 ```
 
+
+```{r}
+unique(crab_metadata$treatment)
+```
+
+
+
+```{r}
+levels(crab_metadata$treatment)
+```
+
+
+
+
 ```{r}
 crab_metadata$treatment <- factor(
   crab_metadata$treatment, 
-  levels = c("5", "15,", "25")
+  levels = c("5C", "15C", "25C")
 )
 ```
 
 
 ```{r}
-crab_metadata %>% #Uses this data frame for the graph 
-  ggplot(., aes(x = as.character(treatment), #tells us what column we are pulling data from to make the x-axis 
-                y = `carapace-width`, #tells us what column we are taking data from to use for Y 
-                color = treatment, #changes the color for each treatment 
-                shape = treatment)) + #Puts different shapes for the two treatments
-  geom_boxplot() + #makes a boxplot
-  geom_jitter(position = position_dodge(width = 0.90)) + #spaces out the data points to keep them from overlapping
-  labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") + #Allows us to name the X and Y axes 
-  scale_color_manual(values = c("green", "purple", "lightblue")) + #Allows us to pick the colors for out two crab populations 
-                     
-  theme_classic()  #gets rid of the grey background in the graph 
+crab_metadata %>%
+  ggplot(aes(x = (treatment),
+             y = `carapace-width`,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") +
+  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic() 
  
 ```
 
 
+```{r}
+str(crab_metadata$treatment)
+table(crab_metadata$treatment, useNA = "always")
+```
 
 
 
