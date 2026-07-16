@@ -33,11 +33,11 @@ library(readr)
 
 #Import data sets 
 ```{r}
-my_data <- read_csv("../../metadata/metabolomics-sample-list.csv") #brings the data set in 
+metadata <- read_csv("../../wc-green-crab/data/crab-metadata.csv") #brings the data set in 
 ```
 
 ```{r}
-my_data <- read_csv("../../data/time-to-right.csv") #load the time to right data 
+TTR <- read_csv("../data/time-to-right.csv") #load the time to right data 
 library()
 ```
 
