@@ -221,8 +221,6 @@ ggsave("../../output/02-demographic-data/figures/carapace-width.pdf",
 #Graph 2: treatment vs. weight 
 
 
-
-
 ```{r}
 merged_data %>%
   mutate(day = case_when(date == "6/28/23" ~ 0,
