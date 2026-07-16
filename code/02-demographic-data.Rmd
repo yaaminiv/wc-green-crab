@@ -88,7 +88,7 @@ merged_data <- full_join(
 ```
 
 ```{r}
-colnames(merged_data)
+colnames(merged_data) #Tells me the names of the columns in the merged dataset 
 ```
 
 
