@@ -34,11 +34,11 @@ library(readr)
 
 #Import data sets 
 ```{r}
-metadata <- read_csv("../../wc-green-crab/data/crab-metadata.csv") #brings the data set in 
+metadata <- read_csv("../../data/crab-metadata.csv") #brings the data set in 
 ```
 
 ```{r}
-TTR <- read_csv("../data/time-to-right.csv") #load the time to right data 
+TTR <- read_csv("../../data/time-to-right.csv") #load the time to right data 
 ```
 
 
@@ -58,38 +58,26 @@ names(metadata) #Shows names of columns
 library(dplyr)
 
 metadata<- metadata  %>%
-  rename(`crab-ID` = ID)
+  rename(`crab-ID` = ID) 
 ```
 
 
 
 
-#Getting rid of columns in the crab-metadata
+#Getting rid of columns in the crab-metadata and merging the datasets 
 
 ```{r}
-metadata <- metadata %>%
-  select(-respirometry,
-         -`dead-date`,
-         -number,
-         -`carapace-length`)
-```
+metadata_clean <- metadata %>%
+  select(-tank, -sex, -`integument-color`, -weight, -notes)
 
-
-
-
-#Merging the two datasets 
-
-```{r}
-merged_data <- full_join(
-  TTR, 
-  metadata,
-  by = c("crab-ID", "integument-color", "weight", "sex", "notes", "tank")
+merged_data <- left_join(
+  TTR,
+  metadata_clean,
+  by = "crab-ID"
 )
 ```
 
-```{r}
-colnames(merged_data) #Tells me the names of the columns in the merged dataset 
-```
+
 
 
 
@@ -98,16 +86,16 @@ colnames(merged_data) #Tells me the names of the columns in the merged dataset
 #Making Graph 1 
 
 ```{r}
-crab_metadata$treatment <- factor(
-  crab_metadata$treatment, 
+merged_data$treatment <- factor(
+  merged_data$treatment, 
   levels = c("5C", "15C", "25C")
 )
 ```
 
 
 ```{r}
-crab_metadata %>%
-  ggplot(aes(x = (treatment),
+merged_data %>%
+  ggplot(aes(x = treatment,
              y = `carapace-width`,
              color = treatment,
              shape = treatment)) +
@@ -116,53 +104,113 @@ crab_metadata %>%
   labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") +
   scale_color_manual(values = c("green", "purple", "lightblue")) +
   scale_shape_manual(values = c(15, 16, 17)) +
-  theme_classic() 
+  theme_classic()
  
 ```
 
 
-```{r}
-str(crab_metadata$treatment) #checking the treatment variable to see if it was changed correctly
-table(crab_metadata$treatment, useNA = "always")
-```
 
 
-#Graph 1: Joining the two datasets (TTR & crab_metadata)
 
 
 
 ```{r}
-names(crab_metadata)
+merged_data %>%
+  filter(!is.na(treatment),
+         !is.na(`carapace-width`)) %>%
+  ggplot(aes(x = treatment,
+             y = `carapace-width`,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") +
+  scale_x_discrete(labels = function(x) gsub("C", "", x)) +
+  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic()
 ```
+
+
 
 
 ```{r}
-names(time_to_right)
+merged_data %>%
+  mutate(day = case_when(date == "6/28/23" ~ 0,
+                         date == "6/29/23" ~ 1,
+                         date == "7/3/23" ~ 2,
+                         date == "7/5/23" ~ 7,
+                         date == "7/10/23" ~ 12, 
+                         date == "7/12/23" ~ 14,
+                         date == "7/17/23" ~ 19,
+                         date == "7/19/23" ~ 21,
+                         date == "7/24/23" ~ 26,
+                         date == "7/26/23" ~ 28,
+                         date == "8/9/23" ~ 42,
+                         date == "8/16/23" ~ 49)) %>%
+  filter(day %in% c(0, 1, 7, 21, 42, 49),
+         !is.na(treatment),
+         !is.na(`carapace-width`)) %>%
+  ggplot(aes(x = treatment,
+             y = `carapace-width`,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  labs(x = "Temperature (ºC)", y = "Carapace Width (mm)") +
+  scale_x_discrete(labels = function(x) gsub("C", "", x)) +
+  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic()
 ```
 
 
-```{r}
-crab_metadata_day <- left_join(
-  crab_metadata,
-  time_to_right,
-  by = c("ID" = "crab-ID")
-)
-```
 
 ```{r}
-names(crab_metadata_day)
+merged_data %>%
+  mutate(day = case_when(date == "6/28/23" ~ 0,
+                         date == "6/29/23" ~ 1,
+                         date == "7/3/23" ~ 2,
+                         date == "7/5/23" ~ 7,
+                         date == "7/10/23" ~ 12, 
+                         date == "7/12/23" ~ 14,
+                         date == "7/17/23" ~ 19,
+                         date == "7/19/23" ~ 21,
+                         date == "7/24/23" ~ 26,
+                         date == "7/26/23" ~ 28,
+                         date == "8/9/23" ~ 42,
+                         date == "8/16/23" ~ 49)) %>%
+  filter(day %in% c(0, 1, 7, 21, 42, 49),
+         !is.na(treatment),
+         !is.na(`carapace-width`)) %>%
+  ggplot(aes(x = treatment,
+             y = `carapace-width`,
+             color = treatment,
+             shape = treatment)) +
+  geom_boxplot() +
+  geom_jitter(position = position_dodge(width = 0.90)) +
+  facet_wrap(~day, labeller = labeller(day = function(x) paste("Day", x))) +
+  labs(x = "Temperature (ºC)", 
+       y = "Carapace Width (mm)") +
+  scale_x_discrete(labels = function(x) gsub("C", "", x)) +
+  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_shape_manual(values = c(15, 16, 17)) +
+  theme_classic()
 ```
 
-```{r}
-unique(crab_metadata_day$date) #checking to see if the merge worked
-```
 
-```{r}
-table(crab_metadata_day$date, useNA = "always") #see how many crabs are in each 
-```
-```{r}
-range(as.Date(crab_metadata_day$date, format = "%m/%d/%y"), na.rm = TRUE) #checking the date range
-```
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #create the "Day" Column
