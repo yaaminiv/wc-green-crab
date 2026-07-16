@@ -196,6 +196,9 @@ merged_data %>%
   scale_color_manual(values = c("green", "purple", "lightblue")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
+ggsave("../../output/02-demographic-data/figures/carapace-width.pdf",
+         height = 8.5,
+       width = 11)
 ```
 
 
