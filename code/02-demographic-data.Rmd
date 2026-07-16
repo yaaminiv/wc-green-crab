@@ -83,7 +83,7 @@ merged_data <- left_join(
 
 
 
-#Making Graph 1 
+#Steps to making graph 1: Axes and data filtering 
 
 ```{r}
 merged_data$treatment <- factor(
@@ -176,7 +176,7 @@ plotColors <- c(brewer.pal(9, "Reds")[7],
 ```
 
 
-
+#Completed Graph 1: treatment vs. carapace width
 
 ```{r}
 merged_data %>%
@@ -219,56 +219,46 @@ ggsave("../../output/02-demographic-data/figures/carapace-width.pdf",
 
 
 #Graph 2: treatment vs. weight 
-```{r}
-summary(crab_metadata_day_filtered$weight.x)
-```
 
-```{r}
-summary(crab_metadata_day_filtered$weight.y)
-```
 
 
 
 ```{r}
-crab_metadata_day_filtered %>%
+merged_data %>%
+  mutate(day = case_when(date == "6/28/23" ~ 0,
+                         date == "6/29/23" ~ 1,
+                         date == "7/3/23" ~ 2,
+                         date == "7/5/23" ~ 7,
+                         date == "7/10/23" ~ 12, 
+                         date == "7/12/23" ~ 14,
+                         date == "7/17/23" ~ 19,
+                         date == "7/19/23" ~ 21,
+                         date == "7/24/23" ~ 26,
+                         date == "7/26/23" ~ 28,
+                         date == "8/9/23" ~ 42,
+                         date == "8/16/23" ~ 49)) %>%
+  filter(day %in% c(0, 1, 7, 21, 42, 49),
+         !is.na(treatment),
+         !is.na(weight)) %>%
   ggplot(aes(x = treatment,
-             y = weight.x,
+             y = weight,
              color = treatment,
              shape = treatment)) +
   geom_boxplot() +
   geom_jitter(position = position_dodge(width = 0.90)) +
-  facet_wrap(~ day) +
-  labs(x = "Temperature (ºC)",
+  facet_wrap(~day, labeller = labeller(day = function(x) paste("Day", x))) +
+  labs(x = "Temperature (ºC)", 
        y = "Weight (g)") +
-  scale_x_discrete(labels = c("5", "15", "25")) +
-  scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
+  scale_x_discrete(labels = function(x) gsub("C", "", x)) +
+  scale_color_manual(values = plotColors) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
-ggsave("~/Desktop/weight.x-treatment.pdf",
+ggsave("../../output/02-demographic-data/figures/weight.pdf",
          height = 8.5,
-         width = 11)
+       width = 11)
 ```
 
-#Graph 2.1 with the weight.y
-```{r}
-crab_metadata_day_filtered %>%
-  ggplot(aes(x = treatment,
-             y = weight.y,
-             color = treatment,
-             shape = treatment)) +
-  geom_boxplot() +
-  geom_jitter(position = position_dodge(width = 0.90)) +
-  facet_wrap(~ day) +
-  labs(x = "Temperature (ºC)",
-       y = "Weight (g)") +
-  scale_x_discrete(labels = c("5", "15", "25")) +
-  scale_color_manual(values = c("#EE1289", "purple", "#68838B")) +
-  scale_shape_manual(values = c(15, 16, 17)) +
-  theme_classic()
-ggsave("~/Desktop/weight.y-treatment.pdf",
-         height = 8.5,
-         width = 11)
-```
+
 
 
 
@@ -283,7 +273,7 @@ library(ggplot2)
 integument_percent <- crab_metadata_day_filtered %>%
   count(`integument-color.x`, treatment) %>%
   group_by(`integument-color.x`) %>%
-  mutate(percent = n / sum(n) * 100) #calculates the % of each treatment within eachh integument color 
+  mutate(percent = n / sum(n) * 100) #calculates the % of each treatment within each integument color 
 ```
 
 
