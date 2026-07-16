@@ -169,6 +169,10 @@ merged_data %>%
 
 ```{r}
 library(RColorBrewer)
+
+plotColors <- c(brewer.pal(9, "Reds")[7],
+                brewer.pal(9, "Greys")[7],
+                brewer.pal(9, "Blues")[7]) #Create color scheme
 ```
 
 
@@ -201,7 +205,7 @@ merged_data %>%
   labs(x = "Temperature (ºC)", 
        y = "Carapace Width (mm)") +
   scale_x_discrete(labels = function(x) gsub("C", "", x)) +
-  scale_color_manual(values = c("green", "purple", "lightblue")) +
+  scale_color_manual(values = plotColors) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
 ggsave("../../output/02-demographic-data/figures/carapace-width.pdf",
