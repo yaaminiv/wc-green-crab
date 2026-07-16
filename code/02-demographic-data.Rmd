@@ -65,10 +65,24 @@ metadata<- metadata  %>%
 
 
 
+
+#Getting rid of columns in the crab-metadata
+
+```{r}
+metadata <- metadata %>%
+  select(-respirometry,
+         -`dead-date`,
+         -number,
+         -`carapace-length`)
+```
+
+
+
+
 #Merging the two datasets 
 
 ```{r}
-merged_data <- full_join(
+merged_data <- left_join(
   TTR,
   metadata,
   by = c("crab-ID", "tank", "weight", "sex", "integument-color", "notes")
