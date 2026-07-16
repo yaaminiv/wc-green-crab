@@ -165,6 +165,14 @@ merged_data %>%
 ```
 
 
+#Adding color brew for the plot colors 
+
+```{r}
+library(RColorBrewer)
+```
+
+
+
 
 ```{r}
 merged_data %>%
