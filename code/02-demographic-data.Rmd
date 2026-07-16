@@ -29,6 +29,9 @@ library(tidyverse)
 install.packages("readr") #(not needed, but it imports the package to download your datasets)
 library(readr)
 ```
+```{r}
+
+```
 
 
 #Import data sets 
@@ -44,27 +47,28 @@ library()
 
 
 ```{r}
-names(time_to_right) #Shows me the names of the columns in the dataset
+names(TTR) #Shows me the names of the columns in the dataset
 ```
 ```{r}
-names(metabolomics_sample_list) #Shows names of columns 
+names(metadata) #Shows names of columns 
 ```
 
+
+
+#Renaming columns to make them match in both datasets
 
 ```{r}
-my_data <- read_csv("../../data/crab-metadata.csv") #load the time to right data
+library(dplyr)
+
+metadata <- metadata %>%
+  rename(`crab-ID` = ID)
 ```
 
 
-```{r}
-unique(crab_metadata$treatment)
-```
 
 
 
-```{r}
-levels(crab_metadata$treatment)
-```
+
 
 
 #Making Graph 1 
