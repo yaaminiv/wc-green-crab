@@ -311,6 +311,9 @@ merged_data %>%
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
+ggsave("../../output/02-demographic-data/figures/stacked-graph-integument-color.pdf",
+         height = 8.5,
+       width = 11)
 ```
 
 
@@ -322,51 +325,45 @@ merged_data %>%
 
 
 
-#Graph 4
-#sex.x graph
+#Graph 4 (stacked graph) --> treatment vs sex
+
+
 ```{r}
-crab_metadata_day_filtered %>%
+merged_data %>%
+  mutate(day = case_when(date == "6/28/23" ~ 0,
+                         date == "6/29/23" ~ 1,
+                         date == "7/3/23" ~ 2,
+                         date == "7/5/23" ~ 7,
+                         date == "7/10/23" ~ 12, 
+                         date == "7/12/23" ~ 14,
+                         date == "7/17/23" ~ 19,
+                         date == "7/19/23" ~ 21,
+                         date == "7/24/23" ~ 26,
+                         date == "7/26/23" ~ 28,
+                         date == "8/9/23" ~ 42,
+                         date == "8/16/23" ~ 49)) %>%
+  filter(day %in% c(0, 1, 7, 21, 42, 49),
+         !is.na(treatment),
+         !is.na(`integument-color`)) %>%
   ggplot(aes(x = treatment,
-             fill = `sex.x`)) +
+             fill = `sex`)) +
   geom_bar(position = "fill") +
-  facet_wrap(~ day) +
+  facet_wrap(~day, labeller = labeller(day = function(x) paste("Day", x))) +
   labs(x = "Temperature (ºC)",
        y = "Percent of Crabs (%)",
-       fill = "Sex") +
+       fill = "sex") +
   scale_x_discrete(labels = c("5", "15", "25")) +
-  
+  scale_fill_manual(name = "sex",
+                    values = c("F" = "darkturquoise",
+                               "M" = "#D53E4F"
+                               )) +
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
-ggsave("~/Desktop/Sex.x-treatment.pdf",
+ggsave("../../output/02-demographic-data/figures/stacked-graph-sex-treatment.pdf",
          height = 8.5,
-         width = 11)
+       width = 11)
 ```
-
-
-
-#sex.y graph
-```{r}
-crab_metadata_day_filtered %>%
-  ggplot(aes(x = treatment,
-             fill = `sex.y`)) +
-  geom_bar(position = "fill") +
-  facet_wrap(~ day) +
-  labs(x = "Temperature (ºC)",
-       y = "Percent of Crabs (%)",
-       fill = "Sex") +
-  scale_x_discrete(labels = c("5", "15", "25")) +
-  
-  scale_y_continuous(labels = scales::percent) +
-  theme_classic() +
-  theme(legend.position = "bottom") 
-  ggsave("~/Desktop/Sex.y-treatment.pdf",
-         height = 8.5,
-         width = 11)
-```
-
-
-
 
 
 
