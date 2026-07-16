@@ -29,9 +29,7 @@ library(tidyverse)
 install.packages("readr") #(not needed, but it imports the package to download your datasets)
 library(readr)
 ```
-```{r}
 
-```
 
 
 #Import data sets 
@@ -82,11 +80,15 @@ metadata <- metadata %>%
 #Merging the two datasets 
 
 ```{r}
-merged_data <- left_join(
-  TTR,
+merged_data <- full_join(
+  TTR, 
   metadata,
-  by = c("crab-ID", "tank", "weight", "sex", "integument-color", "notes")
+  by = c("crab-ID", "integument-color", "weight", "sex", "notes", "tank")
 )
+```
+
+```{r}
+colnames(merged_data)
 ```
 
 
