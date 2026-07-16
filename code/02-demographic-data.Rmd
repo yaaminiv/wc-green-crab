@@ -41,7 +41,6 @@ metadata <- read_csv("../../wc-green-crab/data/crab-metadata.csv") #brings the d
 
 ```{r}
 TTR <- read_csv("../data/time-to-right.csv") #load the time to right data 
-library()
 ```
 
 
@@ -60,12 +59,21 @@ names(metadata) #Shows names of columns
 ```{r}
 library(dplyr)
 
-metadata <- metadata %>%
+metadata<- metadata  %>%
   rename(`crab-ID` = ID)
 ```
 
 
 
+#Merging the two datasets 
+
+```{r}
+merged_data <- full_join(
+  TTR,
+  metadata,
+  by = c("crab-ID", "tank", "weight", "sex", "integument-color", "notes")
+)
+```
 
 
 
