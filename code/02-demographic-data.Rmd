@@ -309,7 +309,7 @@ merged_data %>%
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
-ggsave("../../output/02-demographic-data/figures/stacked-graph-integument-color.pdf",
+ggsave("../../output/02-demographic-data/stacked-graph-integument-color.pdf",
          height = 8.5,
        width = 11)
 ```
@@ -353,7 +353,7 @@ merged_data %>%
   scale_x_discrete(labels = c("5", "15", "25")) +
   scale_fill_manual(name = "sex",
                     values = c("F" = "darkturquoise",
-                               "M" = "#D53E4F"
+                               "M" = "#6A5ACD"
                                )) +
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
