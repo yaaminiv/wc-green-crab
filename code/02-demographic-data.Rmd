@@ -208,7 +208,7 @@ merged_data %>%
   scale_color_manual(values = c("blue", "grey40", "red")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
-ggsave("../../wc-green-crab/output/02-demographic-data/carapace-width(mm).pdf",
+ggsave("../../wc-green-crab/output/02-demographic-data/figures/carapace-width(mm).pdf",
          height = 8.5,
        width = 11)
 ```
