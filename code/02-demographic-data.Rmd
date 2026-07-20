@@ -13,7 +13,7 @@ knitr::opts_knit$set(root.dir = normalizePath("../output/02-demographic-data/"))
 ```
 
 ```{r}
-getwd()
+getwd() #saves to your working directory for your plots (ggsave)
 ```
 
 # START YOUR CHANGES HERE
@@ -205,10 +205,10 @@ merged_data %>%
   labs(x = "Temperature (ºC)", 
        y = "Carapace Width (mm)") +
   scale_x_discrete(labels = function(x) gsub("C", "", x)) +
-  scale_color_manual(values = c("blue", "grey40", "red")) +
+  scale_color_manual(values = rev(plotColors)) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
-ggsave("../../wc-green-crab/output/02-demographic-data/figures/carapace-width(mm).pdf",
+ggsave("figures/carapace-width(mm).pdf",
          height = 8.5,
        width = 11)
 ```
