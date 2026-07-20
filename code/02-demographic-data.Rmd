@@ -205,10 +205,10 @@ merged_data %>%
   labs(x = "Temperature (ºC)", 
        y = "Carapace Width (mm)") +
   scale_x_discrete(labels = function(x) gsub("C", "", x)) +
-  scale_color_manual(values = plotColors) +
+  scale_color_manual(values = c("blue", "grey40", "red")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
-ggsave("../../output/02-demographic-data/figures/carapace-width.pdf",
+ggsave("../../wc-green-crab/output/02-demographic-data/carapace-width.pdf",
          height = 8.5,
        width = 11)
 ```
@@ -248,10 +248,10 @@ merged_data %>%
   labs(x = "Temperature (ºC)", 
        y = "Weight (g)") +
   scale_x_discrete(labels = function(x) gsub("C", "", x)) +
-  scale_color_manual(values = plotColors) +
+  scale_color_manual(values = c("blue", "grey40", "red")) +
   scale_shape_manual(values = c(15, 16, 17)) +
   theme_classic()
-ggsave("../../output/02-demographic-data/figures/weight.pdf",
+ggsave("../../wc-green-crab/output/02-demographic-data/figures/weight.pdf",
          height = 8.5,
        width = 11)
 ```
@@ -309,7 +309,7 @@ merged_data %>%
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
-ggsave("../../output/02-demographic-data/stacked-graph-integument-color.pdf",
+ggsave("../../wc-green-crab/output/02-demographic-data/stacked-graph-integument-color.pdf",
          height = 8.5,
        width = 11)
 ```
@@ -352,13 +352,13 @@ merged_data %>%
        fill = "sex") +
   scale_x_discrete(labels = c("5", "15", "25")) +
   scale_fill_manual(name = "sex",
-                    values = c("F" = "darkturquoise",
-                               "M" = "#6A5ACD"
+                    values = c("F" = "#CC79A7",
+                               "M" = "skyblue"
                                )) +
   scale_y_continuous(labels = scales::percent) +
   theme_classic() +
   theme(legend.position = "bottom")
-ggsave("../../output/02-demographic-data/figures/stacked-graph-sex-treatment.pdf",
+ggsave("../../wc-green-crab/output/02-demographic-data/figures/stacked-graph-sex-treatment.pdf",
          height = 8.5,
        width = 11)
 ```
