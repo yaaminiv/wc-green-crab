@@ -21,15 +21,16 @@ require("RColorBrewer")
 install.packages("pheatmap")
 require(pheatmap)
 ```
-# link for the dataset download #should not be chunk of code
+# link for the dataset download should not be chunk of code
 ```{r}
 # https://osf.io/ea8mq/files/xnt56
 ```
 
 # MAC import dataset
 ```{r}
-require(tidyverse)
-salmon.data <- read.delim("../../../Downloads/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE)
+require(tidyverse) #this loads the package into the session
+salmon.data <- read.delim("../../../Downloads/salmon.genes.counts.matrix", #downloads data and names it "salmon.data". 
+    header=TRUE , check.names = FALSE) # "header = TRUE" tells the system that the first row is not numerical. "check.names = FALSE" tells the system to leave the headers exactly how they are.
 ```
 # WINDOWS import dataset
 ```{r}
