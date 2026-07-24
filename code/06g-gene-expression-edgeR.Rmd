@@ -83,8 +83,8 @@ y <- calcNormFactors(y) #normalizes the dataset
 # creating design matrix
 
 ```{r}
-design <- model.matrix(~ 0 + groups)
-colnames(design) <- levels(groups) 
+design <- model.matrix(~ 0 + groups) #creates a table based off of the grouping variable. The "0" tells Rstudio to not include intercepts 
+colnames(design) <- levels(groups) #renames the columns 
 ```
 
 # fitting model
