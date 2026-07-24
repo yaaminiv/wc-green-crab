@@ -90,8 +90,8 @@ colnames(design) <- levels(groups) #renames the columns
 # fitting model
 
 ```{r}
-y <- estimateDisp(y, design, robust=TRUE)
-fit <- glmQLFit(y, design, robust=TRUE)
+y <- estimateDisp(y, design, robust=TRUE) #The dispersion estimate tells edgeR how much variation is expected before testing for differential expression.
+fit <- glmQLFit(y, design, robust=TRUE) #tells R to estimate the dispersins more robustly to reduce the influence of extreme genes. Makes the analysis more reliable. 
 ```
 
 # comparing 25C and 5C treatments
