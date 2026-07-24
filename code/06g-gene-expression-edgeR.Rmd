@@ -68,7 +68,7 @@ groups <- factor(paste0("G", raw_groups)) #"paste0("G", raw_groups)" joins text 
 # making DGEList object
 
 ```{r}
-y <- DGEList(counts = counts_data, group = groups)
+y <- DGEList(counts = counts_data, group = groups) #function from the edgeR package that stores the count matrix, group labels, total reads per sample, normalization factors. "counts = counts_data" tells edgeR that they are the raw gene counts. "group = groups" tells edgeR which samples belong to which group. 
 ```
 
 # filtering and normalization
