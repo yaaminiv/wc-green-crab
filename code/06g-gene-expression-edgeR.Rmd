@@ -45,7 +45,7 @@ head(salmon.data) #shows the first 6 rows of the dataset which allows you to see
 
 # making dataset renaming columns so they fit DGEList
 ```{r}
-counts_data <- salmon.data
+counts_data <- salmon.data #Creates a copy of the data set and names it "countsdata"
 rownames(counts_data) <- counts_data[, 1]
 counts_data <- counts_data[, -1]
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
