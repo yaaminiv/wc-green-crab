@@ -39,8 +39,8 @@ salmon.data <- read.delim("../../../../Downloads/salmon.genes.counts.matrix", he
 ```
 # alter salmon.data so ID column doesn't mess with data
 ```{r}
-colnames(salmon.data)[1] <- "ID"
-head(salmon.data)
+colnames(salmon.data)[1] <- "ID" #changing the first columns name to "ID"
+head(salmon.data) #shows the first 6 rows of the dataset which allows you to see if your column name was changed accordingly 
 ```
 
 # making dataset renaming columns so they fit DGEList
