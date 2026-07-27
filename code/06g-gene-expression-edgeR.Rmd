@@ -121,11 +121,11 @@ nrow(filtered_15vs5) # 8557 DEGs #filter through the results and only keep the o
 
 ```{r}
 my.contrasts <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
-qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_25"])
-topTags(qlf_15_vs_25, n=10)
-results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table
-filtered_15vs25 <- subset(results_15vs25, FDR < 0.05)
-nrow(filtered_15vs25) # 888 DEGs
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset.  
+topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
+results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
+filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
+nrow(filtered_15vs25) # 888 DEGs #counts the # of rows in the new table 
 ```
 
 # making the PCA
