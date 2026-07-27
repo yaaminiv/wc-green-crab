@@ -147,20 +147,20 @@ pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of tran
 
 ```{r}
 ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
-  geom_point(size=3) + 
+  geom_point(size=3) + #making a ggplot 
   stat_ellipse() + #Add 95% confidence interval ellipses around data
-  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) +
-  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + 
-  coord_fixed() +
-  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), 
-                     name = "Temperature (ºC)",
-                     labels = c("15", "25", "5")) +
-  scale_shape_manual(values = c(17, 16, 15),
-                     name = "Temperature (ºC)",
-                     labels = c("15", "25", "5")) +
-  theme_classic() + theme(legend.position = "top")
+  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
+  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
+  coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
+                     name = "Temperature (ºC)", #names the legend "temperature"
+                     labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
+  scale_shape_manual(values = c(17, 16, 15), 
+                     name = "Temperature (ºC)", 
+                     labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points. 
+  theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
-ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5)
+ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location. 
 ```
 
 
