@@ -140,7 +140,7 @@ pca_data <- data.frame(
 )
 
 pca_var <- pca_results$sdev^2
-pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1)
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of transcription variance in the RNA-seq which helps with labeling the X-axis for the PC plot. 
 ```
 
 # plotting the PCA 
