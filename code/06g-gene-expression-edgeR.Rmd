@@ -130,13 +130,13 @@ nrow(filtered_15vs25) # 888 DEGs #counts the # of rows in the new table
 
 # making the PCA
 ```{r}
-logCPM <- cpm(y, log = TRUE)
-pca_results <- prcomp(t(logCPM), scale. = TRUE)
+logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it. 
+pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combinaitonof genes that show differences between samples.
 pca_data <- data.frame(
   Sample = rownames(pca_results$x),
   PC1 = pca_results$x[, 1],
   PC2 = pca_results$x[, 2],
-  Group = groups 
+  Group = groups #creates a new table containing the information needed to make a PCA plot
 )
 
 pca_var <- pca_results$sdev^2
