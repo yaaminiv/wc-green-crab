@@ -45,6 +45,9 @@ trinity_file_list=/vortexfs1/home/yaamini.venkataraman/trinity-samples.txt
 
 echo "Start de novo transcriptome assembly"
 
+# Clean up any residual/stale run directories from previous attempts
+rm -rf ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
 ${TRINITY}/Trinity \
 --seqType fq \
