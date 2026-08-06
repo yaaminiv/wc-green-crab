@@ -123,11 +123,12 @@ colnames(design) <- levels(groups) #renames the columns to be the same as the gr
 # fitting model
 
 ```{r}
-y <- estimateDisp(y, design, robust=TRUE) #The dispersion estimate tells edgeR how much variation is expected before testing for differential expression.
-fit <- glmQLFit(y, design, robust=TRUE) #tells R to estimate the dispersions more robustly to reduce the influence of extreme genes. Makes the analysis more reliable. 
+y <- estimateDisp(y, design, robust=TRUE) #compares the difference in gene expression between the same samples.robust = TRUE keeps outliers from making a huge impact on gene expression differences.  
+
+fit <- glmQLFit(y, design, robust=TRUE) #estimates how gene expression changes between the treatment groups while tracking biological variation.
 ```
 
-# comparing 25C and 5C treatments
+# comparing 25C and 5C treatments 
 
 ```{r}
 my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
@@ -136,7 +137,7 @@ topTags(qlf_25_vs_5, n=10)
 results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
 filtered_25vs5 <- subset(results_25vs5, FDR < 0.05)
 nrow(filtered_25vs5) # 33,733 DEGs 
-# change n = value to see more genes, or remove it to see all. Negative logFC means downregulation of first treatment vs second treatment
+# change n = value to see more genes, or remove it to see all. Negative logFC means down-regulation of first treatment vs second treatment
 ```
 
 # comparing 15C and 5C treatments
