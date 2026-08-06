@@ -78,6 +78,14 @@ colnames(counts_data)[colnames(counts_data) == "5-133"] <- "15-133"
 head(counts_data) #shows the names and order of the rows. 
 ```
 
+#Making vectors in counts.data matrix 
+```{r}
+sample_names <- colnames(counts_data) #gets the column names from counts_data and stores them in a vector called sample_names, making it easier to change and look at them.   
+```
+
+```{r}
+sample_names #This shwos me what the sample names are
+```
 
 
 ```{r}
