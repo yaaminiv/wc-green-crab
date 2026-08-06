@@ -107,9 +107,10 @@ y <- DGEList(counts = counts_data, group = groups) #function from the edgeR pack
 * This filters out lowly expressed genes
 ```{r}
 keep <- filterByExpr(y) #filters out genes with very low expression 
-table(keep) # 60,0199 genes were kept
-y <- y[keep, , keep.lib.sizes=FALSE] #tells edgeR which genes to keep 
-y <- calcNormFactors(y) #normalizes the dataset
+table(keep) # 48,616 genes were kept
+y <- y[keep, , keep.lib.sizes=FALSE] #tells edgeR to get rid of the genes that are lowly expressed (FALSE). lib.sizes tells edgeR to update the library size based on the genes that are left in the dataset. 
+
+y <- calcNormFactors(y) #normalizes the dataset so that it can be compared. 
 ```
 
 # creating design matrix
