@@ -48,7 +48,17 @@ head(salmon.data) #shows the first 6 rows of the dataset which allows you to see
 # making dataset renaming columns so they fit DGEList
 ```{r}
 counts_data <- salmon.data #Creates a copy of the data set and names it "countsdata"
-rownames(counts_data) <- counts_data[, 1] #shows us what the row names are in the copy of the dataset. 
+rownames(counts_data) <- counts_data[, 1] #This brought all of the original rows with their titles, and also duplicated the first row, one with the "ID" title, and the original row without a title. 
+```
+
+
+```{r}
+counts_data <- counts_data[, -1] #Exclude column 1 with the "ID" as the title. Kept the original row without a title name. 
+```
+
+
+
+```{r}
 counts_data <- counts_data[, -1] #Exclude column 1 
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
 colnames(counts_data)[colnames(counts_data) == "5-009"] <- "15-009"
