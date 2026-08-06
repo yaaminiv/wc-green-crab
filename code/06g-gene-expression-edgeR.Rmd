@@ -53,10 +53,14 @@ rownames(counts_data) <- counts_data[, 1] #This brought all of the original rows
 
 
 ```{r}
-counts_data <- counts_data[, -1] #Exclude column 1 with the "ID" as the title. Kept the original row without a title name. 
+counts_data <- counts_data[, -1] #Exclude column 1 with the "ID" as the title. Kept the original row without a title name.
+head(counts_data)
 ```
 
-
+#Renaming Specific Columns in the Counts_Data
+*colnames(counts_data) --> gathers the names of the columns in dataset
+* == "25-168" --> checks the columns with this name 
+* <- "15-168" --> chagnes the orginal name to this 
 ```{r}
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
 colnames(counts_data)[colnames(counts_data) == "5-009"] <- "15-009"
@@ -70,7 +74,7 @@ colnames(counts_data)[colnames(counts_data) == "25-051"] <- "15-051"
 colnames(counts_data)[colnames(counts_data) == "25-110"] <- "15-110"
 colnames(counts_data)[colnames(counts_data) == "25-202"] <- "15-202"
 colnames(counts_data)[colnames(counts_data) == "5-133"] <- "15-133"
-head(counts_data)
+head(counts_data) #shows the names and order of the rows. 
 ```
 
 
