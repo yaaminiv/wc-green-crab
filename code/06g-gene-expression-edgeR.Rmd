@@ -32,8 +32,10 @@ require(pheatmap)
 
 # MAC import dataset
 ```{r}
-require(tidyverse) #this loads the package into the session
+require(tidyverse) #this loads the package into the session. This package has the ggplot, dplyr, tidyr, etc...things that make data analysis easier.
+
 salmon.data <- read.delim("../../wc-green-crab/metadata/salmon.genes.counts.matrix", #downloads data and names it "salmon.data". *make sure to change the directory to where it is on your computer.
+                          
     header=TRUE , check.names = FALSE) # "header = TRUE" tells the system that the first row is not numerical. "check.names = FALSE" tells the system to leave the headers exactly how they are.
 ```
 
@@ -46,7 +48,7 @@ head(salmon.data) #shows the first 6 rows of the dataset which allows you to see
 # making dataset renaming columns so they fit DGEList
 ```{r}
 counts_data <- salmon.data #Creates a copy of the data set and names it "countsdata"
-rownames(counts_data) <- counts_data[, 1] #sets the row names equal to the values in the first column
+rownames(counts_data) <- counts_data[, 1] #shows us what the row names are in the copy of the dataset. 
 counts_data <- counts_data[, -1] #Exclude column 1 
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
 colnames(counts_data)[colnames(counts_data) == "5-009"] <- "15-009"
