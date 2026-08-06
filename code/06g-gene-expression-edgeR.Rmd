@@ -33,7 +33,7 @@ require(pheatmap)
 # MAC import dataset
 ```{r}
 require(tidyverse) #this loads the package into the session
-salmon.data <- read.delim("../../wc-green-crab/metadata/salmon.genes.counts.matrix", #downloads data and names it "salmon.data". 
+salmon.data <- read.delim("../../wc-green-crab/metadata/salmon.genes.counts.matrix", #downloads data and names it "salmon.data". *make sure to change the directory to where it is on your computer.
     header=TRUE , check.names = FALSE) # "header = TRUE" tells the system that the first row is not numerical. "check.names = FALSE" tells the system to leave the headers exactly how they are.
 ```
 
