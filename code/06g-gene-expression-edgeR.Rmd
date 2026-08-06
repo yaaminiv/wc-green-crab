@@ -89,14 +89,12 @@ sample_names #This shows me what the sample names are
 
 
 ```{r}
-raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1) #splits the sample name wherever it finds a hyphen. "[, 1" says to take the first part of each split. "sapply" repeats the extraction for every sample
+raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1) #splits the sample name wherever it finds a hyphen. "[, 1" says to take the first part of each split. "sapply" repeats the extraction for every sample leaving only the treatment number.
 raw_groups
 ```
 
 ```{r}
-raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1) #splits the sample name wherever it finds a hyphen. "[, 1" says to take the first part of each split. "sapply" repeats the extraction for every sample
-
-groups <- factor(paste0("G", raw_groups)) #"paste0("G", raw_groups)" joins text together without spaces. "G" is added in front of each number. Factor makes the labels "G#" into a category.
+groups <- factor(paste0("G", raw_groups)) #"paste0("G", raw_groups)" joins text together without spaces from the raw_groups. "G" is added in front of each number. Factor makes the labels "G#" into a category.
 ```
 
 # making DGEList object
@@ -106,7 +104,7 @@ y <- DGEList(counts = counts_data, group = groups) #function from the edgeR pack
 ```
 
 # filtering and normalization
-
+* This filters out lowly expressed genes
 ```{r}
 keep <- filterByExpr(y) #filters out genes with very low expression 
 table(keep) # 60,0199 genes were kept
