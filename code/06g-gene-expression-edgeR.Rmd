@@ -116,8 +116,8 @@ y <- calcNormFactors(y) #normalizes the dataset so that it can be compared.
 # creating design matrix
 
 ```{r}
-design <- model.matrix(~ 0 + groups) #creates a table based off of the grouping variable. The "0" tells Rstudio to not include intercepts 
-colnames(design) <- levels(groups) #renames the columns 
+design <- model.matrix(~ 0 + groups) #creates a table that tells edgeR which samples belong to which experimental group. The "0" tells Rstudio to give each group its own column.   
+colnames(design) <- levels(groups) #renames the columns to be the same as the group names "G5..." 
 ```
 
 # fitting model
