@@ -60,7 +60,7 @@ head(counts_data)
 #Renaming Specific Columns in the Counts_Data
 *colnames(counts_data) --> gathers the names of the columns in dataset
 * == "25-168" --> checks the columns with this name 
-* <- "15-168" --> chagnes the orginal name to this 
+* <- "15-168" --> changes the original name to this 
 ```{r}
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
 colnames(counts_data)[colnames(counts_data) == "5-009"] <- "15-009"
