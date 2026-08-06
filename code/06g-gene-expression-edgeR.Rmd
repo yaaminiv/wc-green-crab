@@ -84,13 +84,18 @@ sample_names <- colnames(counts_data) #gets the column names from counts_data an
 ```
 
 ```{r}
-sample_names #This shwos me what the sample names are
+sample_names #This shows me what the sample names are
 ```
 
 
 ```{r}
-sample_names <- colnames(counts_data) #gets the column names from counts_data and stores them in a vector called sample_names
 raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1) #splits the sample name wherever it finds a hyphen. "[, 1" says to take the first part of each split. "sapply" repeats the extraction for every sample
+raw_groups
+```
+
+```{r}
+raw_groups <- sapply(strsplit(sample_names, "-"), `[`, 1) #splits the sample name wherever it finds a hyphen. "[, 1" says to take the first part of each split. "sapply" repeats the extraction for every sample
+
 groups <- factor(paste0("G", raw_groups)) #"paste0("G", raw_groups)" joins text together without spaces. "G" is added in front of each number. Factor makes the labels "G#" into a category.
 ```
 
