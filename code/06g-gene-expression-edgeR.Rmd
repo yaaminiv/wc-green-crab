@@ -143,7 +143,7 @@ nrow(filtered_25vs5) # 33,733 DEGs
 # comparing 15C and 5C treatments
 
 ```{r}
-my.contrasts <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare
+my.contrasts <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
 qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_5"]) #looks at which genes are expressed differently between 5 and 15ºC groups and htens tores the test results for each gene. 
 topTags(qlf_15_vs_5, n=10) 
 results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table #makes the results from the previous line and formats them into a table 
