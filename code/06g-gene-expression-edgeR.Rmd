@@ -3,16 +3,19 @@ title: "06g-gene-expression-edgeR"
 output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
 ```{r}
 getwd() #saves to your working directory for your plots (ggsave)
 ```
 
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-#loading required packages
+#loading required packages #don't need to reinstall the packages everytime 
 ```{r}
+install.packages("tidyverse")
 require(tidyverse)
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
@@ -32,11 +35,10 @@ require(pheatmap)
 
 # MAC import dataset
 ```{r}
-require(tidyverse) #this loads the package into the session. This package has the ggplot, dplyr, tidyr, etc...things that make data analysis easier.
 
-salmon.data <- read.delim("../../wc-green-crab/metadata/salmon.genes.counts.matrix", #downloads data and names it "salmon.data". *make sure to change the directory to where it is on your computer.
-                          
-    header=TRUE , check.names = FALSE) # "header = TRUE" tells the system that the first row is not numerical. "check.names = FALSE" tells the system to leave the headers exactly how they are.
+salmon.data <- read.delim("../../wc-green-crab/metadata/salmon.genes.counts.matrix", header=TRUE , check.names = FALSE) 
+
+# "header = TRUE" tells the system that the first row is not numerical. "check.names = FALSE" tells the system to leave the headers exactly how they are. #downloads data and names it "salmon.data". *make sure to change the directory to where it is on your computer.
 ```
 
 # alter salmon.data so ID column doesn't mess with data
@@ -49,6 +51,7 @@ head(salmon.data) #shows the first 6 rows of the dataset which allows you to see
 ```{r}
 counts_data <- salmon.data #Creates a copy of the data set and names it "countsdata"
 rownames(counts_data) <- counts_data[, 1] #This brought all of the original rows with their titles, and also duplicated the first row, one with the "ID" title, and the original row without a title. 
+column_to_rownames() #makes any coumn into the row name
 ```
 
 
@@ -60,7 +63,7 @@ head(counts_data)
 #Renaming Specific Columns in the Counts_Data
 *colnames(counts_data) --> gathers the names of the columns in dataset
 * == "25-168" --> checks the columns with this name 
-* <- "15-168" --> changes the original name to this 
+* <- "15-168" --> changes the original name to this because it is the temperature used 
 * The reason why the names needed to be changed is because the column names were not matching the names in the count matrix (salmon.data) 
 ```{r}
 colnames(counts_data)[colnames(counts_data) == "25-168"] <- "15-168"
@@ -100,73 +103,42 @@ groups <- factor(paste0("G", raw_groups)) #"paste0("G", raw_groups)" joins text 
 # making DGEList object
 
 ```{r}
-y <- DGEList(counts = counts_data, group = groups) #function from the edgeR package that stores the count matrix, group labels, total reads per sample, normalization factors. "counts = counts_data" tells edgeR that they are the raw gene counts. "group = groups" tells edgeR which samples belong to which group. 
+y <- DGEList(counts = counts_data, group = groups) #function from the edgeR package that stores the count matrix, group labels, total reads per sample, normalization factors. "counts = counts_data" tells edgeR that they are the raw gene counts. "group = groups" tells edgeR which samples belong to which group.
+
 ```
+
 
 # filtering and normalization
 * This filters out lowly expressed genes
 ```{r}
 keep <- filterByExpr(y) #filters out genes with very low expression 
 table(keep) # 48,616 genes were kept
-y <- y[keep, , keep.lib.sizes=FALSE] #tells edgeR to get rid of the genes that are lowly expressed (FALSE). lib.sizes tells edgeR to update the library size based on the genes that are left in the dataset. 
+y_filtered <- y[keep, , keep.lib.sizes=FALSE] #tells edgeR to get rid of the genes that are lowly expressed (FALSE). lib.sizes tells edgeR to update the library size based on the genes that are left in the dataset. 
 
-y <- calcNormFactors(y) #normalizes the dataset so that it can be compared. 
+y_normalization <- calcNormFactors(y_filtered) #normalizes the dataset so that it can be compared. 
 ```
 
 # creating design matrix
 
 ```{r}
-design <- model.matrix(~ 0 + groups) #creates a table that tells edgeR which samples belong to which experimental group. The "0" tells Rstudio to give each group its own column.   
+design <- model.matrix(~ 0 + groups) #creates a table that tells edgeR which samples belong to which experimental group. The "0" tells Rstudio to give each group its own column. Tells us what samples belong to what groups for differnetial analysis. 
 colnames(design) <- levels(groups) #renames the columns to be the same as the group names "G5..." 
 ```
 
-# fitting model
+# fitting model (go back to this)
 
 ```{r}
-y <- estimateDisp(y, design, robust=TRUE) #compares the difference in gene expression between the same samples.robust = TRUE keeps outliers from making a huge impact on gene expression differences.  
+y_estimateDisp <- estimateDisp(y_normalization, design, robust=TRUE) #compares the difference in gene expression between the same samples.robust = TRUE keeps outliers from making a huge impact on gene expression differences.  
 
-fit <- glmQLFit(y, design, robust=TRUE) #estimates how gene expression changes between the treatment groups while tracking biological variation.
+fit <- glmQLFit(y_estimateDisp, design, robust=TRUE) #estimates how gene expression changes between the treatment groups while tracking biological variation.
 ```
 
-# comparing 25C and 5C treatments 
-
-```{r}
-my.contrasts <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design)
-qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group25_vs_5"])
-topTags(qlf_25_vs_5, n=10)
-results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
-filtered_25vs5 <- subset(results_25vs5, FDR < 0.05)
-nrow(filtered_25vs5) # 33,733 DEGs 
-# Comparing the expressed genes in treatments 25ºC and 5ºC. Displays the top 10 expressed genes as well as the ones that are significant (P<0.05)   
-```
-
-# comparing 15C and 5C treatments
-
-```{r}
-my.contrasts <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
-qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_5"]) #looks at which genes are expressed differently between 5 and 15ºC groups and htens tores the test results for each gene. 
-topTags(qlf_15_vs_5, n=10) 
-results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table #makes the results from the previous line and formats them into a table 
-filtered_15vs5 <- subset(results_15vs5, FDR < 0.05)
-nrow(filtered_15vs5) # 8557 DEGs #filter through the results and only keep the ones that are statistically significant. 
-```
-
-# comparing 15C and 25C treatments
-
-```{r}
-my.contrasts <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
-qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset.  
-topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
-results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
-filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
-nrow(filtered_15vs25) # 888 DEGs #counts the # of rows in the new table 
-```
 
 # making the PCA (Principal Component Analysis)
 ```{r}
 logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
 
-pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show significant differences between samples.
+pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
 
 pca_data <- data.frame(
   Sample = rownames(pca_results$x),
@@ -178,6 +150,41 @@ pca_data <- data.frame(
 pca_var <- pca_results$sdev^2
 pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of transcription variance in the RNA-seq which helps with labeling the X-axis for the PC plot. 
 ```
+
+# comparing 25C and 5C treatments 
+
+```{r}
+my.contrasts_25vs5 <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design) 
+qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts_25vs5[,"Group25_vs_5"])
+topTags(qlf_25_vs_5, n=10)
+results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
+filtered_25vs5 <- subset(results_25vs5, FDR < 0.05)
+nrow(filtered_25vs5) # 33,733 DEGs 
+# Comparing the expressed genes in treatments 25ºC and 5ºC. Displays the top 10 expressed genes as well as the ones that are significant (P<0.05)   
+```
+
+# comparing 15C and 5C treatments
+
+```{r}
+my.contrast_15vs5 <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
+qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrast_15vs5[,"Group15_vs_5"]) #looks at which genes are expressed differently between 5 and 15ºC groups and htens tores the test results for each gene. 
+topTags(qlf_15_vs_5, n=10) 
+results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table #makes the results from the previous line and formats them into a table 
+filtered_15vs5 <- subset(results_15vs5, FDR < 0.05)
+nrow(filtered_15vs5) # 8557 DEGs #filter through the results and only keep the ones that are statistically significant. 
+```
+
+# comparing 15C and 25C treatments
+
+```{r}
+my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts_15vs25[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset. Design matirx tells us where the data come from. glmQFTest make comaprisons between the 2 datasets. 
+topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
+results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
+filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
+nrow(filtered_15vs25) # 888 DEGs #counts the # of rows in the new table 
+```
+
 
 # plotting the PCA 
 
