@@ -10,7 +10,7 @@
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
 #SBATCH --time=25-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_trinity%j.log  								   															     		# Standard output/error
-#SBATCH --chdir=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
+#SBATCH --chdir=/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity	  # Working directory for this script
 
 #Adapted from the following:
 #script by Grace Crandall: https://github.com/grace-ac/project-pycno-sswd-2021/blob/main/code/03-20220811_pycno_trinity_RNAseq_transcriptome.sh
@@ -21,32 +21,33 @@
 set -e
 
 #Load module, activate the shell hook, and load environment
-module load mambaforge
+# module load mambaforge
 eval "$(conda shell.bash hook)"
 conda activate trinity_env
 
 #Program paths
-TRINITY=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin
-CUTADAPT=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/cutadapt
-FASTQC=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/fastqc
-python=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/python
-JELLYFISH=//vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/jellyfish
-SALMON=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/salmon
-SAMTOOLS=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/samtools
-BOWTIE2=/vortexfs1/home/yaamini.venkataraman/.conda/envs/trinity_env/bin/bowtie2
+TRINITY=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin
+CUTADAPT=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/cutadapt
+FASTQC=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/fastqc
+python=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/python
+JELLYFISH=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/jellyfish
+SALMON=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/salmon
+SAMTOOLS=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/samtools
+BOWTIE2=/user/yaamini.venkataraman/.conda/envs/trinity_env/bin/bowtie2
 
 #Directory and file paths
-DATA_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/trim-illumina-polyA
-OUTPUT_DIR=/vortexfs1/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
+DATA_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06b-trimgalore/trim-illumina-polyA
+OUTPUT_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
 assembly_stats=assembly_stats.txt
-trinity_file_list=/vortexfs1/home/yaamini.venkataraman/trinity-samples.txt
+trinity_file_list=/user/yaamini.venkataraman/trinity-samples.txt
 
 # DE NOVO TRANSCRIPTOME ASSEMBLY
 
 echo "Start de novo transcriptome assembly"
 
-# Clean up any residual/stale run directories from previous attempts
-rm -rf ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+# Clean up any residual/stale run directories and output files from previous attempts
+rm -r ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+rm ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
 
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
 ${TRINITY}/Trinity \
