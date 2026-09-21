@@ -46,8 +46,18 @@ trinity_file_list=/user/yaamini.venkataraman/trinity-samples.txt
 echo "Start de novo transcriptome assembly"
 
 # Clean up any residual/stale run directories and output files from previous attempts
-rm -r ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
-rm ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+# rm -r ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+# rm ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
+
+# Automatically remove incomplete/corrupted partition folders so Trinity can retry them cleanly
+if [ -d "${OUTPUT_DIR}/trinity_out_dir/read_partitions" ]; then
+    echo "Cleaning up any incomplete partition directories..."
+    find ${OUTPUT_DIR}/trinity_out_dir/read_partitions -type d -name "*.trinity.reads.fa.out" | while read -r dir; do
+        if [ ! -f "$dir/Trinity.fasta" ] && [ ! -f "$dir/inchworm.fa" ]; then
+            rm -rf "$dir"
+        fi
+    done
+fi
 
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
 ${TRINITY}/Trinity \
