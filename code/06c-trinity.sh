@@ -62,7 +62,7 @@ fi
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
 ${TRINITY}/Trinity \
 --seqType fq \
---max_memory 100G \
+--max_memory 400G \
 --samples_file ${trinity_file_list} \
 --SS_lib_type FR \
 --min_contig_length 200 \
