@@ -134,22 +134,7 @@ fit <- glmQLFit(y_estimateDisp, design, robust=TRUE) #estimates how gene express
 ```
 
 
-# making the PCA (Principal Component Analysis)
-```{r}
-logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
 
-pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
-
-pca_data <- data.frame(
-  Sample = rownames(pca_results$x),
-  PC1 = pca_results$x[, 1],
-  PC2 = pca_results$x[, 2],
-  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
-)
-
-pca_var <- pca_results$sdev^2
-pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of transcription variance in the RNA-seq which helps with labeling the X-axis for the PC plot. 
-```
 
 # comparing 25C and 5C treatments 
 
@@ -183,6 +168,23 @@ topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
 results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
 filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
 nrow(filtered_15vs25) # 888 DEGs #counts the # of rows in the new table 
+```
+
+# making the PCA (Principal Component Analysis)
+```{r}
+logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
+
+pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
+
+pca_data <- data.frame(
+  Sample = rownames(pca_results$x),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2],
+  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
+)
+
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of transcription variance in the RNA-seq which helps with labeling the X-axis for the PC plot. 
 ```
 
 
