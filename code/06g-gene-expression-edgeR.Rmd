@@ -51,7 +51,6 @@ head(salmon.data) #shows the first 6 rows of the dataset which allows you to see
 ```{r}
 counts_data <- salmon.data #Creates a copy of the data set and names it "countsdata"
 rownames(counts_data) <- counts_data[, 1] #This brought all of the original rows with their titles, and also duplicated the first row, one with the "ID" title, and the original row without a title. 
-column_to_rownames() #makes any coumn into the row name
 ```
 
 
@@ -163,7 +162,7 @@ nrow(filtered_15vs5) # 8557 DEGs #filter through the results and only keep the o
 
 ```{r}
 my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
-qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts_15vs25[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset. Design matirx tells us where the data come from. glmQFTest make comaprisons between the 2 datasets. 
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts_15vs25[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset. Design matrix tells us where the data come from. glmQFTest make comparisons between the 2 datasets. 
 topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
 results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
 filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
@@ -187,13 +186,14 @@ pca_var <- pca_results$sdev^2
 pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of transcription variance in the RNA-seq which helps with labeling the X-axis for the PC plot. 
 ```
 
-
+coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
 # plotting the PCA 
 
 ```{r}
 ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
-  geom_point(size=3) + #making a ggplot 
-  stat_ellipse() + #Add 95% confidence interval ellipses around data
+  geom_point(size=2,
+            position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+ stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
   coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
