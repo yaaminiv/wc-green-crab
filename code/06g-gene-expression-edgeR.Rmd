@@ -192,12 +192,13 @@ pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #calculates the % of tran
 
 ```{r}
 ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
-  geom_point(size=2,
+  geom_point(size=1.5,
             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
  stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
   coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+  scale_x_continuous(limits = c(-150, 2300)) +
   scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
                      name = "Temperature (ºC)", #names the legend "temperature"
                      labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
