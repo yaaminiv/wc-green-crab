@@ -82,7 +82,7 @@ head(counts_data) #shows the names and order of the rows.
 
 #Making vectors in counts.data matrix 
 ```{r}
-sample_names <- colnames(counts_data) #gets the column names from counts_data and stores them in a vector called sample_names, making it easier to change and look at them.   
+sample_names <- colnames(counts_data) #gets the column names from counts_data and stores them in a vector called sample_names, making it easier to change and look at them. Organizes the data that you want R to analyze.  
 ```
 
 ```{r}
@@ -124,7 +124,7 @@ design <- model.matrix(~ 0 + groups) #creates a table that tells edgeR which sam
 colnames(design) <- levels(groups) #renames the columns to be the same as the group names "G5..." 
 ```
 
-# fitting model (go back to this)
+# fitting model 
 
 ```{r}
 y_estimateDisp <- estimateDisp(y_normalization, design, robust=TRUE) #compares the difference in gene expression between the same samples.robust = TRUE keeps outliers from making a huge impact on gene expression differences.  
