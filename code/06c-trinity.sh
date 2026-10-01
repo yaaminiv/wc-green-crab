@@ -49,14 +49,9 @@ echo "Start de novo transcriptome assembly"
 # rm -r ${OUTPUT_DIR}/trinity_out_dir ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
 # rm ${OUTPUT_DIR}/trinity_out_dir.Trinity.fasta
 
-# Automatically remove incomplete/corrupted partition folders so Trinity can retry them cleanly
-if [ -d "${OUTPUT_DIR}/trinity_out_dir/read_partitions" ]; then
-    echo "Cleaning up any incomplete partition directories..."
-    find ${OUTPUT_DIR}/trinity_out_dir/read_partitions -type d -name "*.trinity.reads.fa.out" | while read -r dir; do
-        if [ ! -f "$dir/Trinity.fasta" ] && [ ! -f "$dir/inchworm.fa" ]; then
-            rm -rf "$dir"
-        fi
-    done
+# Native Trinity bypass for failed edge-case partitions from previous runs
+if [ -f "${OUTPUT_DIR}/trinity_out_dir/FailedCommands" ]; then
+    cat ${OUTPUT_DIR}/trinity_out_dir/FailedCommands >> ${OUTPUT_DIR}/trinity_out_dir/recursive_trinity.cmds.completed
 fi
 
 # Run Trinity to assemble de novo transcriptome. Using primarily default parameters.
