@@ -242,7 +242,7 @@ length(groups)
 ncol(y)
 table(groups)
 "5-010" %in% colnames(y)
-#making sure the groups match "y" and table(groups) tells us the amount of samples in each treatment 
+#making sure the groups match "y" and table(groups) tells us the amount of samples in each treatment. The last line is to make sure that 5-010 was successfully removed.  
 ```
 
 
