@@ -208,7 +208,7 @@ pca_data[pca_data$Sample == "5-010", ]
 logCPM <- cpm(y, log = TRUE)
 which(colnames(y) == "5-010")
 colnames(y)[57]
-#finding the exact column with the outlier and waht thename of the column is. 
+#finding the exact column with the outlier in the PCA data frame and what the name of the column is. 
 ```
 
 
