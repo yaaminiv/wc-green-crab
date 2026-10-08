@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#SBATCH --partition=bigmem          								 				  								  	     		    # Queue selection
+#SBATCH --partition=medmem          								 				  								  	     		    # Queue selection
 #SBATCH --job-name=yrv_entap       							 															        # Job name
 #SBATCH --mail-type=ALL              							   				     									     		    # Mail events (BEGIN, END, FAIL, ALL)
 #SBATCH --mail-user=yaamini.venkataraman@whoi.edu    				    									    		    # Where to send mail
 #SBATCH --nodes=1                                                									            # One node
 #SBATCH --exclusive                                                 								          # All 36 procs on the one node
-#SBATCH --mem=1000gb                                                 								          # Job memory request
+#SBATCH --mem=500gb                                                  								          # Job memory request
 #SBATCH --qos=unlim            								   															     	    	# Unlimited time allowed
 #SBATCH --time=7-00:00:00           								   															     	    	# Time limit (d-hh:mm:ss)
 #SBATCH --output=yrv_entap%j.log  								   															     		# Standard output/error
@@ -29,7 +29,7 @@ conda activate EnTAP
 module load bio #Load bio module
 module load rsem/1.3.0 #Load RSEM
 module load blast/2.7.1 #Dependency for TransDecoder
-# module load transdecoder/5.3.0 #Load TransDecoder
+module load transdecoder/5.7.1 #Load TransDecoder
 module load interproscan/5.51-85.0 #Load InterProScan
 
 #Load modules to compile EnTAP
@@ -39,18 +39,18 @@ module load gcc/9.3.1
 module load boost/gcc9/1.79
 
 #Program paths
-ENTAP=/vortexfs1/home/yaamini.venkataraman/EnTAP-v2.3.0
+ENTAP=/user/yaamini.venkataraman/EnTAP-v2.3.0
 
 #Directory and file paths
 TRINITY_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
 BLAST_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06d-blast
 OUTPUT_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06e-entap
-HOME_DIR=/vortexfs1/home/yaamini.venkataraman
+HOME_DIR=/user/yaamini.venkataraman
 
 # Retain only the longest isoform for annotation - significantly speeds up annotation process
-python ${HOME_DIR}/06e-list-trinity-dups-to-remove.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta
-python ${HOME_DIR}/06d-fasta_subsetter.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved.fasta_dups.txt REMOVE
-mv ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved_dupRemoved.fasta
+# python ${HOME_DIR}/06e-list-trinity-dups-to-remove.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta
+# python ${HOME_DIR}/06d-fasta_subsetter.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved.fasta_dups.txt REMOVE
+# mv ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved_dupRemoved.fasta
 
 # Make EnTap database
 # First download reference databases for use in EnTAP: UniProt's uniref90, trembl, and sprot, and NCBI's nr and refseq databases.
@@ -113,16 +113,16 @@ ${ENTAP}/EnTAP --run \
 
 # Remove EnTAP contamination
 
-rule remove_EnTAP_contam:
-        input:
-                contam = ENTAP_CONTAM,
-                txm = TXM_LONG_CLEAN,
-                script = {'scripts/fasta_subsetter.py'}
-            output:
-                txm = TXM_LONG_CLEAN_CLEAN
-            shell:
-                """
-                awk 'FNR>1 {{print ">"$1}}' {input.contam} > outputs/entap_contam.txt
-                python {input.script} {input.txm} outputs/entap_contam.txt REMOVE
-                mv outputs/entap_contam_REMOVE.fasta {output.txm}
-                """
+# rule remove_EnTAP_contam:
+#        input:
+#                contam = ENTAP_CONTAM,
+#                txm = TXM_LONG_CLEAN,
+#                script = {'scripts/fasta_subsetter.py'}
+#            output:
+#                txm = TXM_LONG_CLEAN_CLEAN
+#            shell:
+#                """
+#                awk 'FNR>1 {{print ">"$1}}' {input.contam} > outputs/entap_contam.txt
+#                python {input.script} {input.txm} outputs/entap_contam.txt REMOVE
+#                mv outputs/entap_contam_REMOVE.fasta {output.txm}
+#                """
