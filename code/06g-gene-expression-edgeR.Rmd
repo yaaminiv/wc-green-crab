@@ -81,51 +81,6 @@ head(counts_data) #shows the names and order of the rows.
 ```
 
 
-#Outlier Identification
-
-```{r}
-colnames(counts_data)
-pca_data
-ggplot(pca_data, aes(PC1, PC2, color = Group, shape = Group)) +
-  geom_point(size = 3) +
-  geom_text(aes(label = Sample), vjust = -1, size = 3) +
-  coord_fixed() +
-  labs(
-    x = paste0("PC1: ", pca_var_perc[1], "% variance"),
-    y = paste0("PC2: ", pca_var_perc[2], "% variance")
-  )
-```
-
-```{r}
-which(colnames(counts_data) == "5-010")  
-groups
-#tells me what column the outlier is in; making sure that it is in the correct position in the group
-```
-```{r}
-colnames(counts_data) #Tells me the column names
-```
-```{r}
-which(colnames(counts_data) == "5-010") #trying to find the column with this name 
-```
-
-```{r}
-pca_data[pca_data$Sample == "5-010", ]
-logCPM <- cpm(y, log = TRUE)
-which(colnames(y) == "5-010")
-colnames(y)[57]
-#finding the exact column with the outlier and waht thename of the column is. 
-```
-
-
-#Removing Outlier sample 5-010
-```{r}
-
-```
-
-
-
-
-
 
 #Making vectors in counts.data matrix 
 ```{r}
@@ -219,11 +174,75 @@ nrow(filtered_15vs25) # 11,115 DEGs #counts the # of rows in the new table
 ```
 
 
-#Remove Outlier 
+#Outlier Identification
 The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
 
-```{r}
 
+```{r}
+colnames(counts_data)
+pca_data
+ggplot(pca_data, aes(PC1, PC2, color = Group, shape = Group)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = Sample), vjust = -1, size = 3) +
+  coord_fixed() +
+  labs(
+    x = paste0("PC1: ", pca_var_perc[1], "% variance"),
+    y = paste0("PC2: ", pca_var_perc[2], "% variance")
+  )
+```
+
+```{r}
+which(colnames(counts_data) == "5-010")  
+groups
+#tells me what column the outlier is in; making sure that it is in the correct position in the group
+```
+```{r}
+colnames(counts_data) #Tells me the column names
+```
+```{r}
+which(colnames(counts_data) == "5-010") #trying to find the column with this name 
+```
+
+```{r}
+pca_data[pca_data$Sample == "5-010", ]
+logCPM <- cpm(y, log = TRUE)
+which(colnames(y) == "5-010")
+colnames(y)[57]
+#finding the exact column with the outlier and waht thename of the column is. 
+```
+
+
+#Removing Outlier sample 5-010
+```{r}
+y <- y[, colnames(y) != "5-010"]
+groups <- groups[-57]
+colnames(y)
+```
+
+
+```{r}
+"5-010" %in% colnames(y)
+#making sure that the column was removed. 
+```
+
+#Recalculating logCPM
+
+```{r}
+logCPM <- cpm(y, log = TRUE)
+```
+
+```{r}
+ncol(y)
+length(groups)
+colnames(y)[1:10]
+```
+```{r}
+groups <- factor(paste0("G", sub("-.*", "", colnames(y))))
+length(groups)
+ncol(y)
+table(groups)
+"5-010" %in% colnames(y)
+#making sure the groups match "y" and table(groups) tells us the amount of samples in each treatment 
 ```
 
 
@@ -257,7 +276,7 @@ ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
   coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
-  scale_x_continuous(limits = c(-150, 2300)) +
+  scale_x_continuous(limits = c(-150, 750)) +
   scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
                      name = "Temperature (ºC)", #names the legend "temperature"
                      labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
