@@ -246,8 +246,6 @@ table(groups)
 ```
 
 
-
-
 # making the PCA (Principal Component Analysis)
 ```{r}
 logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
