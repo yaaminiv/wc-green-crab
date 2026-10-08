@@ -80,6 +80,12 @@ colnames(counts_data)[colnames(counts_data) == "5-133"] <- "15-133"
 head(counts_data) #shows the names and order of the rows. 
 ```
 
+
+#Outlier Identification
+
+
+
+
 #Making vectors in counts.data matrix 
 ```{r}
 sample_names <- colnames(counts_data) #gets the column names from counts_data and stores them in a vector called sample_names, making it easier to change and look at them. Organizes the data that you want R to analyze.  
@@ -174,6 +180,11 @@ nrow(filtered_15vs25) # 11,115 DEGs #counts the # of rows in the new table
 
 #Remove Outlier 
 The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
+
+```{r}
+
+```
+
 
 
 
