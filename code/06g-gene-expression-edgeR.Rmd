@@ -83,6 +83,23 @@ head(counts_data) #shows the names and order of the rows.
 
 #Outlier Identification
 
+```{r}
+colnames(counts_data)
+pca_data
+ggplot(pca_data, aes(PC1, PC2, color = Group, shape = Group)) +
+  geom_point(size = 3) +
+  geom_text(aes(label = Sample), vjust = -1, size = 3) +
+  coord_fixed() +
+  labs(
+    x = paste0("PC1: ", pca_var_perc[1], "% variance"),
+    y = paste0("PC2: ", pca_var_perc[2], "% variance")
+  )
+```
+
+```{r}
+which(colnames(counts_data) == "5-010") #tells me what column the outlier is in 
+```
+
 
 
 
