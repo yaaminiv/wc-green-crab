@@ -147,6 +147,7 @@ nrow(filtered_25vs5) # 29,272 DEGs
 # Comparing the expressed genes in treatments 25ºC and 5ºC. Displays the top 10 expressed genes as well as the ones that are significant (P<0.05)   
 ```
 
+
 # comparing 15C and 5C treatments
 
 ```{r}
@@ -169,6 +170,12 @@ results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that
 filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
 nrow(filtered_15vs25) # 11,115 DEGs #counts the # of rows in the new table 
 ```
+
+
+#Remove Outlier 
+The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
+
+
 
 # making the PCA (Principal Component Analysis)
 ```{r}
