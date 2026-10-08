@@ -97,8 +97,32 @@ ggplot(pca_data, aes(PC1, PC2, color = Group, shape = Group)) +
 ```
 
 ```{r}
-which(colnames(counts_data) == "5-010") #tells me what column the outlier is in 
+which(colnames(counts_data) == "5-010")  
+groups
+#tells me what column the outlier is in; making sure that it is in the correct position in the group
 ```
+```{r}
+colnames(counts_data) #Tells me the column names
+```
+```{r}
+which(colnames(counts_data) == "5-010") #trying to find the column with this name 
+```
+
+```{r}
+pca_data[pca_data$Sample == "5-010", ]
+logCPM <- cpm(y, log = TRUE)
+which(colnames(y) == "5-010")
+colnames(y)[57]
+#finding the exact column with the outlier and waht thename of the column is. 
+```
+
+
+#Removing Outlier sample 5-010
+```{r}
+
+```
+
+
 
 
 
