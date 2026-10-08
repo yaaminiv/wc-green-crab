@@ -123,8 +123,8 @@ ${TRINITY}/util/align_and_estimate_abundance.pl \
 --output_dir ${OUTPUT_DIR}/supertranscript_output \
 --thread_count 16
 
-# Get a list of the salmon quant.sf files so we don't have to list them individually
-find ${OUTPUT_DIR}/. -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt
+# Get a list of the salmon quant.sf files, sort, then save to a new file
+find ${OUTPUT_DIR}/ -maxdepth 2 -name "quant.sf" | tee ${OUTPUT_DIR}/supertranscript_output/salmon.quant_files.txt
 
 # Generate a matrix with abundance estimates across all samples
 ${TRINITY}/util/abundance_estimates_to_matrix.pl \
