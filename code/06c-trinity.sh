@@ -180,4 +180,35 @@ ${TRINITY}/util/filter_low_expr_transcripts.pl \
 
 echo "Completed transcript filtering: TPM < 1"
 
+# TRANSCRIPTOME ASSEMBLY STATISTICS FOR FILTERED TRANSCRIPTOME
+
+echo "Start transcript assembly statistic calculations"
+
+# Create new TPM matrix for filtered transcriptome
+#Parse the input files and extract matching IDs
+#Only retain lines if they are in the filtered FASTA file
+awk '
+NR==FNR {
+    if (/^>/) {
+        sub(/^>/, "")
+        ids[$1] = 1
+    }
+    next
+}
+FNR==1 || ($1 in ids)
+' ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1.fasta \
+${OUTPUT_DIR}/supertranscript_output/salmon.isoform.TPM.not_cross_norm \
+> ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1_salmon.TPM.not_cross_norm
+
+# Calculate Ex50 statistics
+contig_ExN50_statistic.pl ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1_salmon.TPM.not_cross_norm \
+${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1.fasta \
+| tee ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_min_exp_1_ExN50.stats
+
+# Calculate N50 statistics
+TrinityStats.pl ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_transcripts_min_exp_1.fasta \
+> ${OUTPUT_DIR}/filtered_supertranscript_output/filtered_min_exp_1_N50.txt
+
+echo "Completed transcript assembly statistic calculations"
+
 echo "Ready to proceed to the next analytical step"
