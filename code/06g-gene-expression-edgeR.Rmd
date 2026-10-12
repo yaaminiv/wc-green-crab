@@ -247,9 +247,6 @@ nrow(filtered_15vs25)
 ```
 
 
-
-
-
 #Outlier Identification
 The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
 
