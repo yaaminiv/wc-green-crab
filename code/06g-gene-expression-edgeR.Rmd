@@ -365,19 +365,64 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 #PCA of Temperature and Time 
 
-
 ```{r}
 metabolomics <-read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE , check.names = FALSE) 
 #brings in csv files and makes the columns separate
 ```
 
 
+```{r}
+  head(metabolomics)
+colnames(metabolomics)
+#looking at the column names 
+```
+
+```{r}
+logCPM <- cpm(y, log = TRUE)
+
+pca_results <- prcomp(t(logCPM), scale. = TRUE)
+
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1)
+#preparing the data for a PCA by making it into log counts per million. Calculates the total variation in percentages for PC1 and PC2. 
+```
 
 
+```{r}
+metadata_matched <- metabolomics[
+  match(rownames(pca_results$x), metabolomics$crab.ID),
+]
+#matches the crabs with the correct treatment and date for the PCA graph.   
+```
 
 
+```{r}
+pca_data <- data.frame(
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2],
+  Treatment = factor(metadata_matched$treatment),
+  Date = factor(metadata_matched$date)
+)
+```
 
 
+```{r}
+ggplot(pca_data, aes(
+  x = PC1,
+  y = PC2,
+  color = Treatment,
+  shape = Date
+)) +
+  geom_point(size = 2) +
+  labs(
+    x = paste0("PC1 (", pca_var_perc[1], "%)"),
+    y = paste0("PC2 (", pca_var_perc[2], "%)"),
+    color = "Temperature Treatment",
+    shape = "Date"
+  ) +
+  theme_classic()
+ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
+```
 
 
 
