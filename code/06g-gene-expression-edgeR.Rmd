@@ -367,7 +367,8 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 
 ```{r}
-
+metabolomics <-read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE , check.names = FALSE) 
+#brings in csv files and makes the columns separate
 ```
 
 
