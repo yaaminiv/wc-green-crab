@@ -150,7 +150,7 @@ nrow(filtered_25vs5) # 29,272 DEGs
 ```
 
 
-# Logfold change of 2 on 25C and 5C treatments
+# Logfold change > 2 on 25ºC and 5ºC treatments
 
 ```{r}
 my.contrasts_25vs5 <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design) 
@@ -162,9 +162,20 @@ nrow(filtered_25vs5)
 #only kept the genes that had a huge difference between the control group. logfold change of 2 keeps the ones that are twice as high or low compared to the control. Kept 1785 genes. 
 ```
 
+#Log fold change of < -2 for 25ºC and 5ºC treatments
+
+```{r}
+my.contrasts_25vs5 <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design) 
+qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts_25vs5[,"Group25_vs_5"])
+topTags(qlf_25_vs_5, n=10)
+results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
+filtered_25vs5 <- subset(results_25vs5, FDR < 0.05 & abs(logFC) <=-2)
+nrow(filtered_25vs5)
+#There are 0 DEG's that are expressed twice as low in the comparison.  
+```
 
 
-# comparing 15C and 5C treatments
+# Comparing 15ºC and 5ºC treatments
 
 ```{r}
 my.contrast_15vs5 <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
@@ -177,7 +188,7 @@ nrow(filtered_15vs5) # 19,150 DEGs
 ```
 
 
-#Log-fold-change >2 on 15C and 5C treatment 
+#Log-fold-change >2 on 15ºC and 5ºC treatment 
 
 ```{r}
 my.contrast_15vs5 <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
@@ -189,7 +200,16 @@ nrow(filtered_15vs5) # 669 DEGs
 #filter through the results and only keep the ones that are statistically significant. 
 ```
 
+#Log fold change of < -2 for 15ºC and 5ºC treatments
 
+```{r}
+my.contrast_15vs5 <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
+qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrast_15vs5[,"Group15_vs_5"]) #looks at which genes are expressed differently between 5 and 15ºC groups and htens tores the test results for each gene. 
+topTags(qlf_15_vs_5, n=10) 
+results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table #makes the results from the previous line and formats them into a table 
+filtered_15vs5 <- subset(results_15vs5, FDR < 0.05 & abs(logFC) <=-2)
+nrow(filtered_15vs5) # 669 DEGs 
+```
 
 # comparing 15C and 25C treatments
 
@@ -202,7 +222,7 @@ filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results t
 nrow(filtered_15vs25) # 11,115 DEGs #counts the # of rows in the new table 
 ```
 
-#Log-fold change >2 for 15C vs 25C treatment 
+#Log-fold change >2 for 15ºC vs 25ºC treatment 
 
 ```{r}
 my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
@@ -213,6 +233,20 @@ filtered_15vs25 <- subset(results_15vs25, FDR < 0.05 & abs(logFC) >=2) #filters 
 nrow(filtered_15vs25)
 #kept 463 DEG's
 ```
+
+#Log-fold change >2 for 15ºC vs 25ºC treatment
+
+```{r}
+my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts_15vs25[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset. Design matrix tells us where the data come from. glmQFTest make comparisons between the 2 datasets. 
+topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
+results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
+filtered_15vs25 <- subset(results_15vs25, FDR < 0.05 & abs(logFC) <=-2) #filters out the results the have a P > 0.05
+nrow(filtered_15vs25)
+#kept 0 
+```
+
+
 
 
 
