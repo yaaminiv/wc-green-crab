@@ -159,7 +159,7 @@ topTags(qlf_25_vs_5, n=10)
 results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
 filtered_25vs5 <- subset(results_25vs5, FDR < 0.05 & abs(logFC) >=2)
 nrow(filtered_25vs5)
-#only kept the genes that had a huge difference between the control group. logfold change of 2 keeps the ones that are twice as high or low compared to the control. 
+#only kept the genes that had a huge difference between the control group. logfold change of 2 keeps the ones that are twice as high or low compared to the control. Kept 1785 genes. 
 ```
 
 
@@ -185,7 +185,7 @@ qlf_15_vs_5 <- glmQLFTest(fit, contrast=my.contrast_15vs5[,"Group15_vs_5"]) #loo
 topTags(qlf_15_vs_5, n=10) 
 results_15vs5 <- topTags(qlf_15_vs_5, n=Inf)$table #makes the results from the previous line and formats them into a table 
 filtered_15vs5 <- subset(results_15vs5, FDR < 0.05 & abs(logFC) >=2)
-nrow(filtered_15vs5) # 19,150 DEGs 
+nrow(filtered_15vs5) # 669 DEGs 
 #filter through the results and only keep the ones that are statistically significant. 
 ```
 
