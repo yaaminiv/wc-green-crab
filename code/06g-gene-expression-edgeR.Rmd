@@ -137,7 +137,7 @@ fit <- glmQLFit(y_estimateDisp, design, robust=TRUE) #estimates how gene express
 
 
 
-# comparing 25C and 5C treatments 
+# comparing 25C and 5C treatments
 
 ```{r}
 my.contrasts_25vs5 <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design) 
@@ -148,6 +148,20 @@ filtered_25vs5 <- subset(results_25vs5, FDR < 0.05)
 nrow(filtered_25vs5) # 29,272 DEGs 
 # Comparing the expressed genes in treatments 25ºC and 5ºC. Displays the top 10 expressed genes as well as the ones that are significant (P<0.05)   
 ```
+
+
+# Logfold change of 2 on 25C and 5C treatments
+
+```{r}
+my.contrasts_25vs5 <- makeContrasts(Group25_vs_5 = G25 - G5, levels = design) 
+qlf_25_vs_5 <- glmQLFTest(fit, contrast=my.contrasts_25vs5[,"Group25_vs_5"])
+topTags(qlf_25_vs_5, n=10)
+results_25vs5 <- topTags(qlf_25_vs_5, n=Inf)$table
+filtered_25vs5 <- subset(results_25vs5, FDR < 0.05 & abs(logFC) >=2)
+nrow(filtered_25vs5)
+#only kept the genes that had a huge difference between the control group. logfold change of 2 keeps the ones that are twice as high or low compared to the control. 
+```
+
 
 
 # comparing 15C and 5C treatments
