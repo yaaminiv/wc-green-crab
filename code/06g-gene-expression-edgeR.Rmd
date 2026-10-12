@@ -234,7 +234,7 @@ nrow(filtered_15vs25)
 #kept 463 DEG's
 ```
 
-#Log-fold change >2 for 15ºC vs 25ºC treatment
+#Log-fold change < -2 for 15ºC vs 25ºC treatment
 
 ```{r}
 my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
