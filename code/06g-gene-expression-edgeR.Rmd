@@ -177,7 +177,7 @@ nrow(filtered_15vs5) # 19,150 DEGs
 ```
 
 
-#log-fold-change >2 on 15C and 5C treatment 
+#Log-fold-change >2 on 15C and 5C treatment 
 
 ```{r}
 my.contrast_15vs5 <- makeContrasts(Group15_vs_5 = G15 - G5, levels = design) #tells edgeR which groups you want to compare and puts the data under a new group called "my.contrasts"
@@ -201,6 +201,19 @@ results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that
 filtered_15vs25 <- subset(results_15vs25, FDR < 0.05) #filters out the results the have a P > 0.05
 nrow(filtered_15vs25) # 11,115 DEGs #counts the # of rows in the new table 
 ```
+
+#Log-fold change >2 for 15C vs 25C treatment 
+
+```{r}
+my.contrasts_15vs25 <- makeContrasts(Group15_vs_25 = G15 - G25, levels = design)
+qlf_15_vs_25 <- glmQLFTest(fit, contrast=my.contrasts_15vs25[,"Group15_vs_25"]) #tells edgeR what values to contrast and what to label the new dataset. Design matrix tells us where the data come from. glmQFTest make comparisons between the 2 datasets. 
+topTags(qlf_15_vs_25, n=10) #sorts genes by statistical significance (P<0.05)
+results_15vs25 <- topTags(qlf_15_vs_25, n=Inf)$table #saves all the results that are significant in the table 
+filtered_15vs25 <- subset(results_15vs25, FDR < 0.05 & abs(logFC) >=2) #filters out the results the have a P > 0.05
+nrow(filtered_15vs25)
+#kept 463 DEG's
+```
+
 
 
 #Outlier Identification
