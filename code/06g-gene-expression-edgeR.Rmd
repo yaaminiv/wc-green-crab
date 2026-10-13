@@ -213,6 +213,38 @@ nrow(filtered_15vs25)
 
 
 
+
+```{r}
+which(colnames(counts_data) == "5-010")  
+groups
+#tells me what column the outlier is in; making sure that it is in the correct position in the group
+```
+```{r}
+colnames(counts_data) #Tells me the column names
+```
+```{r}
+which(colnames(counts_data) == "5-010") #trying to find the column with this name 
+```
+
+
+# making the PCA (Principal Component Analysis)
+```{r}
+logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
+
+pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
+
+pca_data <- data.frame(
+  Sample = rownames(pca_results$x),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2],
+  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
+)
+
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent variation of gene expression for each PCA. Shows the amount of variation shown in the graph.  
+```
+
+
 #Outlier Identification
 The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
 
@@ -231,25 +263,12 @@ ggplot(pca_data, aes(PC1, PC2, color = Group, shape = Group)) +
 ```
 
 ```{r}
-which(colnames(counts_data) == "5-010")  
-groups
-#tells me what column the outlier is in; making sure that it is in the correct position in the group
-```
-```{r}
-colnames(counts_data) #Tells me the column names
-```
-```{r}
-which(colnames(counts_data) == "5-010") #trying to find the column with this name 
-```
-
-```{r}
 pca_data[pca_data$Sample == "5-010", ]
 logCPM <- cpm(y, log = TRUE)
 which(colnames(y) == "5-010")
 colnames(y)[57]
 #finding the exact column with the outlier in the PCA data frame and what the name of the column is. 
 ```
-
 
 #Removing Outlier sample 5-010
 ```{r}
@@ -283,25 +302,6 @@ table(groups)
 "5-010" %in% colnames(y)
 #making sure the groups match "y" and table(groups) tells us the amount of samples in each treatment. The last line is to make sure that 5-010 was successfully removed.  
 ```
-
-
-# making the PCA (Principal Component Analysis)
-```{r}
-logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
-
-pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
-
-pca_data <- data.frame(
-  Sample = rownames(pca_results$x),
-  PC1 = pca_results$x[, 1],
-  PC2 = pca_results$x[, 2],
-  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
-)
-
-pca_var <- pca_results$sdev^2
-pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent variation of gene expression for each PCA. Shows the amount of variation shown in the graph.  
-```
-
 
 # plotting the PCA 
 
