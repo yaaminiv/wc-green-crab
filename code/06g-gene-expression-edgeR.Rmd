@@ -328,20 +328,28 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 
 
-
 #PCA of Temperature and Time 
 
+
 ```{r}
-metabolomics <-read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE , check.names = FALSE) 
+metabolomics <- read.csv(
+  "../../wc-green-crab/metadata/metabolomics-sample-list.csv",
+  header = TRUE,
+  check.names = FALSE
+)
+
+metabolomics <- metabolomics %>%
+  mutate(day = case_when(
+    date == "6/28/23" ~ "0",
+    date == "6/29/23" ~ "01",
+    date == "7/5/23"  ~ "07",
+    date == "7/19/23" ~ "21",
+    date == "8/9/23"  ~ "42",
+    TRUE ~ NA_character_
+  )) 
 #brings in csv files and makes the columns separate
 ```
 
-
-```{r}
-  head(metabolomics)
-colnames(metabolomics)
-#looking at the column names 
-```
 
 ```{r}
 logCPM <- cpm(y, log = TRUE)
@@ -362,31 +370,67 @@ metadata_matched <- metabolomics[
 ```
 
 
+
+
+
+
 ```{r}
 pca_data <- data.frame(
+  Sample = rownames(pca_results$x),
   PC1 = pca_results$x[, 1],
   PC2 = pca_results$x[, 2],
-  Treatment = factor(metadata_matched$treatment),
-  Date = factor(metadata_matched$date)
+  Group = groups
 )
 ```
 
 
 ```{r}
+table(pca_data$Group)
+pca_data[pca_data$Group == "G15", ]
+```
+```{r}
+colnames(pca_data)
+```
+```{r}
+pca_data$Day <- metadata_matched$day
+```
+
+
+```{r}
 ggplot(pca_data, aes(
-  x = PC1,
-  y = PC2,
-  color = Date,
-  shape = Temperature
+  PC1, PC2,
+  group = Group,
+  color = Group,
+  shape = Group
 )) +
-  geom_point(size = 2) +
-  labs(
-    x = paste0("PC1 (", pca_var_perc[1], "%)"),
-    y = paste0("PC2 (", pca_var_perc[2], "%)"),
-    color = "Temperature Treatment",
-    shape = "Date"
+  geom_point(
+    size = 1.5,
+    position = position_jitter(width = 10, height = 10)
   ) +
-  theme_classic()
+  geom_text(
+    aes(label = Day),
+    vjust = -0.8,
+    size = 3,
+    show.legend = FALSE
+  ) +
+  stat_ellipse() +
+  xlab(paste0("PC1: ", pca_var_perc[1], "% variance")) +
+  ylab(paste0("PC2: ", pca_var_perc[2], "% variance")) +
+  coord_fixed() +
+  scale_color_manual(
+    values = c("#969696", "#CB181D", "#2171B5"),
+    name = "Temperature (ºC)",
+    breaks = c("G15", "G25", "G5"),
+    labels = c("15", "25", "5")
+  ) +
+  scale_shape_manual(
+    values = c(17, 16, 15),
+    name = "Temperature (ºC)",
+    breaks = c("G15", "G25", "G5"),
+    labels = c("15", "25", "5")
+  ) +
+  theme_classic() +
+  theme(legend.position = "top")
 ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
 ```
 
