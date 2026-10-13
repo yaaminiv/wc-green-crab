@@ -394,43 +394,54 @@ colnames(pca_data)
 ```{r}
 pca_data$Day <- metadata_matched$day
 ```
+```{r}
+table(pca_data$Day, useNA = "ifany") #checking to see if there are any "NA" values 
+```
 
 
 ```{r}
 ggplot(pca_data, aes(
-  PC1, PC2,
-  group = Group,
+  x = PC1,
+  y = PC2,
   color = Group,
-  shape = Group
+  shape = Day
 )) +
-  geom_point(
-    size = 1.5,
-    position = position_jitter(width = 10, height = 10)
-  ) +
-  geom_text(
-    aes(label = Day),
-    vjust = -0.8,
-    size = 3,
-    show.legend = FALSE
-  ) +
-  stat_ellipse() +
+  geom_point(size = 2.5, na.rm = FALSE) +
+  stat_ellipse(aes(group = Group)) +
   xlab(paste0("PC1: ", pca_var_perc[1], "% variance")) +
   ylab(paste0("PC2: ", pca_var_perc[2], "% variance")) +
-  coord_fixed() +
   scale_color_manual(
-    values = c("#969696", "#CB181D", "#2171B5"),
-    name = "Temperature (ºC)",
-    breaks = c("G15", "G25", "G5"),
-    labels = c("15", "25", "5")
+    values = c(
+      "G15" = "#969696",
+      "G25" = "#CB181D",
+      "G5" = "#2171B5"
+    ),
+    name = "Temperature (°C)",
+    labels = c("G15" = "15", "G25" = "25", "G5" = "5")
   ) +
   scale_shape_manual(
-    values = c(17, 16, 15),
-    name = "Temperature (ºC)",
-    breaks = c("G15", "G25", "G5"),
-    labels = c("15", "25", "5")
+    values = c(
+      "0" = 16,
+      "01" = 17,
+      "07" = 15,
+      "21" = 18,
+      "42" = 8,
+      "NA" = 4
+    ),
+    na.value = 4,
+    name = "Sampling Day",
+    labels = c(
+      "0" = "Day 0",
+      "01" = "Day 1",
+      "07" = "Day 7",
+      "21" = "Day 21",
+      "42" = "Day 42",
+      "NA" = "Unknown"
+    )
   ) +
+  coord_fixed() +
   theme_classic() +
-  theme(legend.position = "top")
+  theme(legend.position = "right")
 ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
 ```
 
