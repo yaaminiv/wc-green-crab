@@ -18,28 +18,12 @@
 #Exit script if any command fails
 set -e
 
-#Load module, activate the shell hook, and load environment
-module load mambaforge
-unset PYTHONPATH
-unset PYTHONHOME
-eval "$(conda shell.bash hook)"
-conda activate EnTAP
+#Load modules
+module load entap
+module load interproscan
 
-#Load modules with EnTAP dependencies
-module load bio #Load bio module
-module load rsem/1.3.0 #Load RSEM
-module load blast/2.7.1 #Dependency for TransDecoder
-module load transdecoder/5.7.1 #Load TransDecoder
-module load interproscan/5.51-85.0 #Load InterProScan
-
-#Load modules to compile EnTAP
-module load cmake/3.18.6
-module unload gcc
-module load gcc/9.3.1
-module load boost/gcc9/1.79
-
-#Program paths
-ENTAP=/user/yaamini.venkataraman/EnTAP-v2.3.0
+#Program directory
+ENTAP=/apps/EnTAP/2.3.0/
 
 #Directory and file paths
 TRINITY_DIR=/scratch/yaamini.venkataraman/wc-green-crab/output/06c-trinity
@@ -52,15 +36,12 @@ HOME_DIR=/user/yaamini.venkataraman
 # python ${HOME_DIR}/06d-fasta_subsetter.py ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved.fasta_dups.txt REMOVE
 # mv ${BLAST_DIR}/transcriptome_contamRemoved.fasta ${BLAST_DIR}/transcriptome_contamRemoved_dupRemoved.fasta
 
+echo "Download external databases"
+
 # Make EnTap database
-# First download reference databases for use in EnTAP: UniProt's uniref90, trembl, and sprot, and NCBI's nr and refseq databases.
+# Several databases can be downloaded and configured within EnTAP (UniProt Trembl, Uniprot Swiss-Prot, NCBI NR, NCBI Refseq Complete). However, the UnRef 90 database must be downloaded separately
+# Download UniRef90
 wget ftp://ftp.uniprot.org/pub/databases/uniprot/uniref/uniref90/uniref90.fasta.gz
-wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_trembl.fasta.gz
-wget ftp://ftp.ncbi.nih.gov/blast/db/FASTA/nr.gz
-wget ftp://ftp.uniprot.org/pub/databases/uniprot/current_release/knowledgebase/complete/uniprot_sprot.fasta.gz
-wget ftp://ftp.ncbi.nlm.nih.gov/refseq/release/complete/complete.*.protein.faa.gz
-cat complete.*.protein.faa.gz > refseq_complete.faa.gz
-rm complete.*.protein.faa.gz
 
 # EnTAP parses taxonomic information from reference database headers for contaminant filtering and taxonomic weighting.
 # The existing uniref header format is incompatible with EnTAP. Using Zac's script to reformat the headers so they can be parsed by EnTAP
@@ -69,26 +50,32 @@ python ${HOME_DIR}/06e-reformat_uniref.py uniref90.fasta uniref90_rf.fasta
 gzip uniref90_rf.fasta
 rm uniref90.fasta
 
-# Configure EnTAP. this indexes the reference databases into diamond format
-${ENTAP}/EnTAP --config \
+echo "External database download complete"
+
+echo "Start EnTAP configuration"
+
+# Configure EnTAP to index the reference databases into diamond format
+${ENTAP}/bin/EnTAP --config \
 --run-ini ${OUTPUT_DIR}/entap_run.params \
---entap-ini ${OUTPUT_DIR}/entap_config.ini \
--d nr.gz \
--d uniprot_trembl.fasta.gz \
--d refseq_complete.faa.gz \
--d uniprot_sprot.fasta.gz \
--d uniref90_rf.fasta.gz \
+--entap-ini ${ENTAP}/entap_config.ini \
 -t 35
 
+echo "EnTAP configuration complete"
+
 #Unset python variables again to avoid conflicts with EnTAP run
-unset PYTHONPATH
-unset PYTHONHOME
+# unset PYTHONPATH
+# unset PYTHONHOME
+
+echo "Start EnTAP annotation"
 
 #Run EnTAP. The goal is to identify sequences for another round of cleaning.
 
-${ENTAP}/EnTAP --run \
+- revise database paths
+- add output directory path
+
+${ENTAP}/bin/EnTAP --run \
 --run-ini ${OUTPUT_DIR}/entap_run.params \
---entap-ini ${OUTPUT_DIR}/entap_config.ini \
+--entap-ini ${ENTAP}/entap_config.ini \
 -d entap_outfiles/bin/nr.dmnd \
 -d entap_outfiles/bin/refseq_complete.dmnd \
 -d entap_outfiles/bin/uniprot_sprot.dmnd \
@@ -110,6 +97,8 @@ ${ENTAP}/EnTAP --run \
 -c rhizocephala \
 -c entoniscidae \
 --taxon brachyura
+
+echo "EnTAP annotation complete"
 
 # Remove EnTAP contamination
 
