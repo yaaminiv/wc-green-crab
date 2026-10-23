@@ -312,7 +312,8 @@ ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
  stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
-  coord_fixed() + #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+   coord_fixed() +
+  #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
   
   scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
                      name = "Temperature (ºC)", #names the legend "temperature"
@@ -328,7 +329,7 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 
 
-#PCA of Temperature and Time 
+#Creating the PCA for Temperature and Time 
 
 
 ```{r}
@@ -398,6 +399,7 @@ pca_data$Day <- metadata_matched$day
 table(pca_data$Day, useNA = "ifany") #checking to see if there are any "NA" values 
 ```
 
+#Temperature & Day PCA Plot
 
 ```{r}
 ggplot(pca_data, aes(
@@ -443,6 +445,241 @@ ggplot(pca_data, aes(
   theme_classic() +
   theme(legend.position = "right")
 ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
+```
+
+
+
+
+
+#Installing the 2023-crab-genotype data 
+```{r}
+Genotype_data <- read.csv("../../wc-green-crab/data/genotype/2023-crab-genotype.csv", header=TRUE , check.names = FALSE)
+```
+
+
+```{r}
+colnames(Genotype_data)
+head(Genotype_data)
+```
+
+#PCA Temp & Genotype  
+```{r}
+Genotype_data2 <- Genotype_data[, c(
+  "crab-ID",
+  "treatment",
+  "final-genotype"
+)]
+#keeps only these columns
+```
+
+```{r}
+str(Genotype_data)
+head(Genotype_data)
+#tells me the data I have and what it looks like 
+```
+
+```{r}
+table(Genotype_data$`final-genotype`, useNA = "ifany")
+table(Genotype_data$treatment, useNA = "ifany")
+```
+```{r}
+Genotype_data <- read.csv(
+  "../../wc-green-crab/data/genotype/2023-crab-genotype.csv",
+  header = TRUE,
+  check.names = FALSE
+)
+
+colnames(Genotype_data)
+```
+
+```{r}
+head(colnames(logCPM))
+head(Genotype_data$`crab-ID`)
+```
+
+
+```{r}
+# Find crab IDs present in both datasets
+matched_ids <- intersect(
+  colnames(logCPM),
+  Genotype_data$`crab-ID`
+)
+
+# Count matches
+length(matched_ids)
+
+# Show some matching IDs
+head(matched_ids)
+```
+
+
+```{r}
+library(ggplot2)
+
+# Get existing PCA coordinates
+pca_data <- data.frame(
+  crab_ID = colnames(logCPM),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2]
+)
+
+# Match genotype metadata by crab ID
+match_index <- match(
+  pca_data$crab_ID,
+  Genotype_data$`crab-ID`
+)
+
+pca_data$treatment <- Genotype_data$treatment[match_index]
+pca_data$genotype <- Genotype_data$`final-genotype`[match_index]
+
+# Keep only crabs with matching genotype records
+pca_data <- pca_data[!is.na(match_index), ]
+```
+
+```{r}
+library(edgeR)
+library(ggplot2)
+
+# Calculate log counts per million using all genes
+logCPM <- cpm(y, log = TRUE)
+
+# Calculate PCA
+pca_results <- prcomp(t(logCPM), scale. = TRUE)
+
+# Calculate variance explained
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(
+  pca_var / sum(pca_var) * 100,
+  1
+)
+```
+
+
+
+
+
+```{r}
+ggplot(
+  pca_data,
+  aes(
+    x = PC1,
+    y = PC2,
+    color = treatment,
+    shape = genotype
+  )
+) +
+  geom_point(size = 3) +
+  geom_text(
+    aes(label = crab_ID),
+    size = 2.5,
+    vjust = -0.7,
+    check_overlap = TRUE
+  ) +
+  scale_color_manual(
+    values = c(
+      "15C" = "#969696",
+      "25C" = "#CB181D",
+      "5C" = "#2171B5"
+    ),
+    name = "Temperature"
+  ) +
+  labs(
+    title = "Temperature and Genotype",
+    x = paste0("PC1: ", pca_var_perc[1], "% variance"),
+    y = paste0("PC2: ", pca_var_perc[2], "% variance"),
+    shape = "Genotype"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "right"
+  )
+ggsave("../output/temperature & Genotype.pdf", width = 11, height = 8.5)
+```
+
+
+
+
+
+
+#PCA Sex & Temperature  
+
+
+```{r}
+Crab_sex <- read.csv(
+  "../../wc-green-crab/data/crab-metadata.csv",
+  header = TRUE,
+  check.names = FALSE
+)
+
+# Check all column names
+colnames(Crab_sex)
+
+# View the first six rows
+head(Crab_sex)
+```
+
+
+```{r}
+Crab_sex_filter <- Crab_sex[, c(
+  "treatment",
+  "sex",
+  "ID"
+)]
+```
+
+
+```{r}
+pca_data_sex <- data.frame(
+  ID = colnames(logCPM),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2]
+)
+
+match_index <- match(
+  pca_data_sex$ID,
+  Crab_sex_filter$`ID`
+)
+
+pca_data_sex$treatment <- Crab_sex_filter$treatment[match_index]
+pca_data_sex$sex <- Crab_sex_filter$sex[match_index]
+
+pca_data_sex <- pca_data_sex[!is.na(match_index), ]
+```
+
+
+
+```{r}
+colnames(Crab_sex)
+```
+
+
+
+```{r}
+library(ggplot2)
+
+ggplot(
+  pca_data_sex,
+  aes(
+    x = PC1,
+    y = PC2,
+    color = sex,
+    shape = treatment
+  )
+) +
+  geom_point(size = 3) +
+  labs(
+    title = "Temperature and Sex",
+    x = paste0("PC1: ", pca_var_perc[1], "% variance"),
+    y = paste0("PC2: ", pca_var_perc[2], "% variance"),
+    color = "Sex",
+    shape = "Temperature"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
+ggsave("../output/temperature & sex.pdf", width = 11, height = 8.5)
 ```
 
 
