@@ -76,27 +76,7 @@ echo "Start EnTAP annotation"
 ${ENTAP}/bin/EnTAP --run \
 --run-ini ${OUTPUT_DIR}/entap_run.params \
 --entap-ini ${ENTAP}/entap_config.ini \
--d entap_outfiles/bin/nr.dmnd \
--d entap_outfiles/bin/refseq_complete.dmnd \
--d entap_outfiles/bin/uniprot_sprot.dmnd \
--d entap_outfiles/bin/uniprot_trembl.dmnd \
--d entap_outfiles/bin/uniref90_rf.dmnd \
--t 35 \
--c bacteria \
--c archaea \
--c viruses \
--c platyhelminthes \
--c nematoda \
--c fungi \
--c alveolata \
--c viridiplantae \
--c rhodophyta \
--c amoebozoa \
--c rhizaria \
--c stramenopiles \
--c rhizocephala \
--c entoniscidae \
---taxon brachyura
+- t 35
 
 echo "EnTAP annotation complete"
 
