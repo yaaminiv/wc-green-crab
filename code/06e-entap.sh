@@ -68,15 +68,12 @@ echo "EnTAP configuration complete"
 
 echo "Start EnTAP annotation"
 
-#Run EnTAP. The goal is to identify sequences for another round of cleaning.
-
-- revise database paths
-- add output directory path
+#Run EnTAP. The goal is to identify contaminated sequences to remove from the transcriptome.
 
 ${ENTAP}/bin/EnTAP --run \
 --run-ini ${OUTPUT_DIR}/entap_run.params \
 --entap-ini ${ENTAP}/entap_config.ini \
-- t 35
+-t 35
 
 echo "EnTAP annotation complete"
 
