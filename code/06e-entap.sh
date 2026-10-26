@@ -63,8 +63,8 @@ ${ENTAP}/bin/EnTAP --config \
 echo "EnTAP configuration complete"
 
 #Unset python variables again to avoid conflicts with EnTAP run
-# unset PYTHONPATH
-# unset PYTHONHOME
+unset PYTHONPATH
+unset PYTHONHOME
 
 echo "Start EnTAP annotation"
 
