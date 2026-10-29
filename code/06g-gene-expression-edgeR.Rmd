@@ -351,6 +351,11 @@ metabolomics <- metabolomics %>%
 #brings in csv files and makes the columns separate
 ```
 
+```{r}
+colnames(metabolomics)
+head(metabolomics)
+```
+
 
 ```{r}
 logCPM <- cpm(y, log = TRUE)
@@ -364,9 +369,10 @@ pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1)
 
 
 ```{r}
-metadata_matched <- metabolomics[
-  match(rownames(pca_results$x), metabolomics$crab.ID),
-]
+pca_data <- as.data.frame(pca_results$x)
+
+pca_data$Temperature <- metadata_matched$treatment
+pca_data$Day <- as.numeric(metadata_matched$day)
 #matches the crabs with the correct treatment and date for the PCA graph.   
 ```
 
