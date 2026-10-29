@@ -542,7 +542,7 @@ colnames(Genotype_data)
 head(Genotype_data)
 ```
 
-#PCA Temp & Genotype  
+#PCA Temp & Genotype  (workshoppping it still) 
 ```{r}
 Genotype_data2 <- Genotype_data[, c(
   "crab-ID",
@@ -608,6 +608,29 @@ pca_var_perc <- round(
 )
 ```
 
+```{r}
+# Create PCA data frame using every RNA-seq sample
+pca_data <- data.frame(
+  crab_ID = colnames(logCPM),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2]
+)
+
+# Match genotype metadata by crab ID
+match_index <- match(
+  pca_data$crab_ID,
+  Genotype_data$`crab-ID`
+)
+
+# Add treatment and genotype where matching records exist
+pca_data$treatment <- Genotype_data$treatment[match_index]
+pca_data$genotype <- Genotype_data$`final-genotype`[match_index]
+
+# Check sample counts
+nrow(pca_data)
+table(pca_data$treatment, useNA = "ifany")
+```
+
 
 
 ```{r}
@@ -629,8 +652,67 @@ match_index <- match(
 pca_data$treatment <- Genotype_data$treatment[match_index]
 pca_data$genotype <- Genotype_data$`final-genotype`[match_index]
 
-# Keep only crabs with matching genotype records
-pca_data <- pca_data[!is.na(match_index), ]
+```
+
+```{r}
+# Count samples in the graph data by temperature
+table(pca_data$treatment)
+
+# Count the 15C samples
+sum(pca_data$treatment == "15C", na.rm = TRUE)
+
+# Check for missing PCA coordinates
+sum(!is.finite(pca_data$PC1) | !is.finite(pca_data$PC2))
+```
+```{r}
+# All crab IDs labeled 15C in the genotype file
+ids_15C <- Genotype_data$`crab-ID`[
+  Genotype_data$treatment == "15C"
+]
+
+# All sample IDs in the RNA-seq data
+rna_ids <- colnames(logCPM)
+
+# Check how many 15C IDs match the RNA-seq samples
+sum(ids_15C %in% rna_ids)
+
+# Show the 15C IDs that do not match
+missing_15C <- setdiff(ids_15C, rna_ids)
+
+missing_15C
+length(missing_15C)
+```
+
+```{r}
+# Display all RNA-seq sample IDs beginning with 15
+rna_ids[grepl("^15", rna_ids)]
+```
+
+```{r}
+# Show all RNA-seq samples that match genotype crab IDs
+matched_ids <- intersect(
+  colnames(logCPM),
+  Genotype_data$`crab-ID`
+)
+
+matched_ids
+
+# Show the treatment assigned to each matched sample
+Genotype_data[
+  match(matched_ids, Genotype_data$`crab-ID`),
+  c("crab-ID", "treatment", "final-genotype")
+]
+```
+
+```{r}
+# RNA-seq sample IDs that do not match any genotype record
+unmatched_rna_ids <- setdiff(
+  colnames(logCPM),
+  Genotype_data$`crab-ID`
+)
+
+unmatched_rna_ids
+length(unmatched_rna_ids)
 ```
 
 
