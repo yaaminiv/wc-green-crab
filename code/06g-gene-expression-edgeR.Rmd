@@ -376,8 +376,37 @@ pca_data$Day <- as.numeric(metadata_matched$day)
 #matches the crabs with the correct treatment and date for the PCA graph.   
 ```
 
+```{r}
+table(pca_data$Temperature, useNA = "ifany")
+table(pca_data$Day, useNA = "ifany")
+```
+
+```{r}
+unmatched_ids <- rownames(pca_results$x)[
+  is.na(match(
+    rownames(pca_results$x),
+    metabolomics$crab.ID
+  ))
+]
+
+unmatched_ids
+# Find PCA samples that did not match the metadata
+```
 
 
+```{r}
+unmatched_ids <- c(
+  "15-051", "15-053", "15-110", "15-119",
+  "15-168", "15-202", "15-009", "15-074",
+  "15-122", "15-133", "15-182", "15-189"
+)
+
+metabolomics[
+  metabolomics$crab.ID %in% unmatched_ids,
+  c("crab.ID", "treatment", "date", "day")
+]
+#The NA's are not in this data set 
+```
 
 
 
@@ -401,9 +430,7 @@ colnames(pca_data)
 ```{r}
 pca_data$Day <- metadata_matched$day
 ```
-```{r}
-table(pca_data$Day, useNA = "ifany") #checking to see if there are any "NA" values 
-```
+
 
 #Temperature & Day PCA Plot
 
