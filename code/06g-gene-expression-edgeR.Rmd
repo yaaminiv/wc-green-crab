@@ -531,13 +531,6 @@ ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
 ```
 
 
-```{r}
-# Check the number of samples for each temperature and day
-table(pca_data$Temperature, pca_data$Day)
-```
-
-
-
 #Installing the 2023-crab-genotype data 
 ```{r}
 Genotype_data <- read.csv("../../wc-green-crab/data/genotype/2023-crab-genotype.csv", header=TRUE , check.names = FALSE)
