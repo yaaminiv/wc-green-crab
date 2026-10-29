@@ -555,22 +555,19 @@ Genotype_data2 <- Genotype_data[, c(
 ```{r}
 str(Genotype_data)
 head(Genotype_data)
+table(Genotype_data2$treatment, useNA = "ifany")
 #tells me the data I have and what it looks like 
 ```
 
 ```{r}
-table(Genotype_data$`final-genotype`, useNA = "ifany")
-table(Genotype_data$treatment, useNA = "ifany")
-```
-```{r}
-Genotype_data <- read.csv(
-  "../../wc-green-crab/data/genotype/2023-crab-genotype.csv",
-  header = TRUE,
-  check.names = FALSE
+# Count the 15C crabs with each genotype
+table(
+  Genotype_data2$treatment,
+  Genotype_data2$`final-genotype`,
+  useNA = "ifany"
 )
-
-colnames(Genotype_data)
 ```
+
 
 ```{r}
 head(colnames(logCPM))
@@ -594,6 +591,26 @@ head(matched_ids)
 
 
 ```{r}
+library(edgeR)
+library(ggplot2)
+
+# Calculate log counts per million using all genes
+logCPM <- cpm(y, log = TRUE)
+
+# Calculate PCA
+pca_results <- prcomp(t(logCPM), scale. = TRUE)
+
+# Calculate variance 
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(
+  pca_var / sum(pca_var) * 100,
+  1
+)
+```
+
+
+
+```{r}
 library(ggplot2)
 
 # Get existing PCA coordinates
@@ -614,24 +631,6 @@ pca_data$genotype <- Genotype_data$`final-genotype`[match_index]
 
 # Keep only crabs with matching genotype records
 pca_data <- pca_data[!is.na(match_index), ]
-```
-
-```{r}
-library(edgeR)
-library(ggplot2)
-
-# Calculate log counts per million using all genes
-logCPM <- cpm(y, log = TRUE)
-
-# Calculate PCA
-pca_results <- prcomp(t(logCPM), scale. = TRUE)
-
-# Calculate variance explained
-pca_var <- pca_results$sdev^2
-pca_var_perc <- round(
-  pca_var / sum(pca_var) * 100,
-  1
-)
 ```
 
 
