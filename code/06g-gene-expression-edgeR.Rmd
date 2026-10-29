@@ -542,7 +542,7 @@ colnames(Genotype_data)
 head(Genotype_data)
 ```
 
-#PCA Temp & Genotype  (workshoppping it still) 
+#Workshopping still ! PCA Temp & Genotype 
 ```{r}
 Genotype_data2 <- Genotype_data[, c(
   "crab-ID",
