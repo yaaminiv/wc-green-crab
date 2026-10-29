@@ -408,75 +408,125 @@ metabolomics[
 #The NA's are not in this data set 
 ```
 
+```{r}
+grep("051|053|110|119|168|202|009|074|122|133|182|189",
+     metabolomics$crab.ID,
+     value = TRUE)
+```
 
 
 ```{r}
-pca_data <- data.frame(
-  Sample = rownames(pca_results$x),
-  PC1 = pca_results$x[, 1],
-  PC2 = pca_results$x[, 2],
-  Group = groups
+data.frame(
+  PCA_ID = unmatched_ids,
+  Metadata_ID = grep(
+    paste(sub("^[^-]+-", "", unmatched_ids), collapse = "|"),
+    metabolomics$crab.ID,
+    value = TRUE
+  )
 )
 ```
 
 
 ```{r}
-table(pca_data$Group)
-pca_data[pca_data$Group == "G15", ]
+# Extract the crab number from each ID
+pca_numbers <- sub("^[^-]+-", "", unmatched_ids)
+metadata_numbers <- sub("^[^-]+-", "", metabolomics$crab.ID)
+
+# Find metadata IDs with the same crab number
+for (i in seq_along(unmatched_ids)) {
+  cat(
+    unmatched_ids[i], "->",
+    paste(
+      metabolomics$crab.ID[metadata_numbers == pca_numbers[i]],
+      collapse = ", "
+    ),
+    "\n"
+  )
+}
 ```
 ```{r}
-colnames(pca_data)
+pca_numbers <- sub("^[^-]+-", "", unmatched_ids)
+metadata_numbers <- sub("^[^-]+-", "", metabolomics$crab.ID)
+
+metabolomics[
+  metadata_numbers %in% pca_numbers,
+  c("crab.ID", "treatment", "date", "day")
+]
 ```
+
+
 ```{r}
-pca_data$Day <- metadata_matched$day
+# Extract the crab number from each ID
+pca_numbers <- sub("^[^-]+-", "", rownames(pca_results$x))
+metadata_numbers <- sub("^[^-]+-", "", metabolomics$crab.ID)
+
+# Match by crab number
+metadata_matched <- metabolomics[
+  match(pca_numbers, metadata_numbers),
+]
+
+# Add temperature and day to PCA results
+pca_data <- as.data.frame(pca_results$x)
+pca_data$Temperature <- metadata_matched$treatment
+pca_data$Day <- as.numeric(metadata_matched$day)
+
+# Check the results
+table(pca_data$Temperature, useNA = "ifany")
+table(pca_data$Day, useNA = "ifany")
 ```
 
 
 #Temperature & Day PCA Plot
 
 ```{r}
+library(ggplot2)
+
+# Ensure temperature and day are factors with the correct order
+pca_data$Temperature <- factor(
+  pca_data$Temperature,
+  levels = c("15C", "25C", "5C")
+)
+
+pca_data$Day <- factor(
+  pca_data$Day,
+  levels = c("0", "1", "7", "21", "42")
+)
+
 ggplot(pca_data, aes(
   x = PC1,
   y = PC2,
-  color = Group,
+  color = Temperature,
   shape = Day
 )) +
-  geom_point(size = 2.5, na.rm = FALSE) +
-  stat_ellipse(aes(group = Group)) +
+  geom_point(size = 2.5) +
+  stat_ellipse(aes(group = Temperature), na.rm = TRUE) +
   xlab(paste0("PC1: ", pca_var_perc[1], "% variance")) +
   ylab(paste0("PC2: ", pca_var_perc[2], "% variance")) +
   scale_color_manual(
     values = c(
-      "G15" = "#969696",
-      "G25" = "#CB181D",
-      "G5" = "#2171B5"
+      "15C" = "#969696",
+      "25C" = "#CB181D",
+      "5C" = "#2171B5"
     ),
     name = "Temperature (°C)",
-    labels = c("G15" = "15", "G25" = "25", "G5" = "5")
+    labels = c("15C" = "15", "25C" = "25", "5C" = "5")
   ) +
   scale_shape_manual(
     values = c(
       "0" = 16,
-      "01" = 17,
-      "07" = 15,
+      "1" = 17,
+      "7" = 15,
       "21" = 18,
-      "42" = 8,
-      "NA" = 4
+      "42" = 8
     ),
-    na.value = 4,
-    name = "Sampling Day",
-    labels = c(
-      "0" = "Day 0",
-      "01" = "Day 1",
-      "07" = "Day 7",
-      "21" = "Day 21",
-      "42" = "Day 42",
-      "NA" = "Unknown"
-    )
+    name = "Sampling Day"
   ) +
   coord_fixed() +
   theme_classic() +
-  theme(legend.position = "right")
+  theme(
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "right"
+  )
 ggsave("../output/temperature & Date.pdf", width = 11, height = 8.5)
 ```
 
