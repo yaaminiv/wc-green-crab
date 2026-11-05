@@ -322,8 +322,7 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 #Importing dataset with day 
 ```{r}
-read.csv(file = "../metadata/metabolomics-sample-list.csv") 
-  
+Day <- read.delim("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE , check.names = FALSE) 
 ```
 
 
