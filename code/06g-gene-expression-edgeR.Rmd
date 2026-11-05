@@ -326,6 +326,10 @@ Day <- read.delim("../../wc-green-crab/metadata/metabolomics-sample-list.csv", h
 ```
 
 
+```{r}
+head(Day)
+```
+
 
 
 
