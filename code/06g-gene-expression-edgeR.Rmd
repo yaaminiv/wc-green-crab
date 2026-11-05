@@ -333,7 +333,8 @@ head(Date)
 
 ```{r}
 Day <- Date %>%
-mutate(., day = case_when(date == "6/28/23" ~ "0",
+  rowwise %>% 
+mutate(., data = case_when(date == "6/28/23" ~ "0",
 date == "6/29/23" ~ "01",
 date == "7/5/23" ~" 07",
 date == "7/19/23" ~ "21",
