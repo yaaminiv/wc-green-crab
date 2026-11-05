@@ -320,10 +320,13 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 #PCA for the Day only 
 
-
+#Importing dataset with day 
 ```{r}
-
+read.csv(file = "../metadata/metabolomics-sample-list.csv") 
+  
 ```
+
+
 
 
 
