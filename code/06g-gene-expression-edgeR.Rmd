@@ -18,7 +18,7 @@ getwd() #saves to your working directory for your plots (ggsave)
 install.packages("tidyverse")
 require(tidyverse)
 if (!require("BiocManager", quietly = TRUE))
-    install.packages("BiocManager")
+  install.packages("BiocManager")
 
 BiocManager::install("DESeq2")
 BiocManager::install("edgeR")
@@ -30,7 +30,7 @@ install.packages("pheatmap")
 require(pheatmap)
 ```
 # link for the dataset download (should not be chunk of code)
- https://osf.io/ea8mq/files/xnt56
+https://osf.io/ea8mq/files/xnt56
 
 
 # MAC import dataset
@@ -297,11 +297,11 @@ pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent va
 ```{r}
 ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
   geom_point(size=1.5,
-            position = position_jitter(width = 10, height = 10)) + #making a ggplot 
- stat_ellipse() + #Add 95% confidence interval ellipses around data 
+             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
-   coord_fixed() +
+  coord_fixed() +
   #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
   
   scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
@@ -334,51 +334,58 @@ head(Date)
 ```{r}
 Day <- Date %>%
   rowwise %>% 
-mutate(., data = case_when(date == "6/28/23" ~ "0",
-date == "6/29/23" ~ "01",
-date == "7/5/23" ~" 07",
-date == "7/19/23" ~ "21",
-date == "8/9/23" ~ "42"))
+  mutate(., day = case_when(date == "6/28/23" ~ "0",
+                            date == "6/29/23" ~ "01",
+                            date == "7/5/23" ~ "07",
+                            date == "7/19/23" ~ "21",
+                            date == "8/9/23" ~ "42"))
+```
+
+```{r}
+head(Day)
+```
+```{r}
+colnames(Day)[1] <- "Sample" #Rename crab.ID to Sample
+head(Day) #Confirm renaming
 ```
 
 
+#merging two data sets
 
 ```{r}
-logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
-
-pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
-
-pca_data <- data.frame(
-  Sample = rownames(pca_results$x),
-  PC1 = pca_results$x[, 1],
-  PC2 = pca_results$x[, 2],
-  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
-)
-
-pca_var <- pca_results$sdev^2
-pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent variation of gene expression for each PCA.
+head(pca_data)
 ```
 
+```{r}
+pca_data_day <- left_join(x = pca_data, y = Day, by = "Sample") %>% #Join dataframes together
+  mutate(treatment = case_when(is.na(treatment) == FALSE ~ treatment, #looking at the data that does not have an NA in the treatment column.
+                               is.na(treatment) == TRUE ~ "15C")) %>% #looking at the data that has an NA in the treatment column and telling them to be 15C. 
+  mutate(date = case_when(is.na(date) == FALSE ~ date, #looking at the data in column date that do not have an NA. 
+                          is.na(date) == TRUE ~ "6/28/23")) %>% #looking at the data in the date column that show an NA and telling them to have 6/28/23
+  mutate(day = case_when(is.na(day) == FALSE ~ day, #found the data in the day column that do not show an NA. leaving them alone. 
+                         is.na(day) == TRUE ~ "0")) #looking at the data in the day column that have an NA and telling it to replace it with 0. 
+head(pca_data_day) #view top of dataframe 
+```
 
 ```{r}
-ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
+ggplot(pca_data_day, aes(PC1, PC2, group = day, color = day, shape = day)) +
   geom_point(size=1.5,
-            position = position_jitter(width = 10, height = 10)) + #making a ggplot 
- stat_ellipse() + #Add 95% confidence interval ellipses around data 
+             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
-   coord_fixed() +
+  coord_fixed() +
   #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
   
-  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
-                     name = "Temperature (ºC)", #names the legend "temperature"
-                     labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
-  scale_shape_manual(values = c(17, 16, 15), 
-                     name = "Temperature (ºC)", 
-                     labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points. 
+  # scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
+  #                    name = "Temperature (ºC)", #names the legend "temperature"
+  #                    labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
+  # scale_shape_manual(values = c(17, 16, 15), 
+  #                    name = "Temperature (ºC)", 
+  #                    labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points. 
   theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
-ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
+# ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
 ```
 
 
@@ -391,7 +398,26 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 #Temperature & Day PCA Plot
 
+```{r}
+ggplot(pca_data_day, aes(PC1, PC2, group = day, color = day, shape = treatment)) +
+  geom_point(size=1.5,
+             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data 
+  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
+  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
+  coord_fixed() +
+  #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+  
+  scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5", "orange", "purple"), #color coordinator
+                     name = "Day", #names the legend "temperature"
+                     labels = c("0", "1", "7", "21", "42")) + #The different colors coordinate with the three temperatures.
+  scale_shape_manual(values = c(17, 16, 15),
+                     name = "Temperature (ºC)",
+                     labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points.
+  theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
+ggsave("../output/06f-gene-expression/Day_temperature_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
+```
 
 #PCA Temp & Genotype 
 
