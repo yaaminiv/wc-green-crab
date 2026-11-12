@@ -421,6 +421,52 @@ ggsave("../output/06f-gene-expression/Day_temperature_PCA.pdf", width = 11, heig
 
 #PCA Temp & Genotype 
 
+```{r}
+Genotype_data <- read.csv(file = "../data/genotype/2023-crab-genotype.csv") %>%
+  select(c(crab.ID,number, final.genotype)) %>% #Select only the crab.ID and final.genotype columns
+  dplyr::rename(Sample = "crab.ID")
+head(Genotype_data)
+```
+
+```{r}
+pca_data_day_gen <- left_join(x = pca_data_day, y = Genotype_data, by = "Sample")
+head(pca_data_day_gen)
+```
+
+```{r}
+pca_data_day_gen$final.genotype[12] <- "TT" 
+pca_data_day_gen$final.genotype[14] <- "CT"
+pca_data_day_gen$final.genotype[22] <- "TT"
+pca_data_day_gen$final.genotype[29] <- "CT"
+pca_data_day_gen$final.genotype[32] <- "CC"
+pca_data_day_gen$final.genotype[47] <- "TT"
+pca_data_day_gen$final.genotype[56] <- "CC"
+pca_data_day_gen$final.genotype[67] <- "CT"
+pca_data_day_gen$final.genotype[70] <- "CT"
+pca_data_day_gen$final.genotype[79] <- "TT"
+pca_data_day_gen$final.genotype[82] <- "CT"
+pca_data_day_gen$final.genotype[85] <- "CT"
+```
+
+
+this is just regular text! (identifying samples with missing genotype)
+
+Row 12: 15-051 = TT
+Row 14: 15-053 = CT
+Row 22: 15-110 = TT
+Row 29: 15-119 = CT
+Row 32: 15-168 = CC
+Row 47: 15-202 = TT
+Row 56: 15-009 = CC
+Row 67: 15-074 = CT
+Row 70: 15-122 = CT
+Row 79: 15-133 = TT
+Row 82: 15-182 = CT
+Row 85: 15-189 = CT
+
+
+
+
 
 
 #PCA Sex & Temperature  
