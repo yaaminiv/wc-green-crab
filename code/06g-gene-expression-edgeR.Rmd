@@ -510,8 +510,9 @@ head(Sex_Temp)
 
 
 ```{r}
-pca_data_day_sex <- left_join(x = pca_data_day, y = Sex_Temp, by = "Sample")
-head(pca_data_day_sex) 
+pca_data_day_sex <- left_join(x = pca_data_day, y = Sex_Temp, by = "Sample") %>%
+  select(c(Sample, treatment.x, sex)) 
+head(Sex_Temp) 
 ```
 
 
