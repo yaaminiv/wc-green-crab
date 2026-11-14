@@ -394,6 +394,15 @@ ggplot(pca_data_day, aes(PC1, PC2, group = day, color = day, shape = day)) +
 
 #Creating the PCA for Temperature and Time 
 
+```{r}
+Temp_Time <- read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE) 
+```
+
+
+
+
+
+
 
 
 #Temperature & Day PCA Plot
@@ -470,6 +479,14 @@ Row 85: 15-189 = CT
 
 
 #PCA Sex & Temperature  
+
+
+```{r}
+Sex_Temp <- read.csv(file = "../../wc-green-crab/metadata/crab-metadata.csv") %>%
+  select(c(ID, treatment, sex)) %>% #Select only the crab.ID and final.genotype columns
+  dplyr::rename(Sample = "ID")
+head(Sex_Temp)
+```
 
 
 
