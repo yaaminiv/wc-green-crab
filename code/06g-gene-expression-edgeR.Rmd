@@ -475,6 +475,26 @@ Row 85: 15-189 = CT
 
 
 
+```{r}
+ggplot(pca_data_day_gen, aes(PC1, PC2, group = final.genotype, color = final.genotype, shape = final.genotype)) +
+  geom_point(size=1.5,
+             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data 
+  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
+  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
+  coord_fixed() +
+  #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+  
+  scale_color_manual(values = c( "#2171B5","#CB181D","#969696"), #color coordinator
+                     name = "Day", #names the legend "temperature"
+                     labels = c("0", "1", "7", "21", "42")) + #The different colors coordinate with the three temperatures.
+  scale_shape_manual(values = c(17, 16, 15),
+                     name = "final.genotype",
+                     labels = c("CC", "TT", "CT")) + #picks different shapes for the three treatment data points.
+  theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
+
+# ggsave("../output/06f-gene-expression/Day_temperature_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
+```
 
 
 
@@ -489,6 +509,10 @@ head(Sex_Temp)
 ```
 
 
+```{r}
+pca_data_day_sex <- left_join(x = pca_data_day, y = Sex_Temp, by = "Sample")
+head(pca_data_day_sex) 
+```
 
 
 
