@@ -493,7 +493,7 @@ ggplot(pca_data_day_gen, aes(PC1, PC2, group = final.genotype, color = final.gen
                      labels = c("CC", "TT", "CT")) + #picks different shapes for the three treatment data points.
   theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
-# ggsave("../output/06f-gene-expression/Day_temperature_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
+ggsave("../output/06f-gene-expression/Temperature_Genotype_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
 ```
 
 
@@ -508,20 +508,69 @@ Sex_Temp <- read.csv(file = "../../wc-green-crab/metadata/crab-metadata.csv") %>
 head(Sex_Temp)
 ```
 
+```{r}
+head(pca_data_day)
+```
+
 
 ```{r}
-pca_data_day_sex <- left_join(x = pca_data_day, y = Sex_Temp, by = "Sample") %>%
-  select(c(Sample, treatment.x, sex)) 
+pca_data_day_sex <- left_join(x = pca_data_day, y = Sex_Temp, by = "Sample") 
 head(Sex_Temp) 
 ```
 
 
+```{r}
+pca_data_day_sex$sex[12] <- "F" 
+pca_data_day_sex$sex[14] <- "M"
+pca_data_day_sex$sex[22] <- "M"
+pca_data_day_sex$sex[29] <- "F"
+pca_data_day_sex$sex[32] <- "M"
+pca_data_day_sex$sex[47] <- "F"
+pca_data_day_sex$sex[56] <- "M"
+pca_data_day_sex$sex[67] <- "M"
+pca_data_day_sex$sex[70] <- "M"
+pca_data_day_sex$sex[79] <- "F"
+pca_data_day_sex$sex[82] <- "F"
+pca_data_day_sex$sex[85] <- "F"
+```
+
+
+this is just regular text! (identifying samples with missing SEX)
+
+Row 12: 15-051 = F
+Row 14: 15-053 = M  
+Row 22: 15-110 = M 
+Row 29: 15-119 = F
+Row 32: 15-168 = M
+Row 47: 15-202 = F
+Row 56: 15-009 = M
+Row 67: 15-074 = M
+Row 70: 15-122 = M
+Row 79: 15-133 = F
+Row 82: 15-182 = F
+Row 85: 15-189 = F
 
 
 
+```{r}
+ggplot(pca_data_day_sex, aes(PC1, PC2, group = sex, color = sex, shape = sex)) +
+  geom_point(size=1.5,
+             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+  stat_ellipse() + #Add 95% confidence interval ellipses around data 
+  xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
+  ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
+  coord_fixed() +
+  #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
+  
+  scale_color_manual(values = c( "#2171B5","#CB181D"), #color coordinator
+                     name = "Sex", #names the legend "temperature"
+                     labels = c("M", "F")) + #The different colors coordinate with the two sexes.
+  scale_shape_manual(values = c(17, 16, 15),
+                     name = "sex",
+                     labels = c("M", "F")) + #picks different shapes for the two sexes.
+  theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
-
-
-
+ggsave("../output/06f-gene-expression/Temperature_Sex_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
+```
 
 
