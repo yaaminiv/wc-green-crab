@@ -553,7 +553,7 @@ Row 85: 15-189 = F
 
 
 ```{r}
-ggplot(pca_data_day_sex, aes(PC1, PC2, group = sex, color = sex, shape = sex)) +
+ggplot(pca_data_day_sex, aes(PC1, PC2, group = sex, color = sex, shape = treatment.x)) +
   geom_point(size=1.5,
              position = position_jitter(width = 10, height = 10)) + #making a ggplot 
   stat_ellipse() + #Add 95% confidence interval ellipses around data 
@@ -566,8 +566,8 @@ ggplot(pca_data_day_sex, aes(PC1, PC2, group = sex, color = sex, shape = sex)) +
                      name = "Sex", #names the legend "temperature"
                      labels = c("M", "F")) + #The different colors coordinate with the two sexes.
   scale_shape_manual(values = c(17, 16, 15),
-                     name = "sex",
-                     labels = c("M", "F")) + #picks different shapes for the two sexes.
+                     name = "Treatment",
+                     labels = c("5", "15", "25")) + #picks different shapes for the three treatments.
   theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
 ggsave("../output/06f-gene-expression/Temperature_Sex_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
