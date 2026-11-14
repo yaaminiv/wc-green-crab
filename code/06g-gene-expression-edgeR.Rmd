@@ -212,6 +212,26 @@ nrow(filtered_15vs25)
 ```
 
 
+
+# making the PCA (Principal Component Analysis)
+```{r}
+logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
+
+pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
+
+pca_data <- data.frame(
+  Sample = rownames(pca_results$x),
+  PC1 = pca_results$x[, 1],
+  PC2 = pca_results$x[, 2],
+  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
+)
+
+pca_var <- pca_results$sdev^2
+pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent variation of gene expression for each PCA.
+```
+
+
+
 #Outlier Identification
 The PCA graph has an outlier in the 5ºC treatment which is making the graph harder to read. I have good reason to take out the outlier since it does not fall within the confidence intervals of 95%. 
 
@@ -272,24 +292,6 @@ table(groups)
 ```
 
 
-# making the PCA (Principal Component Analysis)
-```{r}
-logCPM <- cpm(y, log = TRUE) #Converts the raw RNA-seq read counts into log Counts Per Million (logCPM) to normalize it.
-
-pca_results <- prcomp(t(logCPM), scale. = TRUE) #Principal Component Analysis (PCA) which looks at all genes simultaneously and determines the combination of genes that show differences between samples.
-
-pca_data <- data.frame(
-  Sample = rownames(pca_results$x),
-  PC1 = pca_results$x[, 1],
-  PC2 = pca_results$x[, 2],
-  Group = groups #creates a new table containing the information needed to make a PCA plot (2-D scatter plot of large datasets)
-)
-
-pca_var <- pca_results$sdev^2
-pca_var_perc <- round(pca_var / sum(pca_var) * 100, 1) #Tells you the percent variation of gene expression for each PCA.
-```
-
-
 
 # plotting the PCA 
 
@@ -320,7 +322,7 @@ ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height 
 
 #PCA for the Day only 
 
-#Importing dataset with day 
+<!-- #Importing dataset with day  -->
 ```{r}
 Date <- read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE) 
 ```
@@ -350,7 +352,7 @@ head(Day) #Confirm renaming
 ```
 
 
-#merging two data sets
+<!-- #merging two data sets -->
 
 ```{r}
 head(pca_data)
@@ -476,7 +478,7 @@ Row 85: 15-189 = CT
 
 
 ```{r}
-ggplot(pca_data_day_gen, aes(PC1, PC2, group = final.genotype, color = final.genotype, shape = final.genotype)) +
+ggplot(pca_data_day_gen, aes(PC1, PC2, group = treatment, color = treatment, shape = final.genotype)) +
   geom_point(size=1.5,
              position = position_jitter(width = 10, height = 10)) + #making a ggplot 
   stat_ellipse() + #Add 95% confidence interval ellipses around data 
@@ -486,8 +488,8 @@ ggplot(pca_data_day_gen, aes(PC1, PC2, group = final.genotype, color = final.gen
   #makes sure that distance on the plot is equal and the plot is not compressed or stretched.
   
   scale_color_manual(values = c( "#2171B5","#CB181D","#969696"), #color coordinator
-                     name = "Day", #names the legend "temperature"
-                     labels = c("0", "1", "7", "21", "42")) + #The different colors coordinate with the three temperatures.
+                     name = "Temperature", #names the legend "temperature"
+                     labels = c("5", "25", "15")) + #The different colors coordinate with the three temperatures.
   scale_shape_manual(values = c(17, 16, 15),
                      name = "final.genotype",
                      labels = c("CC", "TT", "CT")) + #picks different shapes for the three treatment data points.
