@@ -586,17 +586,24 @@ length(crabs_to_investigate)
 ```
 
 ```{r}
-Metadata %>%
-  filter(., ID %in% crabs_to_investigate) #Filter data to retain specified rows
-
+crabs_to_investigate_Metadata <- Metadata %>%
+  filter(., ID %in% crabs_to_investigate) %>% #Filter data to retain specified rows
+   dplyr::rename(Sample = "ID") %>%
+left_join(x = ., y = Genotype_data, by = c("Sample", "number")) #By is what is in both datasets that allows them to be joined. 
+head(crabs_to_investigate_Metadata)
 ```
 
+Sex plot will be a bar graph (x = sex, y = number of crabs) 
+Genotype will be a bar graph (x = genotoype, y = numebr of crabs)
+Integument color will be a bar graph (x = integument color, y = number of crabs) 
+Carapace width will be a histogram (numerical values) (x = carapace width, y = number of crabs)
+Weight is also a histogram (x = weight, y = number of crabs) 
 
+## Histogram of weight 
 
-
-
-
-
+```{r}
+hist(crabs_to_investigate_Metadata$weight)
+```
 
 
 
