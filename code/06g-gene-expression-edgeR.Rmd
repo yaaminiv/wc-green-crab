@@ -293,13 +293,14 @@ table(groups)
 
 
 
-# plotting the PCA 
+# Temperature PCA 
 
 
 ```{r}
-ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
-  geom_point(size=1.5,
-             position = position_jitter(width = 10, height = 10)) + #making a ggplot 
+ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group)) +
+  geom_label(aes(label = Sample), position = position_jitter(width = 10, height = 10)) +
+  # geom_point(size=1.5,
+  #            position = position_jitter(width = 10, height = 10)) + #making a ggplot 
   stat_ellipse() + #Add 95% confidence interval ellipses around data 
   xlab(paste0("PC1: ",pca_var_perc[1],"% variance")) + #Labels the x-axis with the PC1 % values.
   ylab(paste0("PC2: ",pca_var_perc[2],"% variance")) + #labels the y-axis with PC2 % values 
@@ -309,9 +310,9 @@ ggplot(pca_data, aes(PC1, PC2, group = Group, color = Group, shape = Group)) +
   scale_color_manual(values = c( "#969696", "#CB181D", "#2171B5"), #color coordinator 
                      name = "Temperature (ºC)", #names the legend "temperature"
                      labels = c("15", "25", "5")) + #The different colors coordinate with the three temperatures. 
-  scale_shape_manual(values = c(17, 16, 15), 
-                     name = "Temperature (ºC)", 
-                     labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points. 
+  # scale_shape_manual(values = c(17, 16, 15), 
+  #                    name = "Temperature (ºC)", 
+  #                    labels = c("15", "25", "5")) + #picks different shapes for the three treatment data points. 
   theme_classic() + theme(legend.position = "top") #this makes the background for the plot white. 
 
 ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location. 
@@ -389,19 +390,6 @@ ggplot(pca_data_day, aes(PC1, PC2, group = day, color = day, shape = day)) +
 
 # ggsave("../output/06f-gene-expression/EdgeR_PCAcraball.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
 ```
-
-
-
-
-
-#Creating the PCA for Temperature and Time 
-
-```{r}
-Temp_Time <- read.csv("../../wc-green-crab/metadata/metabolomics-sample-list.csv", header=TRUE) 
-```
-
-
-
 
 
 
@@ -574,5 +562,49 @@ ggplot(pca_data_day_sex, aes(PC1, PC2, group = sex, color = sex, shape = treatme
 
 ggsave("../output/06f-gene-expression/Temperature_Sex_PCA.pdf", width = 11, height = 8.5) #has Rstudio save the image in the designated location.
 ```
+
+
+
+
+
+#Histograms of the crabs depicted on the left of the PCA
+
+```{r}
+Metadata <- read.csv(file = "../metadata/crab-metadata.csv") 
+head(Metadata)
+```
+
+<!-- #Integument Color  -->
+
+List of the crab ID's I can see on the left 
+
+
+
+```{r}
+crabs_to_investigate <- c("5-125", "5-131", "5-012", "5-066"," 5-128", "25-193", "5-007", "15-122", "25-059", "25-060", "15-033", "25-055", "25-186", "25-180", "25-185", "25-177", "25-170", "5-063", "25-195"," 25-054")
+length(crabs_to_investigate)
+```
+
+```{r}
+Metadata %>%
+  filter(., ID %in% crabs_to_investigate) #Filter data to retain specified rows
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
